@@ -99,18 +99,24 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: clamp(1rem, 4vw, 2.5rem);
   padding: clamp(0.75rem, 2vw, 1.25rem) clamp(1rem, 4vw, 3rem);
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
-  color: white;
+  background: linear-gradient(135deg, #fdd701 0%, #fafa00 50%, #fea500 100%);
+  color: rgb(0, 0, 0);
   box-shadow: 
     0 clamp(4px, 1vw, 8px) clamp(12px, 3vw, 25px) rgba(30,60,114,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   position: sticky;
   top: 0;
   z-index: 1000;
   backdrop-filter: blur(20px);
-  border-bottom: clamp(1px, 0.3vw, 2px) solid rgba(255,215,0,0.3);
-  width: 100vw;
+  border-bottom: clamp(1px, 0.3vw, 2px) solid rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 100vw;      
+  overflow-x: hidden;    
+  box-sizing: border-box;
+  padding-left: clamp(1rem, 4vw, 2rem);
+  padding-right: clamp(1rem, 4vw, 2rem);
 }
 
 /* Brand - Responsive */
@@ -122,18 +128,18 @@ onUnmounted(() => {
 .logo-container {
   display: flex;
   align-items: center;
-  gap: clamp(0.5rem, 1.5vw, 1rem);
+  gap: clamp(0.75rem, 2vw, 1.25rem);
   font-weight: 800;
-  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
 }
 
 .logo-icon {
-  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-size: clamp(1.25rem, 3.5vw, 1.8rem);
   animation: pulse 2s infinite;
 }
 
 .logo-text {
-  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  background: linear-gradient(135deg, #000000, #000000);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -145,21 +151,24 @@ onUnmounted(() => {
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: clamp(0.5rem, 1vw, 0.75rem);
+  gap: clamp(0.5rem, 1.5vw, 1.25rem);
   align-items: center;
+  flex-shrink: 1;
+  max-width: 60%;
 }
 
 .nav-link {
-  color: rgba(255,255,255,0.95);
+  color: rgba(0, 0, 0, 0.95);
   text-decoration: none;
   padding: clamp(0.5rem, 1.2vw, 0.75rem) clamp(0.75rem, 1.5vw, 1.25rem);
   border-radius: clamp(12px, 3vw, 24px);
   font-weight: 600;
-  font-size: clamp(0.85rem, 1.8vw, 0.95rem);
+  font-size: clamp(0.75rem, 1.5vw, 0.9rem);
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
   border: clamp(1px, 0.2vw, 2px) solid transparent;
   white-space: nowrap;
+  
 }
 
 .nav-link::after {
@@ -169,16 +178,16 @@ onUnmounted(() => {
   left: 50%;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #ffd700, transparent);
+  background: linear-gradient(90deg, #000000, transparent);
   transition: all 0.3s ease;
   transform: translateX(-50%);
 }
 
 .nav-link:hover {
   background: rgba(255,255,255,0.15);
-  color: white;
+  color: rgb(0, 0, 0);
   transform: translateY(-2px);
-  border-color: rgba(255,215,0,0.4);
+  border-color: rgba(0, 0, 0, 0.4);
   box-shadow: 0 clamp(6px, 2vw, 12px) clamp(15px, 4vw, 30px) rgba(255,215,0,0.3);
 }
 
@@ -188,8 +197,8 @@ onUnmounted(() => {
 
 .nav-link.active {
   background: rgba(255,215,0,0.2);
-  color: #ffd700;
-  border-color: #ffd700;
+  color: #000000;
+  border-color: #000000;
   box-shadow: 
     0 clamp(4px, 1vw, 8px) clamp(10px, 2.5vw, 20px) rgba(255,215,0,0.4),
     inset 0 1px 0 rgba(255,255,255,0.3);
@@ -210,9 +219,36 @@ onUnmounted(() => {
   color: #1e3c72 !important;
   font-weight: 700;
   padding: clamp(0.6rem, 1.5vw, 0.85rem) clamp(1rem, 2vw, 1.5rem) !important;
-  box-shadow: 0 clamp(6px, 1.5vw, 12px) clamp(15px, 4vw, 30px) rgba(255,215,0,0.4) !important;
+  font-size: clamp(0.85rem, 2vw, 1rem) !important;
+  white-space: nowrap !important;
+  min-width: max-content;
+  line-height: 1.2 !important;
+  box-shadow: 0 clamp(4px, 1vw, 8px) clamp(10px, 2.5vw, 20px) rgba(255,215,0,0.4) !important;
+  border-radius: clamp(12px, 3vw, 24px) !important;
+  border: none !important;
+  flex-shrink: 0;
+  min-width: 120px;
+  white-space: nowrap;
+}
+html, body {
+  overflow-x: hidden;    /* Body never scrolls horizontally */
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
+@media (min-width: 1024px) {
+  .cta-button {
+    padding: 0.75rem 1.75rem !important;  /* Fixed padding */
+    font-size: 1rem !important;          /* Consistent size */
+    min-height: 44px;                    /* Touch-friendly */
+  }
+}
+@media (max-width: 1024px) {
+  .nav-actions {
+    display: none !important;  /* Force hide on mobile */
+  }
+}
 .cta-button:hover {
   transform: translateY(-3px) scale(1.05) !important;
   box-shadow: 0 clamp(10px, 2.5vw, 20px) clamp(25px, 6vw, 50px) rgba(255,215,0,0.6) !important;
