@@ -1,118 +1,123 @@
 <template>
-  <nav class="navbar" role="navigation">
+  <nav class="navbar navbar-expand-lg" role="navigation">
     <!-- Brand/Logo -->
-    <div class="nav-brand">
-      <div class="logo-container">
-        <span class="logo-icon">{{ isStaff ? '⚙️' : '🔧' }}</span>
-        <span class="logo-text">
-          {{ isStaff ? 'Precision Admin' : 'Precision Auto' }}
-        </span>
-      </div>
-    </div>
+      <!-- BRAND -->
+  <router-link to="/" class="navbar-brand d-flex align-items-center gap-2">
+    <span class="fs-4">{{ isStaff ? '⚙️' : '🔧' }}</span>
+    <strong>{{ isStaff ? 'Precision Admin' : 'Precision Auto' }}</strong>
+  </router-link>
+
+  <!-- BOOTSTRAP HAMBURGER -->
+  <button
+    class="navbar-toggler d-lg-none"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#mainNavbar"
+    aria-controls="mainNavbar"
+    aria-expanded="false"
+    aria-label="Toggle navigation"
     
-    <!-- SINGLE MENU - Desktop + Mobile (handles ALL links + actions) -->
-    <ul class="nav-menu" :class="{ open: isOpen }">
-      <!-- PUBLIC MENU (Guest/Customer) -->
-      <li v-if="!isStaff">
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <!-- COLLAPSIBLE NAV -->
+  <div class="collapse navbar-collapse" id="mainNavbar">
+    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+      <!-- PUBLIC MENU -->
+      <li v-if="!isStaff" class="nav-item">
         <router-link to="/" class="nav-link" active-class="active">🏠 Home</router-link>
       </li>
-      <li v-if="!isStaff">
+
+      <li v-if="!isStaff" class="nav-item">
         <router-link to="/services" class="nav-link" active-class="active">🔧 Services</router-link>
       </li>
-      <li v-if="!isStaff">
+
+      <li v-if="!isStaff" class="nav-item">
         <router-link to="/pricing" class="nav-link" active-class="active">💰 Pricing</router-link>
       </li>
-      <li v-if="!isStaff">
+
+      <li v-if="!isStaff" class="nav-item">
         <router-link to="/gallery" class="nav-link" active-class="active">📸 Gallery</router-link>
       </li>
-      <li v-if="!isStaff">
+
+      <li v-if="!isStaff" class="nav-item">
         <router-link to="/about" class="nav-link" active-class="active">👥 About</router-link>
       </li>
-      <li v-if="!isStaff">
+
+      <li v-if="!isStaff" class="nav-item">
         <router-link to="/contact" class="nav-link" active-class="active">📞 Contact</router-link>
       </li>
-      
-      <!-- STAFF ADMIN MENU -->
-      <li v-if="isStaff">
-        <router-link to="/admin" class="nav-link admin-link" active-class="active">
+
+      <!-- STAFF MENU -->
+      <li v-if="isStaff" class="nav-item">
+        <router-link to="/admin" class="nav-link" active-class="active">
           🛠️ Admin Dashboard
         </router-link>
       </li>
-      <li v-if="isStaff">
-        <router-link to="/staff-dashboard" class="nav-link admin-link" active-class="active">
+
+      <li v-if="isStaff" class="nav-item">
+        <router-link to="/staff-dashboard" class="nav-link" active-class="active">
           📊 Appointments
         </router-link>
       </li>
-      <li v-if="isStaff">
-        <router-link to="/staff-customers" class="nav-link admin-link" active-class="active">
+
+      <li v-if="isStaff" class="nav-item">
+        <router-link to="/staff-customers" class="nav-link" active-class="active">
           👥 Customers
         </router-link>
       </li>
-      <li v-if="isStaff">
-        <router-link to="/reports" class="nav-link admin-link" active-class="active">
+
+      <li v-if="isStaff" class="nav-item">
+        <router-link to="/reports" class="nav-link" active-class="active">
           📈 Reports
         </router-link>
       </li>
-
-      <!-- 👈 MOBILE ACTIONS - APPEAR IN HAMBURGER MENU -->
-      <!-- <li v-if="!isLoggedIn" class="mobile-action">
-        <router-link to="/login" class="login-button full-width">🔐 Login</router-link>
-      </li> -->
-      
-      <!-- CUSTOMER ACTIONS -->
-      <!-- <li v-if="isLoggedIn && !isStaff" class="mobile-action">
-        <div class="customer-actions">
-          <router-link to="/book" class="cta-button full-width">Book Service</router-link>
-          <div class="user-section">
-            <span class="user-greeting">👋 {{ userEmail }}</span>
-            <button class="logout-button full-width" @click="$emit('logout')">🚪 Logout</button>
-          </div>
-        </div>
-      </li> -->
-      
-      <!-- STAFF ACTIONS -->
-      <!-- <li v-if="isStaff" class="mobile-action">
-        <div class="staff-actions">
-          <router-link to="/admin" class="admin-cta full-width">Admin Panel</router-link>
-          <div class="user-section">
-            <span class="user-greeting">{{ userEmail }} (Staff)</span>
-            <button class="logout-button full-width" @click="$emit('logout')">🚪 Logout</button>
-          </div>
-        </div>
-      </li> -->
     </ul>
 
-    <!-- 👈 DESKTOP ACTIONS ONLY -->
-    <div class="nav-actions-desktop">
-      <!-- GUEST: Login -->
-      <router-link v-if="!isLoggedIn" to="/login" class="login-button">🔐 Login</router-link>
-      
-      <!-- CUSTOMER -->
-      <div v-if="isLoggedIn && !isStaff" class="customer-actions">
-        <router-link to="/book" class="cta-button">Book Service</router-link>
-        <span class="user-greeting">👋 {{ userEmail }}</span>
-        <button class="logout-button" @click="$emit('logout')">🚪 Logout</button>
-      </div>
-      
-      <!-- STAFF -->
-      <div v-if="isStaff" class="staff-actions">
-        <router-link to="/admin" class="admin-cta">Admin Panel</router-link>
-        <span class="user-greeting">{{ userEmail }} (Staff)</span>
-        <button class="logout-button" @click="$emit('logout')">🚪 Logout</button>
-      </div>
-    </div>
+    <!-- RIGHT SIDE ACTIONS -->
+    <div class="d-flex align-items-center gap-3">
 
-    <!-- Mobile Hamburger -->
-    <button class="hamburger" @click="toggleMenu" :class="{ open: isOpen }" :aria-expanded="isOpen">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
+      <!-- GUEST -->
+      <router-link
+        v-if="!isLoggedIn"
+        to="/login"
+        class="btn btn-outline-dark"
+      >
+        🔐 Login
+      </router-link>
+
+      <!-- CUSTOMER -->
+      <div v-if="isLoggedIn && !isStaff" class="d-flex align-items-center gap-2">
+        <router-link to="/book" class="btn btn-warning fw-bold">
+          Book Service
+        </router-link>
+        <span class="fw-semibold">👋 {{ userEmail }}</span>
+        <button class="btn btn-danger" @click="$emit('logout')">
+          🚪 Logout
+        </button>
+      </div>
+
+      <!-- STAFF -->
+      <div v-if="isStaff" class="d-flex align-items-center gap-2">
+        <router-link to="/admin" class="btn btn-success">
+          Admin Panel
+        </router-link>
+        <span class="fw-semibold">{{ userEmail }} (Staff)</span>
+        <button class="btn btn-danger" @click="$emit('logout')">
+          🚪 Logout
+        </button>
+      </div>
+
+    </div>
+  </div>
   </nav>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+
 
 const props = defineProps<{
   user: {
@@ -369,167 +374,6 @@ onUnmounted(() => {
   background: #218838 !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 6px 20px rgba(40, 167, 74, 0.4) !important;
-}
-
-/* 👈 NEW: Desktop actions container */
-.nav-actions-desktop {
-  display: none;
-  flex-shrink: 0;
-  gap: 1rem;
-  align-items: center;
-}
-
-/* 👈 FIXED HAMBURGER - ALWAYS CORRECT */
-.hamburger {
-  display: flex;
-  flex-direction: column;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: clamp(0.5rem, 1.5vw, 0.75rem);
-  gap: 4px;
-  z-index: 1001;
-}
-
-.hamburger span {
-  width: clamp(20px, 5vw, 28px);
-  height: clamp(2px, 0.6vw, 3px);
-  background: #000;
-  border-radius: 2px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center;
-}
-
-/* ============================================================================ */
-/* MOBILE - THE KEY FIXES */
-/* ============================================================================ */
-
-@media (max-width: 1024px) {
-  /* 👈 FORCE FULL SCREEN - NOTHING CAN OVERRIDE */
-  .nav-menu {
-    position: fixed !important;
-    inset: 0 !important;  /* top/right/bottom/left = 0 */
-    width: 100vw !important;
-    height: 100vh !important;
-    
-    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%) !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    padding: 120px 30px 30px !important;
-    margin: 0 !important;
-    gap: 25px !important;
-    
-    /* HIDDEN */
-    transform: translateX(-100%) !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    
-    z-index: 10000 !important;
-    overflow-y: auto !important;
-    backdrop-filter: blur(20px) !important;
-  }
-
-  .nav-menu.open {
-    transform: translateX(0) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  /* 👈 BUTTONS TAKE FULL WIDTH */
-  .nav-menu li {
-    width: 100% !important;
-    max-width: 450px !important;
-  }
-
-  .nav-menu .nav-link,
-  .nav-menu .login-button,
-  .nav-menu .cta-button {
-    width: 100% !important;
-    padding: 25px 40px !important;
-    font-size: 1.6rem !important;
-    text-align: center !important;
-    color: white !important;
-    background: rgba(255,255,255,0.15) !important;
-    border: 2px solid transparent !important;
-    border-radius: 25px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
-  }
-
-  .nav-menu .nav-link:hover,
-  .nav-menu .login-button:hover,
-  .nav-menu .cta-button:hover {
-    background: rgba(255,215,0,0.3) !important;
-    color: #000 !important;
-    border-color: #ffd700 !important;
-    transform: translateY(-3px) !important;
-  }
-
-  /* 👈 USER SECTIONS FULL WIDTH */
-  .nav-menu .customer-actions,
-  .nav-menu .staff-actions {
-    width: 100% !important;
-    padding: 40px !important;
-    background: rgba(255,255,255,0.2) !important;
-    border-radius: 30px !important;
-    flex-direction: column !important;
-    gap: 20px !important;
-  }
-
-  .nav-menu .user-greeting {
-    font-size: 1.4rem !important;
-    color: white !important;
-    text-align: center !important;
-  }
-
-  .nav-menu .logout-button {
-    width: 100% !important;
-    padding: 20px !important;
-    font-size: 1.3rem !important;
-  }
-
-  /* HIDE DESKTOP */
-  .nav-actions-desktop,
-  .nav-actions {
-    display: none !important;
-  }
-
-  .hamburger {
-    display: flex !important;
-    z-index: 10001 !important;
-  }
-}
-
-/* 👈 DESKTOP NORMAL */
-@media (min-width: 1025px) {
-  .nav-menu {
-    position: static !important;
-    width: auto !important;
-    height: auto !important;
-    transform: none !important;
-    opacity: 1 !important;
-    z-index: auto !important;
-  }
-}
-
-/* DESKTOP: Normal layout */
-@media (min-width: 1025px) {
-  .nav-actions-desktop {
-    display: flex !important;
-  }
-  .hamburger {
-    display: none !important;
-  }
-  .nav-menu {
-    position: static !important;
-    transform: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    background: none !important;
-    flex-direction: row !important;
-    padding: 0 !important;
-    max-width: 50% !important;
-  }
 }
 
 /* Staff theme */

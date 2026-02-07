@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import NavBar from './components/NavBar.vue'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
 // Auth state
 const user = ref<{
@@ -98,6 +100,7 @@ const logout = () => {
   margin: 0 !important;
   padding: 0 !important;
   left: 0 !important;
+  background-color: grey;
 }
 
 .main-content {
