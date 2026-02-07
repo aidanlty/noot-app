@@ -10,7 +10,7 @@
       </div>
     </div>
     
-    <!-- Desktop Menu -->
+    <!-- SINGLE MENU - Desktop + Mobile (handles ALL links + actions) -->
     <ul class="nav-menu" :class="{ open: isOpen }">
       <!-- PUBLIC MENU (Guest/Customer) -->
       <li v-if="!isStaff">
@@ -53,24 +53,49 @@
           📈 Reports
         </router-link>
       </li>
+
+      <!-- 👈 MOBILE ACTIONS - APPEAR IN HAMBURGER MENU -->
+      <!-- <li v-if="!isLoggedIn" class="mobile-action">
+        <router-link to="/login" class="login-button full-width">🔐 Login</router-link>
+      </li> -->
+      
+      <!-- CUSTOMER ACTIONS -->
+      <!-- <li v-if="isLoggedIn && !isStaff" class="mobile-action">
+        <div class="customer-actions">
+          <router-link to="/book" class="cta-button full-width">Book Service</router-link>
+          <div class="user-section">
+            <span class="user-greeting">👋 {{ userEmail }}</span>
+            <button class="logout-button full-width" @click="$emit('logout')">🚪 Logout</button>
+          </div>
+        </div>
+      </li> -->
+      
+      <!-- STAFF ACTIONS -->
+      <!-- <li v-if="isStaff" class="mobile-action">
+        <div class="staff-actions">
+          <router-link to="/admin" class="admin-cta full-width">Admin Panel</router-link>
+          <div class="user-section">
+            <span class="user-greeting">{{ userEmail }} (Staff)</span>
+            <button class="logout-button full-width" @click="$emit('logout')">🚪 Logout</button>
+          </div>
+        </div>
+      </li> -->
     </ul>
 
-    <!-- Dynamic Actions -->
-    <div class="nav-actions">
+    <!-- 👈 DESKTOP ACTIONS ONLY -->
+    <div class="nav-actions-desktop">
       <!-- GUEST: Login -->
-      <router-link v-if="!isLoggedIn" to="/login" class="login-button">
-        🔐 Login
-      </router-link>
+      <router-link v-if="!isLoggedIn" to="/login" class="login-button">🔐 Login</router-link>
       
       <!-- CUSTOMER -->
-      <div v-else-if="!isStaff" class="customer-actions">
+      <div v-if="isLoggedIn && !isStaff" class="customer-actions">
         <router-link to="/book" class="cta-button">Book Service</router-link>
         <span class="user-greeting">👋 {{ userEmail }}</span>
         <button class="logout-button" @click="$emit('logout')">🚪 Logout</button>
       </div>
       
       <!-- STAFF -->
-      <div v-else class="staff-actions">
+      <div v-if="isStaff" class="staff-actions">
         <router-link to="/admin" class="admin-cta">Admin Panel</router-link>
         <span class="user-greeting">{{ userEmail }} (Staff)</span>
         <button class="logout-button" @click="$emit('logout')">🚪 Logout</button>
@@ -87,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const props = defineProps<{
   user: {
@@ -99,14 +124,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{ logout: [] }>()
 
-// Computed properties for safe reactivity
+const isOpen = ref(false)
+
+// Computed properties
 const isLoggedIn = computed(() => props.user !== null)
 const isStaff = computed(() => props.user?.role === 'staff')
 const userEmail = computed(() => props.user?.email || '')
 
-const isOpen = ref(false)
-let scrollHandler: (() => void) | null = null
-
+// Toggle mobile menu
 const toggleMenu = () => {
   isOpen.value = !isOpen.value
   document.body.style.overflow = isOpen.value ? 'hidden' : ''
@@ -117,23 +142,30 @@ const closeMenu = () => {
   document.body.style.overflow = ''
 }
 
+// Close menu on route change / login
+watch(() => props.user, closeMenu, { immediate: true })
+
 onMounted(() => {
-  scrollHandler = () => closeMenu()
   window.addEventListener('resize', closeMenu)
+  // Close on route change
+  const router = useRouter()
+  router.afterEach(closeMenu)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', closeMenu)
-  closeMenu()
 })
 </script>
 
+
 <style scoped>
+/* ALL YOUR EXISTING STYLES + MOBILE FIXES */
+
 .navbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: clamp(2rem, 6vw, 4rem);  /* logo → menu → actions */
+  gap: clamp(2rem, 6vw, 4rem);
   padding: clamp(0.75rem, 2vw, 1.25rem) clamp(1rem, 4vw, 3rem);
   background: linear-gradient(135deg, #fdd701 0%, #fafa00 50%, #fea500 100%);
   color: rgb(0, 0, 0);
@@ -151,7 +183,7 @@ onUnmounted(() => {
   box-sizing: border-box;
   padding-left: clamp(1rem, 4vw, 2rem);
   padding-right: clamp(1rem, 4vw, 2rem);
-  flex-wrap: nowrap;            /* Prevent wrapping */
+  flex-wrap: nowrap;
 }
 
 /* Brand - Responsive */
@@ -180,7 +212,7 @@ onUnmounted(() => {
   background-clip: text;
 }
 
-/* Navigation Menu */
+/* Navigation Menu - DESKTOP */
 .nav-menu {
   display: flex;
   list-style: none;
@@ -190,9 +222,9 @@ onUnmounted(() => {
   align-items: center;
   flex-shrink: 1;
   max-width: 50%;
-  
 }
 
+/* Navigation Links */
 .nav-link {
   color: rgba(0, 0, 0, 0.95);
   text-decoration: none;
@@ -204,8 +236,6 @@ onUnmounted(() => {
   position: relative;
   border: clamp(1px, 0.2vw, 2px) solid transparent;
   white-space: nowrap;
-  
-  
 }
 
 .nav-link::after {
@@ -264,18 +294,7 @@ onUnmounted(() => {
   box-shadow: 0 clamp(6px, 1.5vw, 12px) clamp(15px, 4vw, 30px) rgba(255, 255, 255, 0.3) !important;
 }
 
-.login-button.active {
-  background: rgba(255, 255, 255, 0.25) !important;
-  border-color: #ffd700 !important;
-  color: #ffd700 !important;
-}
-
 /* CTA Button */
-.nav-actions {
-  display: none;
-  flex-shrink: 0;
-}
-
 .cta-button {
   background: linear-gradient(135deg, #ffd700, #ffed4a);
   color: #000000 !important;
@@ -292,180 +311,14 @@ onUnmounted(() => {
   min-width: 120px;
   white-space: nowrap;
 }
-html, body {
-  overflow-x: hidden;    /* Body never scrolls horizontally */
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
 
-@media (max-width: 1600px) {
-  /* FULL reset for all nav items in mobile menu */
-  .nav-menu a,
-  .nav-menu .nav-link,
-  .nav-menu .cta-button,
-  .nav-menu .login-button {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: rgb(0, 0, 0) !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0.5rem 1rem !important;
-    font-size: 1.1rem !important;
-    font-weight: 600;
-    transform: none !important;
-  }
-
-  /* Hover / active states — text only */
-  .nav-menu a:hover,
-  .nav-menu a.active {
-    color: #000000 !important;
-    background: transparent !important;
-    border: 2px solid #000000 !important;
-    border-radius: clamp(12px, 3vw, 24px) !important;
-    padding: 0.5rem 1.25rem !important;
-  }
-
-  /* Remove pseudo elements */
-  .nav-menu a::after {
-    display: none !important;
-  }
-}
-
-@media (min-width: 1024px) {
-  .cta-button {
-    padding: 0.75rem 1.75rem !important;  /* Fixed padding */
-    font-size: 1rem !important;          /* Consistent size */
-    min-height: 44px;                    /* Touch-friendly */
-  }
-}
-@media (max-width: 1024px) {
-  .nav-actions {
-    display: none !important;  /* Force hide on mobile */
-  }
-
-}
 .cta-button:hover {
   transform: translateY(-3px) scale(1.05) !important;
   box-shadow: 0 clamp(10px, 2.5vw, 20px) clamp(25px, 6vw, 50px) rgba(255,215,0,0.6) !important;
 }
 
-/* Hamburger */
-.hamburger {
-  display: flex;
-  flex-direction: column;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: clamp(0.5rem, 1.5vw, 0.75rem);
-  gap: 4px;
-  z-index: 1001;
-}
-
-.hamburger span {
-  width: clamp(20px, 5vw, 28px);
-  height: clamp(2px, 0.6vw, 3px);
-  background: white;
-  border-radius: 2px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center;
-}
-
-@media (min-width: 1024px) {
-  .nav-actions {
-    display: flex !important;      /* SHOW both buttons */
-    gap: clamp(0.5rem, 1.5vw, 1rem);  /* Space between CTA/Login */
-    align-items: center;
-  }
-  .hamburger {
-    display: none !important;      /* Hide hamburger */
-  }
-  .nav-menu {
-    gap: clamp(1rem, 2vw, 1.5rem); /* Nav link spacing */
-  }
-}
-
-/* Mobile Menu */
-@media (max-width: 1024px) {
-  .nav-actions {
-    display: none;
-  }
-  
-  .hamburger {
-    display: flex;
-  }
-  
-  .nav-menu {
-    position: fixed;
-    top: clamp(70px, 15vw, 90px);
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: clamp(2rem, 8vw, 4rem) 2rem;
-    transform: translateY(-100%);
-    opacity: 0;
-    visibility: hidden;
-    gap: clamp(1rem, 3vw, 1.5rem);
-    backdrop-filter: blur(20px);
-    border-top: clamp(2px, 0.5vw, 4px) solid rgba(255,215,0,0.3);
-    overflow-y: auto;
-  }
-  
-  .nav-menu.open {
-    transform: translateY(0);
-    opacity: 1;
-    visibility: visible;
-  }
-  
-  .hamburger span:nth-child(1).open {
-    transform: rotate(45deg) translate(6px, 6px);
-  }
-  
-  .hamburger span:nth-child(2).open {
-    opacity: 0;
-  }
-  
-  .hamburger span:nth-child(3).open {
-    transform: rotate(-45deg) translate(6px, -5px);
-  }
-}
-
-/* Tablet/Desktop CTA */
-@media (min-width: 1024px) {
-  .nav-actions {
-    display: block;
-  }
-  
-  .nav-menu {
-    gap: clamp(1rem, 2.5vw, 2rem);
-  }
-}
-
-/* Animations */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.nav-link, .cta-button {
-  animation: fadeInUp 0.6s ease forwards;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.user-actions {
+/* User Actions */
+.customer-actions, .staff-actions, .user-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -489,11 +342,6 @@ html, body {
 
 .logout-button:hover {
   background: #c82333 !important;
-}
-.customer-actions, .staff-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
 }
 
 .admin-link {
@@ -523,23 +371,169 @@ html, body {
   box-shadow: 0 6px 20px rgba(40, 167, 74, 0.4) !important;
 }
 
-/* Staff navbar background variation */
-.navbar.staff-nav {
-  background: linear-gradient(135deg, #28a745, #20c997, #17a2b8) !important;
+/* 👈 NEW: Desktop actions container */
+.nav-actions-desktop {
+  display: none;
+  flex-shrink: 0;
+  gap: 1rem;
+  align-items: center;
 }
 
-/* Update user greeting for staff */
-.staff-actions .user-greeting {
-  color: rgba(255, 255, 255, 0.95) !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+/* 👈 FIXED HAMBURGER - ALWAYS CORRECT */
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  gap: 4px;
+  z-index: 1001;
 }
 
-/* Mobile staff menu */
+.hamburger span {
+  width: clamp(20px, 5vw, 28px);
+  height: clamp(2px, 0.6vw, 3px);
+  background: #000;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+/* ============================================================================ */
+/* MOBILE - THE KEY FIXES */
+/* ============================================================================ */
+
 @media (max-width: 1024px) {
-  .nav-menu.staff-menu {
-    background: linear-gradient(180deg, #28a745, #20c997) !important;
+  /* 👈 FORCE FULL SCREEN - NOTHING CAN OVERRIDE */
+  .nav-menu {
+    position: fixed !important;
+    inset: 0 !important;  /* top/right/bottom/left = 0 */
+    width: 100vw !important;
+    height: 100vh !important;
+    
+    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%) !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 120px 30px 30px !important;
+    margin: 0 !important;
+    gap: 25px !important;
+    
+    /* HIDDEN */
+    transform: translateX(-100%) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    
+    z-index: 10000 !important;
+    overflow-y: auto !important;
+    backdrop-filter: blur(20px) !important;
+  }
+
+  .nav-menu.open {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* 👈 BUTTONS TAKE FULL WIDTH */
+  .nav-menu li {
+    width: 100% !important;
+    max-width: 450px !important;
+  }
+
+  .nav-menu .nav-link,
+  .nav-menu .login-button,
+  .nav-menu .cta-button {
+    width: 100% !important;
+    padding: 25px 40px !important;
+    font-size: 1.6rem !important;
+    text-align: center !important;
+    color: white !important;
+    background: rgba(255,255,255,0.15) !important;
+    border: 2px solid transparent !important;
+    border-radius: 25px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
+  }
+
+  .nav-menu .nav-link:hover,
+  .nav-menu .login-button:hover,
+  .nav-menu .cta-button:hover {
+    background: rgba(255,215,0,0.3) !important;
+    color: #000 !important;
+    border-color: #ffd700 !important;
+    transform: translateY(-3px) !important;
+  }
+
+  /* 👈 USER SECTIONS FULL WIDTH */
+  .nav-menu .customer-actions,
+  .nav-menu .staff-actions {
+    width: 100% !important;
+    padding: 40px !important;
+    background: rgba(255,255,255,0.2) !important;
+    border-radius: 30px !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .nav-menu .user-greeting {
+    font-size: 1.4rem !important;
+    color: white !important;
+    text-align: center !important;
+  }
+
+  .nav-menu .logout-button {
+    width: 100% !important;
+    padding: 20px !important;
+    font-size: 1.3rem !important;
+  }
+
+  /* HIDE DESKTOP */
+  .nav-actions-desktop,
+  .nav-actions {
+    display: none !important;
+  }
+
+  .hamburger {
+    display: flex !important;
+    z-index: 10001 !important;
   }
 }
 
+/* 👈 DESKTOP NORMAL */
+@media (min-width: 1025px) {
+  .nav-menu {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+    opacity: 1 !important;
+    z-index: auto !important;
+  }
+}
+
+/* DESKTOP: Normal layout */
+@media (min-width: 1025px) {
+  .nav-actions-desktop {
+    display: flex !important;
+  }
+  .hamburger {
+    display: none !important;
+  }
+  .nav-menu {
+    position: static !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    background: none !important;
+    flex-direction: row !important;
+    padding: 0 !important;
+    max-width: 50% !important;
+  }
+}
+
+/* Staff theme */
+.navbar.staff-nav {
+  background: linear-gradient(135deg, #28a745, #20c997, #17a2b8) !important;
+}
 </style>

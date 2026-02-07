@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import NavBar from './components/NavBar.vue'
-import LoginView from './views/LoginView.vue'
 
 // Auth state
 const user = ref<{
