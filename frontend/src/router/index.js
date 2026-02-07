@@ -26,7 +26,7 @@ const routes = [
   { path: '/login', name: 'login', component: () => import('../views/LoginView.vue') },
   { path: '/contact', name: 'contact', component: () => import('../views/ContactView.vue') },
   { path: '/book', name: 'book', component: () => import('../views/BookingView.vue') },
-  
+  { path: '/myBookings', name: 'customerBookings', component: () => import('../views/customerBookings.vue') },
 ]
 
 const router = createRouter({
