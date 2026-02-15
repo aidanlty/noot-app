@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand-lg" role="navigation">
+  <nav class="navbar navbar-expand-xl" role="navigation">
     <!-- Brand/Logo -->
       <!-- BRAND -->
   <router-link to="/" class="navbar-brand d-flex align-items-center gap-2">
@@ -9,7 +9,7 @@
 
   <!-- BOOTSTRAP HAMBURGER -->
   <button
-    class="navbar-toggler d-lg-none"
+    class="navbar-toggler d-xl-none"
     type="button"
     data-bs-toggle="collapse"
     data-bs-target="#mainNavbar"
@@ -23,7 +23,7 @@
 
   <!-- COLLAPSIBLE NAV -->
   <div class="collapse navbar-collapse" id="mainNavbar">
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+    <ul class="navbar-nav me-auto mb-2 mb-xl-0">
 
       <!-- PUBLIC MENU -->
       <li v-if="!isStaff" class="nav-item">
@@ -58,7 +58,7 @@
       </li>
 
       <li v-if="isStaff" class="nav-item">
-        <router-link to="/staff-dashboard" class="nav-link" active-class="active">
+        <router-link to="/staffAppointments" class="nav-link" active-class="active">
           📊 Appointments
         </router-link>
       </li>
@@ -74,10 +74,58 @@
           📈 Reports
         </router-link>
       </li>
+
+      <!-- MOBILE MENU ITEMS - ONLY SHOW ON SMALL SCREENS -->
+      <!-- GUEST MOBILE -->
+      <li v-if="!isLoggedIn" class="nav-item d-xl-none">
+        <router-link to="/login" class="nav-link">
+          🔐 Login
+        </router-link>
+      </li>
+
+      <!-- CUSTOMER MOBILE -->
+      <li v-if="isLoggedIn && !isStaff" class="nav-item d-xl-none">
+        <router-link to="/book" class="nav-link book-service-mobile">
+          📚 Book Service
+        </router-link>
+      </li>
+
+      <li v-if="isLoggedIn && !isStaff" class="nav-item d-xl-none">
+        <router-link to="/profile" class="nav-link profile-link-mobile">
+          <img :src="profileIcon" alt="Profile" class="profile-icon-mobile" />
+          Profile
+        </router-link>
+      </li>
+
+      <li v-if="isLoggedIn && !isStaff" class="nav-item d-xl-none">
+        <button class="nav-link logout-mobile" @click="$emit('logout')">
+          🚪 Logout
+        </button>
+      </li>
+
+      <!-- STAFF MOBILE -->
+      <li v-if="isStaff" class="nav-item d-xl-none">
+        <router-link to="/admin" class="nav-link">
+          Admin Panel
+        </router-link>
+      </li>
+
+      <li v-if="isStaff" class="nav-item d-xl-none">
+        <router-link to="/profile" class="nav-link profile-link-mobile">
+          <img :src="profileIcon" alt="Profile" class="profile-icon-mobile" />
+          Profile
+        </router-link>
+      </li>
+
+      <li v-if="isStaff" class="nav-item d-xl-none">
+        <button class="nav-link logout-mobile" @click="$emit('logout')">
+          🚪 Logout
+        </button>
+      </li>
     </ul>
 
-    <!-- RIGHT SIDE ACTIONS -->
-    <div class="d-flex align-items-center gap-3">
+    <!-- RIGHT SIDE ACTIONS - DESKTOP ONLY -->
+    <div class="d-none d-xl-flex align-items-center gap-3">
 
       <!-- GUEST -->
       <router-link
@@ -90,10 +138,13 @@
 
       <!-- CUSTOMER -->
       <div v-if="isLoggedIn && !isStaff" class="d-flex align-items-center gap-2">
-        <router-link to="/book" class="btn btn-warning fw-bold">
-          Book Service
+        <router-link to="/book" class="btn btn-warning fw-bold book-service-btn">
+          📚 Book Service
         </router-link>
-        <span class="fw-semibold">👋 {{ userEmail }}</span>
+        <router-link to="/profile" class="profile-btn">
+          <img :src="profileIcon" alt="Profile" class="profile-icon" />
+          Profile
+        </router-link>
         <button class="btn btn-danger" @click="$emit('logout')">
           🚪 Logout
         </button>
@@ -104,7 +155,11 @@
         <router-link to="/admin" class="btn btn-success">
           Admin Panel
         </router-link>
-        <span class="fw-semibold">{{ userEmail }} (Staff)</span>
+        <router-link to="/profile" class="profile-btn">
+          <img :src="profileIcon" alt="Profile" class="profile-icon" />
+          Profile
+        </router-link>
+
         <button class="btn btn-danger" @click="$emit('logout')">
           🚪 Logout
         </button>
@@ -117,11 +172,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import profileIcon from '@/assets/profile.svg'
+
 
 
 const props = defineProps<{
   user: {
-    email: string
     role: 'customer' | 'staff'
     loggedIn: boolean
   } | null
@@ -134,32 +191,18 @@ const isOpen = ref(false)
 // Computed properties
 const isLoggedIn = computed(() => props.user !== null)
 const isStaff = computed(() => props.user?.role === 'staff')
-const userEmail = computed(() => props.user?.email || '')
 
-// Toggle mobile menu
-const toggleMenu = () => {
-  isOpen.value = !isOpen.value
-  document.body.style.overflow = isOpen.value ? 'hidden' : ''
-}
-
-const closeMenu = () => {
-  isOpen.value = false
-  document.body.style.overflow = ''
-}
-
-// Close menu on route change / login
-watch(() => props.user, closeMenu, { immediate: true })
-
-onMounted(() => {
-  window.addEventListener('resize', closeMenu)
-  // Close on route change
-  const router = useRouter()
-  router.afterEach(closeMenu)
+const route = useRoute()
+watch(() => route.fullPath, () => {
+  const navbar = document.getElementById('mainNavbar')
+  const toggler = document.querySelector('.navbar-toggler')
+  
+  if (navbar && navbar.classList.contains('show')) {
+    navbar.classList.remove('show')
+    toggler?.setAttribute('aria-expanded', 'false')
+  }
 })
 
-onUnmounted(() => {
-  window.removeEventListener('resize', closeMenu)
-})
 </script>
 
 
@@ -281,6 +324,73 @@ onUnmounted(() => {
   background: #ffd700;
 }
 
+/* Book Service Button - Bold Outline Desktop */
+.book-service-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 0.5rem 1rem !important;
+  border-radius: 30px !important;
+  border: 2px solid #000 !important;
+  background: rgba(255, 215, 0, 0.3) !important;
+  backdrop-filter: blur(10px);
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: all 0.3s ease !important;
+  text-decoration: none !important;
+  color: #000000 !important;
+}
+
+.book-service-btn:hover {
+  background: rgba(255, 215, 0, 0.5) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
+  border-color: #000 !important;
+}
+
+/* Book Service Button - Mobile */
+.book-service-mobile {
+  background: linear-gradient(135deg, #ffd700, #ffed4a) !important;
+  color: #000000 !important;
+  border: 3px solid #000000 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(255,215,0,0.4) !important;
+}
+
+.book-service-mobile:hover {
+  background: #ffdb4d !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Mobile Profile Link */
+.profile-link-mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.5rem 1rem !important;
+}
+
+.profile-icon-mobile {
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile Logout Button */
+.logout-mobile {
+  color: rgba(0, 0, 0, 0.95) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0.5rem 1rem !important;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.logout-mobile:hover {
+  background: rgba(220,53,69,0.2) !important;
+  color: #c82333 !important;
+}
+
 /* Login Button */
 .login-button {
   background: rgba(255, 255, 255, 0.1);
@@ -380,4 +490,32 @@ onUnmounted(() => {
 .navbar.staff-nav {
   background: linear-gradient(135deg, #28a745, #20c997, #17a2b8) !important;
 }
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  border: 2px solid #000;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: black;
+}
+
+.profile-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.profile-btn:hover {
+  background: rgba(255,255,255,0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
 </style>

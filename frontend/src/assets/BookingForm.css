@@ -22,11 +22,12 @@ h1 {
 }
 
 .booking-form {
-  background: #ffffff;
+  background: #1c1c1c;
   padding: 3rem 2.5rem;
   border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   width: 100%;
+  border: 1px solid #2e2e2e;
 }
 
 .form-group {
@@ -40,49 +41,50 @@ h1 {
 label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #2c3e50;
-  font-weight: 500;
-  font-size: 0.9rem;
-  letter-spacing: 0.3px;
+  color: #aaaaaa;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 input {
   width: 100%;
   padding: 0.85rem 1.1rem;
-  border: 1.5px solid #dfe6e9;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   font-size: 0.95rem;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   box-sizing: border-box;
-  background: #f8f9fa;
-  color: #2c3e50;
+  background: #141414;
+  color: #e0e0e0;
 }
 
 input:hover {
-  border-color: #b2bec3;
-  background: #ffffff;
+  border-color: #444444;
+  background: #1a1a1a;
 }
 
 input:focus {
   outline: none;
-  border-color: #0984e3;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1);
+  border-color: #FFD700;
+  background: #1a1a1a;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.12);
 }
 
 input::placeholder {
-  color: #b2bec3;
+  color: #555555;
   font-size: 0.9rem;
 }
 
 input[type="date"] {
-  color: #636e72;
+  color: #aaaaaa;
   cursor: pointer;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  filter: opacity(0.6);
+  filter: invert(1) opacity(0.5);
 }
 
 input[type="number"]::-webkit-inner-spin-button,
@@ -94,28 +96,28 @@ input[type="number"]::-webkit-outer-spin-button {
 .submit-btn {
   width: 100%;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #0984e3 0%, #0652dd 100%);
-  color: white;
+  background: #FFD700;
+  color: #111111;
   border: none;
   border-radius: 10px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   margin-top: 0.5rem;
-  box-shadow: 0 4px 12px rgba(9, 132, 227, 0.3);
-  letter-spacing: 0.5px;
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.25);
+  letter-spacing: 0.3px;
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #0652dd 0%, #0984e3 100%);
-  box-shadow: 0 6px 16px rgba(9, 132, 227, 0.4);
+  background: #e6c200;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.35);
   transform: translateY(-2px);
 }
 
 .submit-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(9, 132, 227, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
 }
 
 /* Responsive design */
@@ -123,11 +125,11 @@ input[type="number"]::-webkit-outer-spin-button {
   .booking {
     padding: 2rem 1rem;
   }
-  
+
   .booking-form {
     padding: 2rem 1.5rem;
   }
-  
+
   h1 {
     font-size: 1.5rem;
     margin-bottom: 2rem;
@@ -153,67 +155,67 @@ input[type="number"]::-webkit-outer-spin-button {
 select {
   width: 100%;
   padding: 0.85rem 1.1rem;
-  border: 1.5px solid #dfe6e9;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   font-size: 0.95rem;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   box-sizing: border-box;
-  background: #f8f9fa;
-  color: #2c3e50;
+  background: #141414;
+  color: #e0e0e0;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23636e72' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaaaaa' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
 }
 
 select:hover {
-  border-color: #b2bec3;
-  background-color: #ffffff;
+  border-color: #444444;
+  background-color: #1a1a1a;
 }
 
 select:focus {
   outline: none;
-  border-color: #0984e3;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1);
+  border-color: #FFD700;
+  background-color: #1a1a1a;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.12);
 }
 
 textarea {
   width: 100%;
   padding: 0.85rem 1.1rem;
-  border: 1.5px solid #dfe6e9;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   font-size: 0.95rem;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   box-sizing: border-box;
-  background: #f8f9fa;
-  color: #2c3e50;
+  background: #141414;
+  color: #e0e0e0;
   font-family: inherit;
   resize: vertical;
   min-height: 100px;
 }
 
 textarea:hover {
-  border-color: #b2bec3;
-  background: #ffffff;
+  border-color: #444444;
+  background: #1a1a1a;
 }
 
 textarea:focus {
   outline: none;
-  border-color: #0984e3;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1);
+  border-color: #FFD700;
+  background: #1a1a1a;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.12);
 }
 
 textarea::placeholder {
-  color: #b2bec3;
+  color: #555555;
   font-size: 0.9rem;
 }
 
 label::after {
   content: " *";
-  color: #e74c3c;
-  font-weight: 600;
+  color: #FFD700;
+  font-weight: 700;
 }

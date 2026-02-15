@@ -27,6 +27,8 @@ const routes = [
   { path: '/contact', name: 'contact', component: () => import('../views/ContactView.vue') },
   { path: '/book', name: 'book', component: () => import('../views/BookingView.vue') },
   { path: '/myBookings', name: 'customerBookings', component: () => import('../views/customerBookings.vue') },
+  { path: '/profile', name: 'profile', component: () => import('../views/Profile.vue') },
+  { path: '/staffAppointments', name: 'staffAppointments', component: () => import('../views/StaffAppointments.vue') }
 ]
 
 const router = createRouter({
