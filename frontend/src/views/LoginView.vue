@@ -13,7 +13,7 @@ const testAccounts = [
 
 const currentMode = ref('login')
 const loginForm = reactive({ role: 'customer', email: '', password: '' })
-const registerForm = reactive({ email: '', password: '', confirmPassword: '' })
+const registerForm = reactive({ name: '', email: '', password: '', confirmPassword: '' })
 const error = ref('')
 const loading = ref(false)
 
@@ -141,6 +141,18 @@ const handleSubmit = () => {
             Staff
           </button>
         </div>
+      </div>
+
+      <div v-if="currentMode === 'register'" class="form-group">
+        <label>Name</label>
+        <input 
+          v-model="registerForm.name"
+          type="text" 
+          maxlength = "20"
+          placeholder="Enter name"
+          required 
+          :disabled="loading"
+        />
       </div>
 
       <div class="form-group">
