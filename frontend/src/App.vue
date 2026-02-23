@@ -1,80 +1,100 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 import NavBar from './components/NavBar.vue'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
-// Auth state
+// 🔹 GLOBAL AUTH STATE (App.vue manages this)
 const user = ref<{
   email: string
-  role: 'customer' | 'staff'
+  role: 'customer' | 'manager' | 'technician'
   loggedIn: boolean
 } | null>(null)
 
-const showLogoutConfirm = ref(false)  // 👈 NEW: Confirmation dialog
+const router = useRouter()
+const showLogoutConfirm = ref(false)
 
-onMounted(() => {
-  const storedUser = localStorage.getItem('currentUser')
-  if (storedUser) {
-    user.value = JSON.parse(storedUser)
+// 🔹 CHECK PERSISTED TOKEN ON LOAD
+onMounted(async () => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    try {
+      // Verify token with backend
+      const res = await fetch('http://localhost:3000/api/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        user.value = {
+          email: data.email,
+          role: data.role,
+          loggedIn: true
+        }
+      } else {
+        localStorage.removeItem('token')
+      }
+    } catch {
+      localStorage.removeItem('token')
+    }
   }
 })
 
-const handleLogin = (formData: { role: string; email: string; password: string }) => {
-  setTimeout(() => {
-    user.value = {
-      email: formData.email,
-      role: formData.role as 'customer' | 'staff',
-      loggedIn: true
+// 🔹 LOGIN HANDLER (called by LoginView.vue via emit)
+const handleLogin = (userData: { email: string; role: 'customer' | 'manager' | 'technician'; loggedIn: boolean }) => {
+  user.value = userData
+  // Token already saved by LoginView.vue
+  console.log('✅ Global login state updated:', user.value)
+}
+
+// 🔹 REGISTER HANDLER (LoginView.vue emits this after successful register)
+const handleRegister = (userData: { email: string; role: 'customer' | 'manager' | 'technician'; loggedIn: boolean }) => {
+  user.value = userData
+  console.log('✅ Global register state updated:', user.value)
+}
+
+// 🔹 LOGOUT (called by NavBar.vue)
+const logout = async () => {
+  const token = localStorage.getItem('token')
+  
+  if (token) {
+    try {
+      await fetch('http://localhost:3000/api/auth/logout', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    } catch (e) {
+      console.log('Logout API failed (ok for demo)')
     }
-    localStorage.setItem('currentUser', JSON.stringify(user.value))
-    console.log('Login successful:', user.value)
-  }, 1500)
-}
-
-const handleRegister = (formData: { email: string; password: string; confirmPassword: string }) => {
-  setTimeout(() => {
-    console.log('Registration successful:', formData.email)
-  }, 1500)
-}
-
-// 👈 NEW: Logout with confirmation
-const confirmLogout = () => {
+  }
+  
+  // Clear everything
+  localStorage.removeItem('token')
   user.value = null
-  localStorage.removeItem('currentUser')
-  showLogoutConfirm.value = false
-  console.log('Logged out successfully')
+  router.push('/')
 }
-
-const cancelLogout = () => {
-  showLogoutConfirm.value = false
-}
-
-const requestLogout = () => {
-  showLogoutConfirm.value = true  // Show confirmation dialog
-}
-const logout = () => {
-  user.value = null
-  localStorage.removeItem('currentUser')
-}
-
 </script>
 
 <template>
   <div class="app-container">
-    <!-- Navbar ALWAYS shows -->
+    <!-- Navbar ALWAYS visible -->
     <NavBar 
       :user="user"
-      :class="{ 'staff-nav': user?.role === 'staff' }"
+      :class="{ 'staff-nav': user?.role === 'manager' || user?.role === 'technician' }"
       @logout="logout"
     />
     
-    <!-- 👈 FIXED: RouterView ALWAYS shows, LoginView is a ROUTE -->
+    <!-- RouterView shows LoginView.vue, dashboards, etc. -->
     <main class="main-content">
       <RouterView 
         @login="handleLogin"
-        @register="handleRegister" />
+        @register="handleRegister"
+      />
     </main>
   </div>
 </template>

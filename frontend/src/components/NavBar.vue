@@ -1,172 +1,192 @@
 <template>
   <nav class="navbar navbar-expand-xl" role="navigation">
     <!-- Brand/Logo -->
-      <!-- BRAND -->
-  <router-link to="/" class="navbar-brand d-flex align-items-center gap-2">
-    <span class="fs-4">{{ isStaff ? '⚙️' : '🔧' }}</span>
-    <strong>{{ isStaff ? 'Precision Admin' : 'Precision Auto' }}</strong>
-  </router-link>
+    <router-link to="/" class="navbar-brand d-flex align-items-center gap-2">
+      <span class="fs-4">
+        {{ isStaff ? '⚙️' : '🔧' }}
+      </span>
+      <strong>
+        {{ isStaff ? 'Precision Admin' : 'Precision Auto' }}
+      </strong>
+    </router-link>
 
-  <!-- BOOTSTRAP HAMBURGER -->
-  <button
-    class="navbar-toggler d-xl-none"
-    type="button"
-    data-bs-toggle="collapse"
-    data-bs-target="#mainNavbar"
-    aria-controls="mainNavbar"
-    aria-expanded="false"
-    aria-label="Toggle navigation"
-    
-  >
-    <span class="navbar-toggler-icon"></span>
-  </button>
+    <!-- BOOTSTRAP HAMBURGER -->
+    <button
+      class="navbar-toggler d-xl-none"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#mainNavbar"
+      aria-controls="mainNavbar"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-  <!-- COLLAPSIBLE NAV -->
-  <div class="collapse navbar-collapse" id="mainNavbar">
-    <ul class="navbar-nav me-auto mb-2 mb-xl-0">
+    <!-- COLLAPSIBLE NAV -->
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav me-auto mb-2 mb-xl-0">
 
-      <!-- PUBLIC MENU -->
-      <li v-if="!isStaff" class="nav-item">
-        <router-link to="/" class="nav-link" active-class="active">🏠 Home</router-link>
-      </li>
+        <!-- 🔹 PUBLIC MENU (GUEST) -->
+        <li v-if="!isLoggedIn" class="nav-item">
+          <router-link to="/" class="nav-link" active-class="active">🏠 Home</router-link>
+        </li>
+        <li v-if="!isLoggedIn" class="nav-item">
+          <router-link to="/services" class="nav-link" active-class="active">🔧 Services</router-link>
+        </li>
+        <li v-if="!isLoggedIn" class="nav-item">
+          <router-link to="/pricing" class="nav-link" active-class="active">💰 Pricing</router-link>
+        </li>
+        <li v-if="!isLoggedIn" class="nav-item">
+          <router-link to="/gallery" class="nav-link" active-class="active">📸 Gallery</router-link>
+        </li>
+        <li v-if="!isLoggedIn" class="nav-item">
+          <router-link to="/about" class="nav-link" active-class="active">👥 About</router-link>
+        </li>
+        <li v-if="!isLoggedIn" class="nav-item">
+          <router-link to="/contact" class="nav-link" active-class="active">📞 Contact</router-link>
+        </li>
 
-      <li v-if="!isStaff" class="nav-item">
-        <router-link to="/services" class="nav-link" active-class="active">🔧 Services</router-link>
-      </li>
+        <!-- 🔹 CUSTOMER MENU -->
+        <li v-if="isCustomer" class="nav-item">
+          <router-link to="/" class="nav-link" active-class="active">🏠 Home</router-link>
+        </li>
+        <li v-if="isCustomer" class="nav-item">
+          <router-link to="/services" class="nav-link" active-class="active">🔧 Services</router-link>
+        </li>
 
-      <li v-if="!isStaff" class="nav-item">
-        <router-link to="/pricing" class="nav-link" active-class="active">💰 Pricing</router-link>
-      </li>
+        <!-- 🔹 MANAGER MENU -->
+        <li v-if="isManager" class="nav-item">
+          <router-link to="/manager-dashboard" class="nav-link" active-class="active">
+            🛠️ Manager Dashboard
+          </router-link>
+        </li>
+        <li v-if="isManager" class="nav-item">
+          <router-link to="/staffAppointments" class="nav-link" active-class="active">
+            📊 Appointments
+          </router-link>
+        </li>
+        <li v-if="isManager" class="nav-item">
+          <router-link to="/manager-customers" class="nav-link" active-class="active">
+            👥 Customers
+          </router-link>
+        </li>
+        <li v-if="isManager" class="nav-item">
+          <router-link to="/manager-reports" class="nav-link" active-class="active">
+            📈 Reports
+          </router-link>
+        </li>
 
-      <li v-if="!isStaff" class="nav-item">
-        <router-link to="/gallery" class="nav-link" active-class="active">📸 Gallery</router-link>
-      </li>
+        <!-- 🔹 TECHNICIAN MENU -->
+        <li v-if="isTechnician" class="nav-item">
+          <router-link to="/technician-dashboard" class="nav-link" active-class="active">
+            🔧 Technician Dashboard
+          </router-link>
+        </li>
+        <li v-if="isTechnician" class="nav-item">
+          <router-link to="/staffAppointments" class="nav-link" active-class="active">
+            📊 Appointments
+          </router-link>
+        </li>
+        <li v-if="isTechnician" class="nav-item">
+          <router-link to="/technician-jobs" class="nav-link" active-class="active">
+            ⚙️ My Jobs
+          </router-link>
+        </li>
 
-      <li v-if="!isStaff" class="nav-item">
-        <router-link to="/about" class="nav-link" active-class="active">👥 About</router-link>
-      </li>
+        <!-- 🔹 MOBILE MENU ITEMS -->
+        <!-- GUEST MOBILE -->
+        <li v-if="!isLoggedIn" class="nav-item d-xl-none">
+          <router-link to="/login" class="nav-link">🔐 Login</router-link>
+        </li>
 
-      <li v-if="!isStaff" class="nav-item">
-        <router-link to="/contact" class="nav-link" active-class="active">📞 Contact</router-link>
-      </li>
+        <!-- CUSTOMER MOBILE -->
+        <li v-if="isCustomer" class="nav-item d-xl-none">
+          <router-link to="/book" class="nav-link book-service-mobile">📚 Book Service</router-link>
+        </li>
+        <li v-if="isCustomer" class="nav-item d-xl-none">
+          <router-link to="/profile" class="nav-link profile-link-mobile">
+            <img :src="profileIcon" alt="Profile" class="profile-icon-mobile" />
+            Profile
+          </router-link>
+        </li>
+        <li v-if="isCustomer" class="nav-item d-xl-none">
+          <button class="nav-link logout-mobile" @click="$emit('logout')">🚪 Logout</button>
+        </li>
 
-      <!-- STAFF MENU -->
-      <li v-if="isStaff" class="nav-item">
-        <router-link to="/admin" class="nav-link" active-class="active">
-          🛠️ Admin Dashboard
-        </router-link>
-      </li>
+        <!-- MANAGER MOBILE -->
+        <li v-if="isManager" class="nav-item d-xl-none">
+          <router-link to="/manager-dashboard" class="nav-link">Manager Dashboard</router-link>
+        </li>
+        <li v-if="isManager" class="nav-item d-xl-none">
+          <router-link to="/profile" class="nav-link profile-link-mobile">
+            <img :src="profileIcon" alt="Profile" class="profile-icon-mobile" />
+            Profile
+          </router-link>
+        </li>
+        <li v-if="isManager" class="nav-item d-xl-none">
+          <button class="nav-link logout-mobile" @click="$emit('logout')">🚪 Logout</button>
+        </li>
 
-      <li v-if="isStaff" class="nav-item">
-        <router-link to="/staffAppointments" class="nav-link" active-class="active">
-          📊 Appointments
-        </router-link>
-      </li>
+        <!-- TECHNICIAN MOBILE -->
+        <li v-if="isTechnician" class="nav-item d-xl-none">
+          <router-link to="/technician-dashboard" class="nav-link">Tech Dashboard</router-link>
+        </li>
+        <li v-if="isTechnician" class="nav-item d-xl-none">
+          <router-link to="/profile" class="nav-link profile-link-mobile">
+            <img :src="profileIcon" alt="Profile" class="profile-icon-mobile" />
+            Profile
+          </router-link>
+        </li>
+        <li v-if="isTechnician" class="nav-item d-xl-none">
+          <button class="nav-link logout-mobile" @click="$emit('logout')">🚪 Logout</button>
+        </li>
+      </ul>
 
-      <li v-if="isStaff" class="nav-item">
-        <router-link to="/staff-customers" class="nav-link" active-class="active">
-          👥 Customers
-        </router-link>
-      </li>
-
-      <li v-if="isStaff" class="nav-item">
-        <router-link to="/reports" class="nav-link" active-class="active">
-          📈 Reports
-        </router-link>
-      </li>
-
-      <!-- MOBILE MENU ITEMS - ONLY SHOW ON SMALL SCREENS -->
-      <!-- GUEST MOBILE -->
-      <li v-if="!isLoggedIn" class="nav-item d-xl-none">
-        <router-link to="/login" class="nav-link">
+      <!-- RIGHT SIDE ACTIONS - DESKTOP ONLY -->
+      <div class="d-none d-xl-flex align-items-center gap-3">
+        <!-- GUEST -->
+        <router-link v-if="!isLoggedIn" to="/login" class="btn btn-outline-dark">
           🔐 Login
         </router-link>
-      </li>
 
-      <!-- CUSTOMER MOBILE -->
-      <li v-if="isLoggedIn && !isStaff" class="nav-item d-xl-none">
-        <router-link to="/book" class="nav-link book-service-mobile">
-          📚 Book Service
-        </router-link>
-      </li>
+        <!-- CUSTOMER DESKTOP -->
+        <div v-if="isCustomer" class="d-flex align-items-center gap-2">
+          <router-link to="/book" class="btn btn-warning fw-bold book-service-btn">
+            📚 Book Service
+          </router-link>
+          <router-link to="/profile" class="profile-btn">
+            <img :src="profileIcon" alt="Profile" class="profile-icon" />
+            Profile
+          </router-link>
+          <button class="btn btn-danger" @click="$emit('logout')">🚪 Logout</button>
+        </div>
 
-      <li v-if="isLoggedIn && !isStaff" class="nav-item d-xl-none">
-        <router-link to="/profile" class="nav-link profile-link-mobile">
-          <img :src="profileIcon" alt="Profile" class="profile-icon-mobile" />
-          Profile
-        </router-link>
-      </li>
+        <!-- MANAGER DESKTOP -->
+        <div v-if="isManager" class="d-flex align-items-center gap-2">
+          <router-link to="/manager-dashboard" class="btn btn-success">
+            Manager Panel
+          </router-link>
+          <router-link to="/profile" class="profile-btn">
+            <img :src="profileIcon" alt="Profile" class="profile-icon" />
+            Profile
+          </router-link>
+          <button class="btn btn-danger" @click="$emit('logout')">🚪 Logout</button>
+        </div>
 
-      <li v-if="isLoggedIn && !isStaff" class="nav-item d-xl-none">
-        <button class="nav-link logout-mobile" @click="$emit('logout')">
-          🚪 Logout
-        </button>
-      </li>
-
-      <!-- STAFF MOBILE -->
-      <li v-if="isStaff" class="nav-item d-xl-none">
-        <router-link to="/admin" class="nav-link">
-          Admin Panel
-        </router-link>
-      </li>
-
-      <li v-if="isStaff" class="nav-item d-xl-none">
-        <router-link to="/profile" class="nav-link profile-link-mobile">
-          <img :src="profileIcon" alt="Profile" class="profile-icon-mobile" />
-          Profile
-        </router-link>
-      </li>
-
-      <li v-if="isStaff" class="nav-item d-xl-none">
-        <button class="nav-link logout-mobile" @click="$emit('logout')">
-          🚪 Logout
-        </button>
-      </li>
-    </ul>
-
-    <!-- RIGHT SIDE ACTIONS - DESKTOP ONLY -->
-    <div class="d-none d-xl-flex align-items-center gap-3">
-
-      <!-- GUEST -->
-      <router-link
-        v-if="!isLoggedIn"
-        to="/login"
-        class="btn btn-outline-dark"
-      >
-        🔐 Login
-      </router-link>
-
-      <!-- CUSTOMER -->
-      <div v-if="isLoggedIn && !isStaff" class="d-flex align-items-center gap-2">
-        <router-link to="/book" class="btn btn-warning fw-bold book-service-btn">
-          📚 Book Service
-        </router-link>
-        <router-link to="/profile" class="profile-btn">
-          <img :src="profileIcon" alt="Profile" class="profile-icon" />
-          Profile
-        </router-link>
-        <button class="btn btn-danger" @click="$emit('logout')">
-          🚪 Logout
-        </button>
+        <!-- TECHNICIAN DESKTOP -->
+        <div v-if="isTechnician" class="d-flex align-items-center gap-2">
+          <router-link to="/technician-dashboard" class="btn btn-primary">
+            Tech Panel
+          </router-link>
+          <router-link to="/profile" class="profile-btn">
+            <img :src="profileIcon" alt="Profile" class="profile-icon" />
+            Profile
+          </router-link>
+          <button class="btn btn-danger" @click="$emit('logout')">🚪 Logout</button>
+        </div>
       </div>
-
-      <!-- STAFF -->
-      <div v-if="isStaff" class="d-flex align-items-center gap-2">
-        <router-link to="/admin" class="btn btn-success">
-          Admin Panel
-        </router-link>
-        <router-link to="/profile" class="profile-btn">
-          <img :src="profileIcon" alt="Profile" class="profile-icon" />
-          Profile
-        </router-link>
-
-        <button class="btn btn-danger" @click="$emit('logout')">
-          🚪 Logout
-        </button>
-      </div>
-
     </div>
-  </div>
   </nav>
 </template>
 
@@ -179,7 +199,7 @@ import profileIcon from '@/assets/profile.svg'
 
 const props = defineProps<{
   user: {
-    role: 'customer' | 'staff'
+    role: 'customer' | 'manager' | 'technician'
     loggedIn: boolean
   } | null
 }>()
@@ -190,7 +210,10 @@ const isOpen = ref(false)
 
 // Computed properties
 const isLoggedIn = computed(() => props.user !== null)
-const isStaff = computed(() => props.user?.role === 'staff')
+const isCustomer = computed(() => props.user?.role === 'customer')
+const isManager = computed(() => props.user?.role === 'manager')
+const isTechnician = computed(() => props.user?.role === 'technician')
+const isStaff = computed(() => isManager.value || isTechnician.value)
 
 const route = useRoute()
 watch(() => route.fullPath, () => {
