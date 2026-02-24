@@ -62,13 +62,13 @@
           </router-link>
         </li>
         <li v-if="isManager" class="nav-item">
-          <router-link to="/staffAppointments" class="nav-link" active-class="active">
+          <router-link to="/managerAppointments" class="nav-link" active-class="active">
             📊 Appointments
           </router-link>
         </li>
         <li v-if="isManager" class="nav-item">
-          <router-link to="/manager-customers" class="nav-link" active-class="active">
-            👥 Customers
+          <router-link to="/jobCards" class="nav-link" active-class="active">
+            👥 Job Cards
           </router-link>
         </li>
         <li v-if="isManager" class="nav-item">
@@ -84,12 +84,7 @@
           </router-link>
         </li>
         <li v-if="isTechnician" class="nav-item">
-          <router-link to="/staffAppointments" class="nav-link" active-class="active">
-            📊 Appointments
-          </router-link>
-        </li>
-        <li v-if="isTechnician" class="nav-item">
-          <router-link to="/technician-jobs" class="nav-link" active-class="active">
+          <router-link to="/technicianJobs" class="nav-link" active-class="active">
             ⚙️ My Jobs
           </router-link>
         </li>
@@ -164,9 +159,6 @@
 
         <!-- MANAGER DESKTOP -->
         <div v-if="isManager" class="d-flex align-items-center gap-2">
-          <router-link to="/manager-dashboard" class="btn btn-success">
-            Manager Panel
-          </router-link>
           <router-link to="/profile" class="profile-btn">
             <img :src="profileIcon" alt="Profile" class="profile-icon" />
             Profile
@@ -176,9 +168,6 @@
 
         <!-- TECHNICIAN DESKTOP -->
         <div v-if="isTechnician" class="d-flex align-items-center gap-2">
-          <router-link to="/technician-dashboard" class="btn btn-primary">
-            Tech Panel
-          </router-link>
           <router-link to="/profile" class="profile-btn">
             <img :src="profileIcon" alt="Profile" class="profile-icon" />
             Profile
