@@ -57,7 +57,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     // 2️⃣ Get EXACT role from your users table
     const { data: userProfile, error: profileError } = await supabase
-      .from('users')
+      .from('Profiles')
       .select('id, name, email, role')
       .eq('email', email)
       .single()
@@ -85,7 +85,7 @@ app.post('/api/auth/login', async (req, res) => {
 // ** REGISTER
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body
+    const { name, email, password, role } = req.body
 
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -104,7 +104,7 @@ app.post('/api/auth/register', async (req, res) => {
         ID: authData.user.id,  // 👈 links to auth.users
         Name: name,            // 👈 lowercase from req.body, capitalized for column
         Email: email,
-        Role: 'customer'
+        Role: role,
       })
       .select()
       .single()
