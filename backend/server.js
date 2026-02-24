@@ -1,14 +1,19 @@
 require('dotenv').config()
-
 const express = require('express')
-const crypto = require('crypto')
+const { createClient } = require('@supabase/supabase-js')
 
 const app = express()
 const PORT = 3000
 
 app.use(express.json())
 
-// Simple CORS for your Vue dev server
+// 👇 FIX: Ensure req.body is always defined
+app.use((req, res, next) => {
+  if (!req.body) req.body = {}
+  next()
+})
+
+// CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:5173')
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
@@ -17,105 +22,180 @@ app.use((req, res, next) => {
   next()
 })
 
-// USERS (in-memory database)
-let users = [
-  { id: 1, email: 'customer@test.com', password: '123456', role: 'customer', name: 'Test Customer' },
-  { id: 2, email: 'manager@test.com', password: '123456', role: 'manager', name: 'Test Manager' },
-  { id: 3, email: 'tech@test.com', password: '123456', role: 'technician', name: 'Test Tech' }
-]
+// ** Supabase client (service role - full access)
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
 
-// SESSIONS
-const sessions = new Map()
+// ** ROUTES **
 
-function createSession(user) {
-  const sessionId = crypto.randomBytes(32).toString('hex')
-  sessions.set(sessionId, { userId: user.id, email: user.email, role: user.role, createdAt: Date.now() })
-  return sessionId
-}
-
-function getSession(sessionId) {
-  const session = sessions.get(sessionId)
-  if (!session || Date.now() - session.createdAt > 7200000) { // 2h
-    sessions.delete(sessionId)
-    return null
+// Health check
+app.get('/', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('users').select('count').single()
+    res.json({ status: 'Supabase connected!', users: data?.count || 0 })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-  return session
-}
+})
 
-// AUTH MIDDLEWARE
-function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.replace('Bearer ', '')
-  const session = getSession(token)
-  if (!session) return res.status(401).json({ message: 'Not authenticated' })
-  req.user = session
-  next()
-}
+// ** LOGIN - FIXED QUERY
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body
+    
+    // 1️⃣ Sign in with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
 
-function requireRole(...roles) {
-  return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Forbidden' })
+    if (authError) {
+      return res.status(401).json({ message: authError.message })
     }
-    next()
+
+    // 2️⃣ Get EXACT role from your users table
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('id, name, email, role')
+      .eq('email', email)
+      .single()
+
+    if (profileError || !userProfile) {
+      return res.status(404).json({ message: 'User profile not found' })
+    }
+
+    console.log('🔍 Found user:', userProfile) // DEBUG
+
+    res.json({
+      user: {
+        id: userProfile.id,
+        email: userProfile.email,
+        role: userProfile.role,
+      },
+      token: authData.session.access_token
+    })
+  } catch (err) {
+    console.error('Login error:', err)
+    res.status(500).json({ error: err.message })
   }
-}
-
-// ROUTES
-app.get('/', (req, res) => res.json({ status: 'Backend ready!' }))
-
-// LOGIN
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body
-  const user = users.find(u => u.email === email && u.password === password)
-  
-  if (!user) return res.status(401).json({ message: 'Invalid credentials' })
-  
-  const token = createSession(user)
-  res.json({
-    user: { email: user.email, role: user.role },
-    token
-  })
 })
 
-// REGISTER
-app.post('/api/auth/register', (req, res) => {
-  const { name, email, password } = req.body
-  
-  if (users.find(u => u.email === email)) {
-    return res.status(409).json({ message: 'Email exists' })
+// ** REGISTER
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body
+
+    // Create auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password
+    })
+
+    if (authError) {
+      return res.status(400).json({ message: authError.message })
+    }
+
+    // Insert user profile (default customer)
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .insert({
+        name,
+        email,
+        role: 'customer'
+      })
+      .select()
+      .single()
+
+    if (profileError) {
+      return res.status(500).json({ message: profileError.message })
+    }
+
+    res.json({
+      user: {
+        id: userProfile.id,
+        email: userProfile.email,
+        role: userProfile.role
+      },
+      token: authData.session?.access_token  // Auto-login token
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-  
-  const newUser = {
-    id: users.length + 1,
-    name,
-    email,
-    password, // plain for demo
-    role: 'customer'
+})
+
+// ** VERIFY TOKEN (for router guards)
+app.post('/api/auth/verify', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+
+    if (error || !user) {
+      return res.status(401).json({ message: 'Invalid token' })
+    }
+
+    // Get role from your users table
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('email', user.email)
+      .single()
+
+    res.json({
+      valid: true,
+      email: user.email,
+      role: userProfile?.role || 'customer'
+    })
+  } catch (err) {
+    res.status(401).json({ message: 'Token verification failed' })
   }
-  
-  users.push(newUser)
-  const token = createSession(newUser)
-  
-  res.json({
-    user: { email: newUser.email, role: newUser.role },
-    token
-  })
 })
 
-// VERIFY (router guard)
-app.post('/api/auth/verify', authMiddleware, (req, res) => {
-  res.json({ valid: true, email: req.user.email, role: req.user.role })
+// ** LOGOUT
+app.post('/api/auth/logout', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    const { error } = await supabase.auth.signOut()
+    
+    if (error) {
+      return res.status(400).json({ message: error.message })
+    }
+    
+    res.json({ message: 'Logged out' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-// PROTECTED ROUTES
-app.get('/api/manager/data', authMiddleware, requireRole('manager'), (req, res) => {
-  res.json({ message: 'Manager data', user: req.user })
-})
+// ** PROTECTED ROUTES (verify token + role)
+app.get('/api/manager/data', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    
+    const { data: { user } } = await supabase.auth.getUser(token)
+    if (!user) return res.status(401).json({ message: 'Not authenticated' })
 
-app.get('/api/customer/data', authMiddleware, requireRole('customer'), (req, res) => {
-  res.json({ message: 'Customer data', user: req.user })
+    // Check role from your table
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('email', user.email)
+      .single()
+
+    if (profile?.role !== 'manager') {
+      return res.status(403).json({ message: 'Manager access required' })
+    }
+
+    // Manager data
+    const { data } = await supabase.from('appointments').select('*')
+    res.json({ data, user })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 app.listen(PORT, () => {
-  console.log(`🚀 Backend: http://localhost:${PORT}`)
+  console.log(`🚀 Supabase Backend: http://localhost:${3000}`)
 })
