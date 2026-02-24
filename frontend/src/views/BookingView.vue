@@ -109,7 +109,7 @@
       </div>
       
       <div class="form-group">
-        <label for="notes">Additional Notes</label>
+        <label for="notes">Customer Notes (Include reasons for appointment)</label>
         <textarea 
           id="notes" 
           rows="4" 
