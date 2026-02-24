@@ -1,18 +1,13 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const emit = defineEmits(['login', 'register'])
-
-// 🎯 DUMMY TEST ACCOUNTS - HARDCODED (for display only)
-const testAccounts = [
-  { email: 'customer@test.com',  password: '123456', role: 'customer' },
-  { email: 'manager@test.com',   password: '123456', role: 'manager' },
-  { email: 'tech@test.com',      password: '123456', role: 'technician' },
-]
+const router = useRouter()
 
 const currentMode = ref<'login' | 'register'>('login')
 const loginForm = reactive({ email: '', password: '' })
-const registerForm = reactive({ name: '', email: '', password: '', confirmPassword: '' })
+const registerForm = reactive({ name: '', role: '', email: '', password: '', confirmPassword: '' })
 const error = ref('')
 const loading = ref(false)
 
@@ -81,6 +76,7 @@ const handleLogin = async () => {
     })
 
     console.log('✅ Backend login successful:', data.user)
+    router.push('/')
   } catch (e: any) {
     error.value = e.message || 'Login failed'
   } finally {
@@ -109,10 +105,11 @@ const handleRegister = async () => {
       body: JSON.stringify({
         name: registerForm.name,
         email: registerForm.email,
-        password: registerForm.password
+        password: registerForm.password,
+        role: registerForm.role,
       })
     })
-
+    
     const data = await res.json()
 
     if (!res.ok) {
@@ -128,6 +125,7 @@ const handleRegister = async () => {
     })
 
     console.log('✅ Backend registration successful:', data.user)
+    router.push('/')
   } catch (e: any) {
     error.value = e.message || 'Registration failed'
   } finally {
@@ -139,18 +137,6 @@ const handleRegister = async () => {
 
 <template>
   <div class="login-container">
-    <!-- 🧪 TEST ACCOUNTS DISPLAY -->
-    <div class="test-accounts" v-if="!loading">
-      <h3 style="margin-top: 0;">🧪 Test Accounts:</h3>
-      <div class="account-list">
-        <div v-for="account in testAccounts" :key="account.email" class="account-item">
-          <strong>{{ account.email }}</strong>
-          ({{ account.password }})
-          <span class="role-badge" :class="'role-' + account.role">{{ account.role }}</span>
-        </div>
-      </div>
-    </div>
-
     <form @submit.prevent="handleSubmit" class="login-form">
       <div class="mode-toggle">
         <button
@@ -169,20 +155,30 @@ const handleRegister = async () => {
         </button>
       </div>
 
-      <!-- 🔁 role-group REMOVED: centralized login -->
-
+      <!-- Name (register only) -->
       <div v-if="currentMode === 'register'" class="form-group">
         <label>Name</label>
         <input
           v-model="registerForm.name"
           type="text"
-          maxlength="20"
-          placeholder="Enter name"
+          maxlength="50"
+          placeholder="Enter your name"
           required
           :disabled="loading"
         />
       </div>
 
+      <!-- Role dropdown (register only) -->
+      <div v-if="currentMode === 'register'" class="form-group">
+        <label>Role</label>
+        <select v-model="registerForm.role" :disabled="loading" class="form-control">
+          <option value="customer">Customer</option>
+          <option value="manager">Manager</option>
+          <option value="technician">Technician</option>
+        </select>
+      </div>
+
+      <!-- Email -->
       <div class="form-group">
         <label>Email</label>
         <input
@@ -194,6 +190,7 @@ const handleRegister = async () => {
         />
       </div>
 
+      <!-- Password -->
       <div class="form-group">
         <label>Password</label>
         <input
@@ -205,6 +202,7 @@ const handleRegister = async () => {
         />
       </div>
 
+      <!-- Confirm Password (register only) -->
       <div v-if="currentMode === 'register'" class="form-group">
         <label>Confirm Password</label>
         <input
