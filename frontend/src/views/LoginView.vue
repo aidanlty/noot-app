@@ -76,7 +76,17 @@ const handleLogin = async () => {
     })
 
     console.log('✅ Backend login successful:', data.user)
-    router.push('/')
+    const role = data.user.role
+
+    if (role === 'manager') {
+      router.push('/manager-dashboard')
+    } 
+    else if (role === 'technician') {
+      router.push('/technician-dashboard')
+    } 
+    else {
+      router.push('/') // customer stays on landing page
+      }
   } catch (e: any) {
     error.value = e.message || 'Login failed'
   } finally {
@@ -125,7 +135,16 @@ const handleRegister = async () => {
     })
 
     console.log('✅ Backend registration successful:', data.user)
-    router.push('/')
+    const role = data.user.role
+    if (role === 'manager') {
+     router.push('/manager-dashboard')
+    } 
+    else if (role === 'technician') {
+     router.push('/technician-dashboard')
+    } 
+    else {
+     router.push('/') // customer stays on landing page
+    }
   } catch (e: any) {
     error.value = e.message || 'Registration failed'
   } finally {

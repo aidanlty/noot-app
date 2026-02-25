@@ -58,8 +58,8 @@ app.post('/api/auth/login', async (req, res) => {
     // 2️⃣ Get EXACT role from your users table
     const { data: userProfile, error: profileError } = await supabase
       .from('Profiles')
-      .select('id, name, email, role')
-      .eq('email', email)
+      .select('ID, Name, Email, Role')
+      .eq('Email', email)
       .single()
 
     if (profileError || !userProfile) {
@@ -70,9 +70,9 @@ app.post('/api/auth/login', async (req, res) => {
 
     res.json({
       user: {
-        id: userProfile.id,
-        email: userProfile.email,
-        role: userProfile.role,
+        id: userProfile.ID,
+        email: userProfile.Email,
+        role: userProfile.Role,
       },
       token: authData.session.access_token
     })
