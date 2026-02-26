@@ -100,8 +100,8 @@ const handleRegister = async () => {
     error.value = '❌ Passwords do not match'
     return
   }
-  if (registerForm.password.length < 6) {
-    error.value = '❌ Password must be at least 6 characters'
+  if (registerForm.password.length < 8) {
+    error.value = '❌ Password must be at least 8 characters'
     return
   }
 

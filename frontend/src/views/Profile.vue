@@ -286,10 +286,53 @@ export default {
         console.error('Unexpected error updating email:', err);
       }
     },
-    savePassword() {
+    async savePassword() {
       if (!this.form.current) { this.error = 'Enter your current password.'; return; }
       if (this.form.newPass.length < 8) { this.error = 'Password must be at least 8 characters.'; return; }
       if (this.form.newPass !== this.form.confirm) { this.error = 'Passwords do not match.'; return; }
+
+      try {
+        // NEW: Get token from localStorage
+        const token = localStorage.getItem('token');
+        if (!token) { this.$router.push('/login'); return; }
+
+        // verify current pw
+        const verifyRes = await fetch('http://localhost:3000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: this.profile.email,
+            password: this.form.current,
+          }),
+        });
+
+        if (!verifyRes.ok) {
+          this.error = 'Current password is incorrect.';
+          return;
+        }
+
+        const res = await fetch('http://localhost:3000/api/auth/change-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ newPassword: this.form.newPass }),
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) { this.error = result.message || 'Failed to update password.'; return; }
+        
+
+        this.closeModal();
+        this.showToast('Password changed successfully!');
+
+      } catch (err) {
+        this.error = 'An unexpected error occurred.';
+        console.error('Unexpected error changing password:', err);
+      }
+
       this.closeModal();
       this.showToast('Password changed successfully!');
     },

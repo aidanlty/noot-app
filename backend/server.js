@@ -198,6 +198,34 @@ app.get('/api/manager/data', async (req, res) => {
   }
 })
 
+// CHANGE PASSWORD
+app.post('/api/auth/change-password', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    const { newPassword } = req.body;
+
+    // get the user via auth token
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+
+    // update pw via Supabase auth
+    const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
+      password: newPassword
+    });
+
+    if (updateError) {
+      return res.status(400).json({ message: updateError.message });
+    }
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Supabase Backend: http://localhost:${3000}`)
 })
