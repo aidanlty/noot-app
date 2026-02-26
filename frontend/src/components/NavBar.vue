@@ -122,6 +122,11 @@
         <li v-if="isManager" class="nav-item d-xl-none">
           <button class="nav-link logout-mobile" @click="$emit('logout')">🚪 Logout</button>
         </li>
+        <li v-if="isAdmin" class="nav-item d-xl-none">
+          <router-link to="/admin-register-user" class="nav-link">
+            Register Staff Account
+          </router-link>
+        </li>
 
         <!-- TECHNICIAN MOBILE -->
         <li v-if="isTechnician" class="nav-item d-xl-none">
