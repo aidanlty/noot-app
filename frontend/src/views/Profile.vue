@@ -128,6 +128,7 @@ export default {
   name: 'ProfilePage',
   data() {
     return {
+      userId: null,
       profile: {
         name: '',
         email: '',
@@ -179,8 +180,8 @@ export default {
       // extract the user's ID
       const payload = JSON.parse(atob(token.split('.')[1]));
       const userId = payload.sub; // standard JWT subject claim = user UUID
-      console.log("payload:", payload);
-      console.log("userId:", userId);
+      // console.log("payload:", payload);
+      // console.log("userId:", userId);
 
       if (!userId) {
         console.error('Could not extract user ID from token');
@@ -200,6 +201,7 @@ export default {
         return;
       }
 
+      this.userId = payload.sub;
       // NEW: Populate profile with data from DB
       this.profile.name = data.Name;
       this.profile.email = data.Email;
@@ -228,18 +230,61 @@ export default {
       this.toast = msg;
       setTimeout(() => { this.toast = ''; }, 3000);
     },
-    saveName() {
+    async saveName() {
       if (!this.form.name.trim()) { this.error = 'Name cannot be empty.'; return; }
-      this.profile.name = this.form.name.trim();
-      this.closeModal();
-      this.showToast('Name updated successfully!');
+
+      try {
+        console.log("userId:", this.userId);
+
+        // update name in the backend
+        const { error: dbError } = await supabase
+          .from('Profiles')
+          .update({ Name: this.form.name.trim() })
+          .eq('"ID"', this.userId);
+
+        if (dbError) {
+          this.error = 'Failed to update name. Please try again.';
+          console.error('Error updating name:', dbError);
+          return;
+        }
+      
+        this.profile.name = this.form.name.trim();
+        this.closeModal();
+        this.showToast('Name updated successfully!');
+
+      } catch (err) {
+          
+        this.error = 'An unexpected error occurred.';
+        console.error('Unexpected error updating name:', err);
+      }
     },
-    saveEmail() {
-      if (!this.form.email) { this.error = 'Please enter a new email.'; return; }
-      if (this.form.email !== this.form.emailConfirm) { this.error = 'Emails do not match.'; return; }
-      this.profile.email = this.form.email;
-      this.closeModal();
-      this.showToast('Email updated successfully!');
+    async saveEmail() {
+      if (!this.form.email.trim()) { this.error = 'Email cannot be empty.'; return; }
+
+      try {
+
+        // update name in the backend
+        const { error: dbError } = await supabase
+          .from('Profiles')
+          .update({ Email: this.form.email.trim() })
+          .eq('"ID"', this.userId);
+
+        if (dbError) {
+          this.error = 'Failed to update email. Please try again.';
+          console.error('Error updating email:', dbError);
+          return;
+        }
+      
+        if (!this.form.email) { this.error = 'Please enter a new email.'; return; }
+        if (this.form.email !== this.form.emailConfirm) { this.error = 'Emails do not match.'; return; }
+        this.profile.email = this.form.email;
+        this.closeModal();
+        this.showToast('Email updated successfully!');
+
+      } catch (err) {
+        this.error = 'An unexpected error occurred.';
+        console.error('Unexpected error updating email:', err);
+      }
     },
     savePassword() {
       if (!this.form.current) { this.error = 'Enter your current password.'; return; }
