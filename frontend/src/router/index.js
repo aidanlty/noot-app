@@ -25,8 +25,17 @@ const routes = [
   { path: '/gallery', name: 'gallery', component: () => import('../views/GalleryView.vue') },
   { path: '/login', name: 'login', component: () => import('../views/LoginView.vue') },
   { path: '/contact', name: 'contact', component: () => import('../views/ContactView.vue') },
-  { path: '/book', name: 'book', component: () => import('../views/BookingView.vue') },
-  { path: '/myBookings', name: 'customerBookings', component: () => import('../views/customerBookings.vue') },
+  
+  { path: '/book',
+    name: 'book', 
+    meta: { requiresAuth: true, roles: ['customer'] },
+    component: () => import('../views/BookingView.vue') },
+
+  { path: '/myBookings', 
+    name: 'customerBookings', 
+    meta: { requiresAuth: true, roles: ['customer'] },
+    component: () => import('../views/customerBookings.vue') },
+
   { path: '/profile', name: 'profile', component: () => import('../views/Profile.vue') },
   // 🔹 MANAGER ROUTES
   {
