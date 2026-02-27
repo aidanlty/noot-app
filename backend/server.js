@@ -127,33 +127,39 @@ app.post('/api/auth/register', async (req, res) => {
   }
 })
 
-// ** VERIFY TOKEN (for router guards)
+// VERIFY TOKEN (for router guards)
 app.post('/api/auth/verify', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '')
 
     const { data: { user }, error } = await supabase.auth.getUser(token)
-
     if (error || !user) {
       return res.status(401).json({ message: 'Invalid token' })
     }
 
-    // Get role from your users table
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('email', user.email)
+    // Use your real profiles table
+    const { data: userProfile, error: profileError } = await supabase
+      .from('Profiles')               // or 'users' – but be consistent
+      .select('Role')
+      .eq('Email', user.email)
       .single()
+
+    if (profileError || !userProfile) {
+      return res.status(403).json({ message: 'Profile not found' })
+    }
+
+    const role = String(userProfile.Role || 'customer').trim().toLowerCase()
 
     res.json({
       valid: true,
       email: user.email,
-      role: userProfile?.role || 'customer'
+      role,  // 'customer' | 'manager' | 'technician' | 'administrator'
     })
   } catch (err) {
     res.status(401).json({ message: 'Token verification failed' })
   }
 })
+
 
 // ** LOGOUT
 app.post('/api/auth/logout', async (req, res) => {
