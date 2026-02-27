@@ -47,7 +47,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['manager'] },
     component: () => import('../views/ManagerReports.vue'), // CREATE THIS
   },
-
+  {
+    path: '/jobCards',
+    name: 'jobCards',
+    meta: { requiresAuth: true, roles: ['manager'] },
+    component: () => import('../views/JobCards.vue'),
+  },
   // 🔹 TECHNICIAN ROUTES
   {
     path: '/technician-dashboard',
@@ -62,12 +67,7 @@ const routes = [
     component: () => import('../views/TechnicianJobs.vue'), // CREATE THIS
   },
   // 🔹 SHARED STAFF ROUTES (manager + technician)
-  {
-    path: '/jobCards',
-    name: 'jobCards',
-    meta: { requiresAuth: true, roles: ['manager', 'technician'] },
-    component: () => import('../views/JobCards.vue'),
-  },
+  // to add view all job cards for them
   {
     path: '/admin-register-user',
     name: 'adminRegisterUser',
