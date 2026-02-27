@@ -1,8 +1,3 @@
-/* ══════════════════════════════════════════
-   JOB CARDS — jobCards.css
-   Self-contained stylesheet (no dependencies)
-   ══════════════════════════════════════════ */
-
 /* ── Container ── */
 .jc-container {
   padding: 2rem;
@@ -360,6 +355,82 @@
   transform: scale(1.05);
 }
 
+/* ── Assign / Change Buttons ── */
+.jc-btn-assign {
+  padding: 0.5rem 1.1rem;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.jc-btn-assign:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.jc-btn-change {
+  padding: 0.5rem 1.1rem;
+  background: #f59e0b;
+  color: #111111;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.jc-btn-change:hover {
+  background: #d97706;
+  transform: scale(1.05);
+}
+
+/* ── Proceed / Next Status Button ── */
+.jc-btn-proceed {
+  padding: 0.5rem 1.1rem;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+  letter-spacing: 0.02em;
+}
+.jc-btn-proceed:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: scale(1.05);
+}
+
+/* Blocked / disabled state */
+.jc-btn-proceed--blocked,
+.jc-btn-proceed:disabled {
+  background: #2a2a2a;
+  color: #555555;
+  cursor: not-allowed;
+  border: 1px dashed #3a3a3a;
+  transform: none !important;
+  opacity: 1;
+}
+
+/* Larger version inside modal */
+.jc-btn-proceed--modal {
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+}
+
+/* Wrapper to allow tooltip on disabled button */
+.jc-proceed-wrapper {
+  display: inline-block;
+}
+
 /* ── Pagination ── */
 .jc-pagination {
   display: flex;
@@ -518,54 +589,6 @@
   color: #ffffff;
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .jc-container        { padding: 1rem; }
-  .jc-header h1        { font-size: 1.7rem; }
-  .jc-status-col       { min-width: 80px; padding: 1rem 0.75rem; }
-  .jc-card-body        { padding: 0.85rem 1rem; }
-  .jc-card-actions     { padding: 0 0.75rem; }
-  .jc-card-name        { font-size: 0.95rem; }
-  .jc-count            { margin-left: 0; width: 100%; }
-  .jc-pagination       { flex-wrap: wrap; gap: 0.75rem; padding: 1rem; }
-  .jc-pagination-btn   { padding: 0.5rem 1rem; font-size: 0.8rem; }
-}
-
-/* ── Assign / Change Buttons ── */
-.jc-btn-assign {
-  padding: 0.5rem 1.1rem;
-  background: #3b82f6;
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 0.82rem;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-.jc-btn-assign:hover {
-  background: #2563eb;
-  transform: scale(1.05);
-}
-
-.jc-btn-change {
-  padding: 0.5rem 1.1rem;
-  background: #f59e0b;
-  color: #111111;
-  border: none;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 0.82rem;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-.jc-btn-change:hover {
-  background: #d97706;
-  transform: scale(1.05);
-}
-
 /* ── Technician Modal ── */
 .jc-tech-modal {
   max-width: 420px;
@@ -634,11 +657,11 @@
 }
 
 /* ── Technician Assignment Filter Buttons ── */
-.jc-tech-filter-btn--unassigned:hover         { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.07); }
-.jc-tech-filter-btn--unassigned.active        { background: #ef4444; color: #ffffff; border-color: #ef4444; }
+.jc-tech-filter-btn--unassigned:hover  { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.07); }
+.jc-tech-filter-btn--unassigned.active { background: #ef4444; color: #ffffff; border-color: #ef4444; }
 
-.jc-tech-filter-btn--assigned:hover           { border-color: #22c55e; color: #22c55e; background: rgba(34, 197, 94, 0.07); }
-.jc-tech-filter-btn--assigned.active          { background: #22c55e; color: #111111; border-color: #22c55e; }
+.jc-tech-filter-btn--assigned:hover    { border-color: #22c55e; color: #22c55e; background: rgba(34, 197, 94, 0.07); }
+.jc-tech-filter-btn--assigned.active   { background: #22c55e; color: #111111; border-color: #22c55e; }
 
 /* ── Technician name tag on card ── */
 .jc-meta-tag--technician {
@@ -652,4 +675,48 @@
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ── Diagnose Readiness Pills ── */
+.jc-readiness-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.jc-readiness-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.73rem;
+  font-weight: 700;
+  padding: 0.22rem 0.65rem;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.jc-readiness-pill--ok {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.jc-readiness-pill--missing {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .jc-container        { padding: 1rem; }
+  .jc-header h1        { font-size: 1.7rem; }
+  .jc-status-col       { min-width: 80px; padding: 1rem 0.75rem; }
+  .jc-card-body        { padding: 0.85rem 1rem; }
+  .jc-card-actions     { padding: 0 0.75rem; }
+  .jc-card-name        { font-size: 0.95rem; }
+  .jc-count            { margin-left: 0; width: 100%; }
+  .jc-pagination       { flex-wrap: wrap; gap: 0.75rem; padding: 1rem; }
+  .jc-pagination-btn   { padding: 0.5rem 1rem; font-size: 0.8rem; }
 }
