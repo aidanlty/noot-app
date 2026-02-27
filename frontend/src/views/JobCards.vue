@@ -128,10 +128,27 @@
               <span v-else class="jc-meta-tag jc-meta-tag--unassigned">Service Tech: Not Assigned</span>
             </template>
           </div>
+
+          <!-- Diagnose readiness pills -->
+          <div v-if="job.status === 'diagnose'" class="jc-readiness-row">
+            <span
+              class="jc-readiness-pill"
+              :class="job.parts && job.parts.length > 0 ? 'jc-readiness-pill--ok' : 'jc-readiness-pill--missing'"
+            >
+              {{ job.parts && job.parts.length > 0 ? '✓' : '✕' }} Parts ({{ job.parts ? job.parts.length : 0 }})
+            </span>
+            <span
+              class="jc-readiness-pill"
+              :class="job.services && job.services.length > 0 ? 'jc-readiness-pill--ok' : 'jc-readiness-pill--missing'"
+            >
+              {{ job.services && job.services.length > 0 ? '✓' : '✕' }} Services ({{ job.services ? job.services.length : 0 }})
+            </span>
+          </div>
         </div>
 
         <div class="jc-card-actions">
           <button class="jc-btn-view" @click="openModal(job)">View</button>
+
           <template v-if="job.status === 'diagnose'">
             <button
               v-if="!job.diagnoseTechnician"
@@ -144,6 +161,7 @@
               @click="openTechModal(job, 'change', 'diagnose')"
             >Change</button>
           </template>
+
           <template v-if="job.status === 'service'">
             <button
               v-if="!job.serviceTechnician"
@@ -155,6 +173,31 @@
               class="jc-btn-change"
               @click="openTechModal(job, 'change', 'service')"
             >Change</button>
+          </template>
+
+          <!-- Proceed Button -->
+          <template v-if="getNextStatus(job.status)">
+            <div
+              v-if="job.status === 'diagnose'"
+              class="jc-proceed-wrapper"
+              :title="getDiagnoseBlockReason(job) || ''"
+            >
+              <button
+                class="jc-btn-proceed"
+                :class="{ 'jc-btn-proceed--blocked': !canProceedFromDiagnose(job) }"
+                :disabled="!canProceedFromDiagnose(job)"
+                @click="proceedToNextStatus(job)"
+              >
+                {{ getNextStatusLabel(job.status) }} →
+              </button>
+            </div>
+            <button
+              v-else
+              class="jc-btn-proceed"
+              @click="proceedToNextStatus(job)"
+            >
+              {{ getNextStatusLabel(job.status) }} →
+            </button>
           </template>
         </div>
       </div>
@@ -227,6 +270,29 @@
           </div>
         </div>
         <div class="jc-modal-actions">
+          <!-- Proceed button inside modal too -->
+          <template v-if="getNextStatus(modal.job.status)">
+            <div
+              v-if="modal.job.status === 'diagnose'"
+              :title="getDiagnoseBlockReason(modal.job) || ''"
+            >
+              <button
+                class="jc-btn-proceed jc-btn-proceed--modal"
+                :class="{ 'jc-btn-proceed--blocked': !canProceedFromDiagnose(modal.job) }"
+                :disabled="!canProceedFromDiagnose(modal.job)"
+                @click="proceedToNextStatus(modal.job); closeModal()"
+              >
+                {{ getNextStatusLabel(modal.job.status) }} →
+              </button>
+            </div>
+            <button
+              v-else
+              class="jc-btn-proceed jc-btn-proceed--modal"
+              @click="proceedToNextStatus(modal.job); closeModal()"
+            >
+              {{ getNextStatusLabel(modal.job.status) }} →
+            </button>
+          </template>
           <button class="jc-btn-secondary" @click="closeModal">Close</button>
         </div>
       </div>
@@ -311,7 +377,7 @@ export default {
         { value: 'service',           label: 'Service'           },
       ],
       modal: { isOpen: false, job: null },
-      techModal: { isOpen: false, job: null, selected: '', mode: '', techType: '' },
+      techModal: { isOpen: false, job: null, selected: '', mode: '', techType: '', showError: false },
       technicians: [
         'Alex Johnson',
         'Maria Santos',
@@ -321,16 +387,16 @@ export default {
         'Sam Okafor',
       ],
       jobCards: [
-        { id: 'JC-001', licensePlate: 'ABC-1234', vehicleMake: 'Toyota',  vehicleModel: 'Camry',    vehicleYear: '2022', customerName: 'James Carter',   status: 'diagnose',          jobDate: todayStr,          serviceType: 'Engine Check',           diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 120,  notes: 'Customer reports unusual engine noise at idle.' },
-        { id: 'JC-002', licensePlate: 'XYZ-5678', vehicleMake: 'Honda',   vehicleModel: 'Civic',    vehicleYear: '2023', customerName: 'Priya Nair',     status: 'quotation',         jobDate: todayStr,          serviceType: 'Brake Replacement',      diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 350,  notes: 'Awaiting customer approval on parts quote.' },
-        { id: 'JC-003', licensePlate: 'DEF-9012', vehicleMake: 'Ford',    vehicleModel: 'F-150',    vehicleYear: '2021', customerName: 'Marco Silva',    status: 'waiting-for-parts', jobDate: todayStr,          serviceType: 'Suspension Repair',      diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 780,  notes: 'Parts ordered — ETA 2 days.' },
-        { id: 'JC-004', licensePlate: 'GHI-3456', vehicleMake: 'BMW',     vehicleModel: '3 Series', vehicleYear: '2024', customerName: 'Sarah Mitchell', status: 'service',           jobDate: todayStr,          serviceType: 'Full Service',           diagnoseTechnician: 'Alex Johnson', serviceTechnician: 'Chris Lee',  estimatedCost: 500,  notes: null },
-        { id: 'JC-005', licensePlate: 'JKL-7890', vehicleMake: 'Tesla',   vehicleModel: 'Model 3',  vehicleYear: '2023', customerName: 'David Okafor',   status: 'diagnose',          jobDate: addDays(today, 1), serviceType: 'Battery Diagnostic',     diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 80,   notes: 'Check charging system and battery health.' },
-        { id: 'JC-006', licensePlate: 'MNO-1122', vehicleMake: 'Audi',    vehicleModel: 'A4',       vehicleYear: '2022', customerName: 'Lena Hoffmann',  status: 'quotation',         jobDate: addDays(today, 2), serviceType: 'Gearbox Service',        diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 950,  notes: null },
-        { id: 'JC-007', licensePlate: 'PQR-3344', vehicleMake: 'Mazda',   vehicleModel: 'CX-5',     vehicleYear: '2020', customerName: 'Tom Nguyen',     status: 'waiting-for-parts', jobDate: addDays(today, 3), serviceType: 'AC Compressor Replace',  diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 620,  notes: 'Compressor unit on back-order.' },
-        { id: 'JC-008', licensePlate: 'STU-5566', vehicleMake: 'Hyundai', vehicleModel: 'Tucson',   vehicleYear: '2021', customerName: 'Nina Patel',     status: 'service',           jobDate: addDays(today, 4), serviceType: 'Oil Change & Filter',    diagnoseTechnician: 'Ryan Patel',   serviceTechnician: null,         estimatedCost: 90,   notes: null },
-        { id: 'JC-009', licensePlate: 'VWX-7788', vehicleMake: 'Kia',     vehicleModel: 'Sportage', vehicleYear: '2023', customerName: 'Leo Fernandez',  status: 'diagnose',          jobDate: subDays(today, 1), serviceType: 'Electrical Fault',       diagnoseTechnician: 'Ryan Patel',   serviceTechnician: null,         estimatedCost: 150,  notes: 'Multiple warning lights on dash.' },
-        { id: 'JC-010', licensePlate: 'YZA-9900', vehicleMake: 'Subaru',  vehicleModel: 'Forester', vehicleYear: '2022', customerName: 'Chloe Kim',      status: 'service',           jobDate: subDays(today, 2), serviceType: 'Timing Belt Replacement', diagnoseTechnician: 'Maria Santos', serviceTechnician: null,         estimatedCost: 1100, notes: null },
+        { id: 'JC-001', licensePlate: 'ABC-1234', vehicleMake: 'Toyota',  vehicleModel: 'Camry',    vehicleYear: '2022', customerName: 'James Carter',   status: 'diagnose',          jobDate: todayStr,          serviceType: 'Engine Check',           diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 120,  notes: 'Customer reports unusual engine noise at idle.', parts: [], services: [] },
+        { id: 'JC-002', licensePlate: 'XYZ-5678', vehicleMake: 'Honda',   vehicleModel: 'Civic',    vehicleYear: '2023', customerName: 'Priya Nair',     status: 'quotation',         jobDate: todayStr,          serviceType: 'Brake Replacement',      diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 350,  notes: 'Awaiting customer approval on parts quote.',    parts: [], services: [] },
+        { id: 'JC-003', licensePlate: 'DEF-9012', vehicleMake: 'Ford',    vehicleModel: 'F-150',    vehicleYear: '2021', customerName: 'Marco Silva',    status: 'waiting-for-parts', jobDate: todayStr,          serviceType: 'Suspension Repair',      diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 780,  notes: 'Parts ordered — ETA 2 days.',                   parts: [], services: [] },
+        { id: 'JC-004', licensePlate: 'GHI-3456', vehicleMake: 'BMW',     vehicleModel: '3 Series', vehicleYear: '2024', customerName: 'Sarah Mitchell', status: 'service',           jobDate: todayStr,          serviceType: 'Full Service',           diagnoseTechnician: 'Alex Johnson', serviceTechnician: 'Chris Lee',  estimatedCost: 500,  notes: null,                                            parts: ['Oil Filter', 'Air Filter'], services: ['Full Service', 'Fluid Top-Up'] },
+        { id: 'JC-005', licensePlate: 'JKL-7890', vehicleMake: 'Tesla',   vehicleModel: 'Model 3',  vehicleYear: '2023', customerName: 'David Okafor',   status: 'diagnose',          jobDate: addDays(today, 1), serviceType: 'Battery Diagnostic',     diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 80,   notes: 'Check charging system and battery health.',     parts: ['Battery Cell Module'], services: [] },
+        { id: 'JC-006', licensePlate: 'MNO-1122', vehicleMake: 'Audi',    vehicleModel: 'A4',       vehicleYear: '2022', customerName: 'Lena Hoffmann',  status: 'quotation',         jobDate: addDays(today, 2), serviceType: 'Gearbox Service',        diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 950,  notes: null,                                            parts: [], services: [] },
+        { id: 'JC-007', licensePlate: 'PQR-3344', vehicleMake: 'Mazda',   vehicleModel: 'CX-5',     vehicleYear: '2020', customerName: 'Tom Nguyen',     status: 'waiting-for-parts', jobDate: addDays(today, 3), serviceType: 'AC Compressor Replace',  diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 620,  notes: 'Compressor unit on back-order.',                parts: [], services: [] },
+        { id: 'JC-008', licensePlate: 'STU-5566', vehicleMake: 'Hyundai', vehicleModel: 'Tucson',   vehicleYear: '2021', customerName: 'Nina Patel',     status: 'service',           jobDate: addDays(today, 4), serviceType: 'Oil Change & Filter',    diagnoseTechnician: 'Ryan Patel',   serviceTechnician: null,         estimatedCost: 90,   notes: null,                                            parts: ['Oil Filter'], services: ['Oil Change'] },
+        { id: 'JC-009', licensePlate: 'VWX-7788', vehicleMake: 'Kia',     vehicleModel: 'Sportage', vehicleYear: '2023', customerName: 'Leo Fernandez',  status: 'diagnose',          jobDate: subDays(today, 1), serviceType: 'Electrical Fault',       diagnoseTechnician: 'Ryan Patel',   serviceTechnician: null,         estimatedCost: 150,  notes: 'Multiple warning lights on dash.',              parts: ['Fuse Kit', 'Relay Switch'], services: ['Electrical Diagnosis'] },
+        { id: 'JC-010', licensePlate: 'YZA-9900', vehicleMake: 'Subaru',  vehicleModel: 'Forester', vehicleYear: '2022', customerName: 'Chloe Kim',      status: 'service',           jobDate: subDays(today, 2), serviceType: 'Timing Belt Replacement', diagnoseTechnician: 'Maria Santos', serviceTechnician: null,         estimatedCost: 1100, notes: null,                                            parts: ['Timing Belt', 'Tensioner Pulley'], services: ['Timing Belt Replacement'] },
       ],
     };
   },
@@ -372,18 +438,17 @@ export default {
       if (this.activeStatusFilter) {
         list = list.filter(j => j.status === this.activeStatusFilter);
       }
-      // Technician filter — only applies to diagnose and service statuses
       if (this.activeTechFilter === 'unassigned') {
         list = list.filter(j => {
           if (j.status === 'diagnose') return !j.diagnoseTechnician;
           if (j.status === 'service')  return !j.serviceTechnician;
-          return false; // exclude quotation/waiting-for-parts from unassigned view
+          return false;
         });
       } else if (this.activeTechFilter === 'assigned') {
         list = list.filter(j => {
           if (j.status === 'diagnose') return !!j.diagnoseTechnician;
           if (j.status === 'service')  return !!j.serviceTechnician;
-          return false; // exclude quotation/waiting-for-parts from assigned view
+          return false;
         });
       }
       return [...list].sort((a, b) => a.jobDate.localeCompare(b.jobDate));
@@ -434,7 +499,6 @@ export default {
       } else {
         this.techModal.job.serviceTechnician = this.techModal.selected;
       }
-      // Add your save/emit logic here
       this.closeTechModal();
     },
     formatDate(date) {
@@ -444,6 +508,40 @@ export default {
     getDayName(date) {
       if (!date) return '';
       return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' });
+    },
+
+    // ── Status Progression ──────────────────────────────────────────────
+    getNextStatus(currentStatus) {
+      const flow = {
+        'diagnose':          'quotation',
+        'quotation':         'waiting-for-parts',
+        'waiting-for-parts': 'service',
+      };
+      return flow[currentStatus] || null;
+    },
+    getNextStatusLabel(currentStatus) {
+      const labels = {
+        'diagnose':          'Proceed to Quotation',
+        'quotation':         'Proceed to Waiting for Parts',
+        'waiting-for-parts': 'Proceed to Service',
+      };
+      return labels[currentStatus] || '';
+    },
+    canProceedFromDiagnose(job) {
+      return job.parts && job.parts.length > 0 && job.services && job.services.length > 0;
+    },
+    getDiagnoseBlockReason(job) {
+      const hasParts    = job.parts    && job.parts.length    > 0;
+      const hasServices = job.services && job.services.length > 0;
+      if (!hasParts && !hasServices) return 'Add at least one part and one service before proceeding';
+      if (!hasParts)    return 'Add at least one part before proceeding';
+      if (!hasServices) return 'Add at least one service before proceeding';
+      return '';
+    },
+    proceedToNextStatus(job) {
+      if (job.status === 'diagnose' && !this.canProceedFromDiagnose(job)) return;
+      const next = this.getNextStatus(job.status);
+      if (next) job.status = next;
     },
   },
 };
