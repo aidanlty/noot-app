@@ -29,12 +29,12 @@ const routes = [
   { path: '/book',
     name: 'book', 
     meta: { requiresAuth: true, roles: ['customer'] },
-    component: () => import('../views/BookingView.vue') },
+    component: () => import('../views/Customer/BookingView.vue') },
 
   { path: '/myBookings', 
     name: 'customerBookings', 
     meta: { requiresAuth: true, roles: ['customer'] },
-    component: () => import('../views/customerBookings.vue') },
+    component: () => import('../views/Customer/customerBookings.vue') },
 
   
   // 🔹 MANAGER ROUTES
@@ -48,7 +48,7 @@ const routes = [
     path: '/managerAppointments',
     name: 'managerAppointments',
     meta: { requiresAuth: true, roles: ['manager'] },
-    component: () => import('../views/ManagerAppointments.vue'), // CREATE THIS
+    component: () => import('../views/Manager/ManagerAppointments.vue'), // CREATE THIS
   },
   {
     path: '/manager-reports',
@@ -60,7 +60,7 @@ const routes = [
     path: '/jobCards',
     name: 'jobCards',
     meta: { requiresAuth: true, roles: ['manager'] },
-    component: () => import('../views/JobCards.vue'),
+    component: () => import('../views/Manager/JobCards.vue'),
   },
   // 🔹 TECHNICIAN ROUTES
   {
@@ -73,7 +73,7 @@ const routes = [
     path: '/technicianJobs',
     name: 'technicianJobs',
     meta: { requiresAuth: true, roles: ['technician'] },
-    component: () => import('../views/TechnicianJobs.vue'), // CREATE THIS
+    component: () => import('../views/Technician/TechnicianJobs.vue'), // CREATE THIS
   },
   // 🔹 SHARED STAFF ROUTES (manager + technician)
   // to add view all job cards for them
