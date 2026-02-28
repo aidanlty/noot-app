@@ -62,7 +62,6 @@
           <div class="appt-meta">
             <span class="meta-tag date-tag">{{ formatDate(appt.appointmentDate) }}</span>
             <span class="meta-tag duration-tag">{{ appt.duration }}</span>
-            <!-- Diagnose Tech Tag -->
             <span v-if="appt.diagnoseTech" class="meta-tag tech-assigned-tag">
               👤 {{ appt.diagnoseTech }}
             </span>
@@ -73,7 +72,6 @@
         </div>
         <div class="appt-actions">
           <button class="btn-view" @click="openModal(appt)">View</button>
-          <!-- Assign / Change Tech Button -->
           <button
             v-if="!appt.diagnoseTech"
             class="btn-assign-tech"
@@ -191,17 +189,27 @@
         <div class="tech-select-wrapper">
           <label class="tech-select-label">Diagnose Technician</label>
           <div class="custom-select-container">
+
+            <!-- Loading state -->
+            <p v-if="technicianLoading" class="tech-loading">Loading technicians...</p>
+
+            <!-- Error state -->
+            <p v-else-if="technicianError" class="reason-error">{{ technicianError }}</p>
+
+            <!-- Dropdown -->
             <select
+              v-else
               v-model="assignTech.selectedTech"
               class="tech-select"
             >
               <option value="" disabled>— Select a technician —</option>
               <option
                 v-for="tech in technicians"
-                :key="tech"
-                :value="tech"
-              >{{ tech }}</option>
+                :key="tech.ID"
+                :value="tech.Name"
+              >{{ tech.Name }}</option>
             </select>
+
           </div>
         </div>
 
@@ -248,7 +256,6 @@
           <span class="confirm-meta">{{ cancelConfirm.appt.vehicleYear }} {{ cancelConfirm.appt.vehicleMake }} {{ cancelConfirm.appt.vehicleModel }} · #{{ cancelConfirm.appt.id }}</span>
         </div>
 
-        <!-- Reason Radio Options -->
         <div class="cancel-reasons">
           <label
             v-for="reason in cancelReasons"
@@ -302,14 +309,12 @@ export default {
         { label: 'This Month', value: 'month' },
         { label: 'All',        value: 'all'   },
       ],
-      // Available technicians list
-      technicians: [
-        'Ryan Patel',
-        'Chris Lee',
-        'Marco Reyes',
-        'Aisha Johnson',
-        'Tom Nguyen',
-      ],
+
+      // Technicians — populated from API
+      technicians: [],
+      technicianLoading: false,
+      technicianError: '',
+
       modal: { isOpen: false, appt: null },
       assignTech: { isOpen: false, appt: null, selectedTech: '', showError: false },
       proceedConfirm: { isOpen: false, appt: null },
@@ -326,6 +331,15 @@ export default {
       ],
     };
   },
+
+  async mounted() {
+    await this.fetchTechnicians();
+    this._nowTimer = setInterval(() => { this.now = new Date(); }, 60000);
+  },
+  beforeUnmount() {
+    clearInterval(this._nowTimer);
+  },
+
   computed: {
     todayStr() {
       return new Date().toISOString().split('T')[0];
@@ -364,13 +378,25 @@ export default {
       return this.filteredAppointments.slice(start, start + this.itemsPerPage);
     },
   },
-  mounted() {
-    this._nowTimer = setInterval(() => { this.now = new Date(); }, 60000);
-  },
-  beforeUnmount() {
-    clearInterval(this._nowTimer);
-  },
+
   methods: {
+    // ── Fetch technicians from API ──────────────────────────────────────
+    async fetchTechnicians() {
+      this.technicianLoading = true;
+      this.technicianError = '';
+      try {
+        const res = await fetch('http://localhost:3000/api/technicians');
+        if (!res.ok) throw new Error('Failed to fetch technicians');
+        const data = await res.json();
+        this.technicians = data.technicians;
+      } catch (err) {
+        console.error('Error fetching technicians:', err);
+        this.technicianError = 'Could not load technicians. Please try again.';
+      } finally {
+        this.technicianLoading = false;
+      }
+    },
+
     isToday(date) {
       return date === this.todayStr;
     },

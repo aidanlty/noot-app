@@ -270,7 +270,6 @@
           </div>
         </div>
         <div class="jc-modal-actions">
-          <!-- Proceed button inside modal too -->
           <template v-if="getNextStatus(modal.job.status)">
             <div
               v-if="modal.job.status === 'diagnose'"
@@ -315,15 +314,24 @@
           </div>
           <div class="jc-detail-group">
             <label>{{ techModal.mode === 'assign' ? 'Select Technician' : 'New Technician' }}</label>
-            <select class="jc-tech-select" v-model="techModal.selected">
+
+            <!-- Loading state -->
+            <p v-if="technicianLoading" class="jc-tech-loading">Loading technicians...</p>
+
+            <!-- Error state -->
+            <p v-else-if="technicianError" class="jc-tech-error">{{ technicianError }}</p>
+
+            <!-- Dropdown -->
+            <select v-else class="jc-tech-select" v-model="techModal.selected">
               <option value="">— Select a technician —</option>
               <option
                 v-for="t in technicians"
-                :key="t"
-                :value="t"
-                :disabled="techModal.mode === 'change' && t === (techModal.techType === 'diagnose' ? techModal.job.diagnoseTechnician : techModal.job.serviceTechnician)"
-              >{{ t }}</option>
+                :key="t.ID"
+                :value="t.Name"
+                :disabled="techModal.mode === 'change' && t.Name === (techModal.techType === 'diagnose' ? techModal.job.diagnoseTechnician : techModal.job.serviceTechnician)"
+              >{{ t.Name }}</option>
             </select>
+
             <p v-if="techModal.showError" class="jc-tech-error">Please select a technician to continue.</p>
           </div>
         </div>
@@ -378,14 +386,12 @@ export default {
       ],
       modal: { isOpen: false, job: null },
       techModal: { isOpen: false, job: null, selected: '', mode: '', techType: '', showError: false },
-      technicians: [
-        'Alex Johnson',
-        'Maria Santos',
-        'Ryan Patel',
-        'Chris Lee',
-        'Jordan Williams',
-        'Sam Okafor',
-      ],
+
+      // Technicians — populated from API
+      technicians: [],
+      technicianLoading: false,
+      technicianError: '',
+
       jobCards: [
         { id: 'JC-001', licensePlate: 'ABC-1234', vehicleMake: 'Toyota',  vehicleModel: 'Camry',    vehicleYear: '2022', customerName: 'James Carter',   status: 'diagnose',          jobDate: todayStr,          serviceType: 'Engine Check',           diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 120,  notes: 'Customer reports unusual engine noise at idle.', parts: [], services: [] },
         { id: 'JC-002', licensePlate: 'XYZ-5678', vehicleMake: 'Honda',   vehicleModel: 'Civic',    vehicleYear: '2023', customerName: 'Priya Nair',     status: 'quotation',         jobDate: todayStr,          serviceType: 'Brake Replacement',      diagnoseTechnician: null,           serviceTechnician: null,         estimatedCost: 350,  notes: 'Awaiting customer approval on parts quote.',    parts: [], services: [] },
@@ -400,6 +406,11 @@ export default {
       ],
     };
   },
+
+  async mounted() {
+    await this.fetchTechnicians();
+  },
+
   computed: {
     todayStr() {
       return new Date().toISOString().split('T')[0];
@@ -461,7 +472,25 @@ export default {
       return this.filteredJobCards.slice(start, start + this.itemsPerPage);
     },
   },
+
   methods: {
+    // ── Fetch technicians from API ──────────────────────────────────────
+    async fetchTechnicians() {
+      this.technicianLoading = true;
+      this.technicianError = '';
+      try {
+        const res = await fetch('http://localhost:3000/api/technicians');
+        if (!res.ok) throw new Error('Failed to fetch technicians');
+        const data = await res.json();
+        this.technicians = data.technicians;
+      } catch (err) {
+        console.error('Error fetching technicians:', err);
+        this.technicianError = 'Could not load technicians. Please try again.';
+      } finally {
+        this.technicianLoading = false;
+      }
+    },
+
     isToday(date) { return date === this.todayStr; },
     setDateFilter(val) { this.activeDateFilter = val; this.specificDate = ''; this.currentPage = 1; },
     setStatusFilter(val) { this.activeStatusFilter = val; this.currentPage = 1; },
