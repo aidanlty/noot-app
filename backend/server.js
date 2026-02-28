@@ -32,7 +32,7 @@ const supabase = createClient(
 app.use('/api/auth', require('./routes/auth')(supabase))
 app.use('/api/technicians', require('./routes/technicians')(supabase))
 app.use('/api/manager', require('./routes/manager')(supabase))
-app.use('/api/job-orders', require('./routes/jobOrders')(supabase))   // NEW
+app.use('/api/job-orders', require('./routes/jobOrders')(supabase))   
 app.use('/api/customer', require('./routes/customer')(supabase))
 
 // Health check
