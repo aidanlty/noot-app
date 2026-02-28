@@ -49,6 +49,7 @@ router.post('/createAppointment', async (req, res) => {
   }
 })
 
+// get timing of booked slots and disallow users to select.
 router.get('/bookedSlots', async (req, res) => {
   try {
     const { data, error } = await supabase
