@@ -131,7 +131,7 @@
 </template>
 
 <script>
-import { commonCarData } from '../data/commonCarData.js';
+import { commonCarData } from '@/data/commonCarData.js';
 
 const ALL_SLOTS = [
   { value: '10:00', label: '10:00 AM' },

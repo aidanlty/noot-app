@@ -54,6 +54,9 @@
         <li v-if="isCustomer" class="nav-item">
           <router-link to="/services" class="nav-link" active-class="active">🔧 Services</router-link>
         </li>
+        <li v-if="isCustomer" class="nav-item">
+          <router-link to="/myBookings" class="nav-link" active-class="active">My Bookings</router-link>
+        </li>
 
         <!-- 🔹 MANAGER MENU -->
         <li v-if="isManager" class="nav-item">

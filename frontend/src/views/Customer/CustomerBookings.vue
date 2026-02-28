@@ -66,7 +66,7 @@
           </button>
         </div>
 
-        <div v-if="statusFilter !== 'upcoming'" class="sort-group">
+        <div v-if="statusFilter !== 'upcoming' && statusFilter !== 'ongoing'" class="sort-group">
           <label class="sort-label">Sort by Booking Date:</label>
           <button
             class="sort-btn"
@@ -134,7 +134,16 @@
             <div class="row-actions">
               <button class="btn-view" @click="openModal('view', booking)">View Details</button>
               <button v-if="booking.status === 'appointment'" class="btn-edit" @click="openModal('edit', booking)">Edit Appointment</button>
-              <button v-if="booking.status === 'appointment'" class="btn-cancel" @click="openModal('cancel', booking)">Cancel</button>
+              <button
+                v-if="booking.status === 'appointment'"
+                class="btn-cancel"
+                :class="{ 'btn-cancel--disabled': !canCancelBooking(booking) }"
+                :disabled="!canCancelBooking(booking)"
+                :title="!canCancelBooking(booking) ? 'Cancellations are not allowed within 2 days of the appointment' : 'Cancel this appointment'"
+                @click="openModal('cancel', booking)"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -200,7 +209,13 @@
             </div>
             <div class="modal-actions">
               <button class="btn-secondary" @click="closeModal">Keep Appointment</button>
-              <button class="btn-danger" @click="confirmCancel">Yes, Cancel Appointment</button>
+              <button
+                class="btn-danger"
+                :disabled="!canCancelBooking(modal.booking)"
+                @click="confirmCancel"
+              >
+                Yes, Cancel Appointment
+              </button>
             </div>
           </div>
         </div>
@@ -294,7 +309,6 @@
             <div v-if="jobModal.job.status !== 'diagnose'" class="jc-detail-group"><label>Service Type</label><p>{{ jobModal.job.serviceType }}</p></div>
             <div class="jc-detail-group"><label>Estimated Cost</label><p>${{ jobModal.job.estimatedCost }}</p></div>
 
-            <!-- Diagnose tech -->
             <div class="jc-detail-group">
               <label>Diagnose Technician</label>
               <div v-if="jobModal.job.diagnoseTechnician">
@@ -307,7 +321,6 @@
               <p v-else class="jc-not-assigned">Not Assigned</p>
             </div>
 
-            <!-- Service tech -->
             <div class="jc-detail-group">
               <label>Service Technician</label>
               <div v-if="jobModal.job.serviceTechnician">
@@ -320,7 +333,6 @@
               <p v-else class="jc-not-assigned">Not Assigned</p>
             </div>
 
-            <!-- Parts — hidden for diagnose -->
             <div v-if="jobModal.job.status !== 'diagnose' && jobModal.job.parts && jobModal.job.parts.length" class="jc-detail-group">
               <label>Parts</label>
               <div class="jc-item-list">
@@ -331,7 +343,6 @@
               </div>
             </div>
 
-            <!-- Services — hidden for diagnose -->
             <div v-if="jobModal.job.status !== 'diagnose' && jobModal.job.services && jobModal.job.services.length" class="jc-detail-group">
               <label>Services</label>
               <div class="jc-item-list">
@@ -506,12 +517,13 @@ export default {
       modal: { isOpen: false, type: null, booking: null },
       editForm: { appointmentDate: '', appointmentTime: '' },
       appointmentFilters: [
-        { value: 'upcoming',  label: '📅 Upcoming' },
-        { value: 'completed', label: '✓ Completed' },
-        { value: 'cancelled', label: '✕ Cancelled' },
+        { value: 'upcoming',  label: '📅 Upcoming'  },
+        { value: 'ongoing',   label: '⏳ Ongoing'   },
+        { value: 'completed', label: '✓ Completed'  },
+        { value: 'cancelled', label: '✕ Cancelled'  },
       ],
       bookings: [
-        { id: 1, licensePlate: 'ABC-1234', vehicleMake: 'Toyota', vehicleModel: 'Camry',    vehicleYear: '2022', serviceType: 'Oil Change',          price: 75,  status: 'appointment', bookedDate: '2026-02-05', appointmentDate: '2026-03-10', appointmentTime: '10:30 AM' },
+        { id: 1, licensePlate: 'ABC-1234', vehicleMake: 'Toyota', vehicleModel: 'Camry',    vehicleYear: '2022', serviceType: 'Oil Change',          price: 75,  status: 'appointment', bookedDate: '2026-02-05', appointmentDate: '2026-02-28', appointmentTime: '10:30 AM' },
         { id: 2, licensePlate: 'ABC-1234', vehicleMake: 'Toyota', vehicleModel: 'Camry',    vehicleYear: '2022', serviceType: 'Tire Rotation',       price: 120, status: 'completed',   bookedDate: '2026-01-20', appointmentDate: '2026-02-01', appointmentTime: '02:00 PM' },
         { id: 3, licensePlate: 'ABC-1234', vehicleMake: 'Toyota', vehicleModel: 'Camry',    vehicleYear: '2022', serviceType: 'Battery Replacement', price: 150, status: 'pending',     bookedDate: '2026-02-03', appointmentDate: null,         appointmentTime: null },
         { id: 4, licensePlate: 'GHI-3456', vehicleMake: 'BMW',    vehicleModel: '3 Series', vehicleYear: '2024', serviceType: 'Brake Service',       price: 200, status: 'appointment', bookedDate: '2026-02-01', appointmentDate: '2026-03-20', appointmentTime: '03:30 PM' },
@@ -621,21 +633,35 @@ export default {
     // ── Appointments ──
     filteredAndSortedBookings() {
       let filtered;
+
+      // ── Shared time parser ──
+      const parseTime = (t) => {
+        if (!t) return { h: 0, min: 0 };
+        const parts = t.trim().split(' ');
+        const m = parts[1] ? parts[1].toUpperCase() : '';
+        let [h, min] = parts[0].split(':').map(Number);
+        if (m === 'PM' && h !== 12) h += 12;
+        if (m === 'AM' && h === 12) h = 0;
+        return { h, min: min || 0 };
+      };
+
       if (this.statusFilter === 'upcoming') {
-        filtered = this.bookings.filter(b => b.status === 'appointment');
-        const parseTime = (t) => {
-          if (!t) return 0;
-          const parts = t.trim().split(' ');
-          const m = parts[1] ? parts[1].toUpperCase() : '';
-          let [h, min] = parts[0].split(':').map(Number);
-          if (m === 'PM' && h !== 12) h += 12;
-          if (m === 'AM' && h === 12) h = 0;
-          return h * 60 + (min || 0);
-        };
+        // Future appointments only: appointmentDate+time >= now
+        const now = new Date();
+        filtered = this.bookings.filter(b => {
+          if (b.status !== 'appointment' || !b.appointmentDate) return false;
+          const { h, min } = parseTime(b.appointmentTime);
+          const apptDateTime = new Date(b.appointmentDate + 'T00:00:00');
+          apptDateTime.setHours(h, min, 0, 0);
+          return apptDateTime >= now;
+        });
+
         const getDateTime = (b) => {
           if (!b.appointmentDate) return null;
-          const days = Math.floor(new Date(b.appointmentDate + 'T00:00:00').getTime() / 86400000);
-          return days * 1440 + parseTime(b.appointmentTime);
+          const { h, min } = parseTime(b.appointmentTime);
+          const dt = new Date(b.appointmentDate + 'T00:00:00');
+          dt.setHours(h, min, 0, 0);
+          return dt.getTime();
         };
         filtered.sort((a, b) => {
           const da = getDateTime(a), db = getDateTime(b);
@@ -644,6 +670,24 @@ export default {
           if (db === null) return -1;
           return this.upcomingSortOrder === 'asc' ? da - db : db - da;
         });
+
+      } else if (this.statusFilter === 'ongoing') {
+        // Ongoing: appointment status AND appointmentDate+time is in the past
+        const now = new Date();
+        filtered = this.bookings.filter(b => {
+          if (b.status !== 'appointment' || !b.appointmentDate || !b.appointmentTime) return false;
+          const { h, min } = parseTime(b.appointmentTime);
+          const apptDateTime = new Date(b.appointmentDate + 'T00:00:00');
+          apptDateTime.setHours(h, min, 0, 0);
+          return now > apptDateTime;
+        });
+        // Sort: most recently started first
+        filtered.sort((a, b) => {
+          const da = new Date(a.appointmentDate + 'T00:00:00');
+          const db = new Date(b.appointmentDate + 'T00:00:00');
+          return db - da;
+        });
+
       } else {
         filtered = this.bookings.filter(b => b.status === this.statusFilter);
         filtered.sort((a, b) => {
@@ -651,21 +695,40 @@ export default {
           return this.sortOrder === 'asc' ? da - db : db - da;
         });
       }
+
       return filtered;
     },
+
     nextUpBookingId() {
+      const now = new Date();
+      const parseTime = (t) => {
+        if (!t) return { h: 0, min: 0 };
+        const parts = t.trim().split(' ');
+        const m = parts[1] ? parts[1].toUpperCase() : '';
+        let [h, min] = parts[0].split(':').map(Number);
+        if (m === 'PM' && h !== 12) h += 12;
+        if (m === 'AM' && h === 12) h = 0;
+        return { h, min: min || 0 };
+      };
       const candidates = this.bookings
-        .filter(b => b.status === 'appointment' && b.appointmentDate)
+        .filter(b => {
+          if (b.status !== 'appointment' || !b.appointmentDate) return false;
+          const { h, min } = parseTime(b.appointmentTime);
+          const apptDateTime = new Date(b.appointmentDate + 'T00:00:00');
+          apptDateTime.setHours(h, min, 0, 0);
+          return apptDateTime >= now;
+        })
         .slice()
         .sort((a, b) => new Date(a.appointmentDate + 'T00:00:00') - new Date(b.appointmentDate + 'T00:00:00'));
       return candidates.length ? candidates[0].id : null;
     },
+
     paginatedBookings() {
       const s = (this.currentPage - 1) * this.itemsPerPage;
       return this.filteredAndSortedBookings.slice(s, s + this.itemsPerPage);
     },
     totalPages() {
-      return Math.ceil(this.filteredAndSortedBookings.length / this.itemsPerPage);
+      return Math.max(1, Math.ceil(this.filteredAndSortedBookings.length / this.itemsPerPage));
     },
 
     // ── Active Jobs ──
@@ -697,8 +760,19 @@ export default {
     // ── Tab ──
     switchTab(tab) { this.activeTab = tab; },
 
+    // ── Cancellation Guard ──
+    canCancelBooking(booking) {
+      if (!booking || !booking.appointmentDate) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const apptDate = new Date(booking.appointmentDate + 'T00:00:00');
+      const diffDays = (apptDate - today) / (1000 * 60 * 60 * 24);
+      return diffDays > 2;
+    },
+
     // ── Appointments ──
     openModal(type, booking) {
+      if (type === 'cancel' && !this.canCancelBooking(booking)) return;
       this.modal = { type, booking, isOpen: true };
       if (type === 'edit') {
         this.editForm.appointmentDate = booking.appointmentDate;
@@ -719,6 +793,11 @@ export default {
       this.closeModal();
     },
     confirmCancel() {
+      if (!this.canCancelBooking(this.modal.booking)) {
+        alert('Cancellations are not allowed within 2 days of the appointment.');
+        this.closeModal();
+        return;
+      }
       const idx = this.bookings.findIndex(b => b.id === this.modal.booking.id);
       if (idx !== -1) this.bookings[idx].status = 'cancelled';
       alert('Appointment cancelled successfully!');
