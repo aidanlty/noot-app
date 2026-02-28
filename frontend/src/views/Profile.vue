@@ -7,7 +7,7 @@
         <div class="avatar">{{ initials }}</div>
       </div>
 
-      <h1 class="card-name">{{ profile.name}}</h1>
+      <h1 class="card-name">{{ profile.name }}</h1>
       <p class="card-email-sub">{{ profile.email }}</p>
 
       <div class="divider"></div>
@@ -17,7 +17,7 @@
         <div class="field-row">
           <div class="field-meta">
             <span class="field-label">Role</span>
-            <span class="field-value">{{ profile.role || 'err'}}</span>
+            <span class="field-value">{{ profile.role || 'err' }}</span>
           </div>
         </div>
 
@@ -47,10 +47,22 @@
       </div>
     </div>
 
-    <!-- Toast -->
-    <div v-if="toast" class="toast">{{ toast }}</div>
+    <!-- Success Modal -->
+    <div v-if="success.isOpen" class="modal-overlay" @click="closeSuccess">
+      <div class="modal-content success-modal" @click.stop>
+        <div class="success-icon">
+          <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="26" cy="26" r="25" stroke="#22c55e" stroke-width="2"/>
+            <path d="M14 27l8 8 16-16" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2 class="success-title">{{ success.title }}</h2>
+        <p class="success-message">{{ success.message }}</p>
+        <button class="btn-primary success-btn" @click="closeSuccess">Done</button>
+      </div>
+    </div>
 
-    <!-- Modal — same pattern as reference -->
+    <!-- Edit Modal -->
     <div v-if="modal.isOpen" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <button class="modal-close" @click="closeModal">&times;</button>
@@ -122,7 +134,7 @@
 </template>
 
 <script>
-import {supabase} from '@/supabase.js'
+import { supabase } from '@/supabase.js'
 
 export default {
   name: 'ProfilePage',
@@ -138,7 +150,11 @@ export default {
         isOpen: false,
         type: null,
       },
-      toast: '',
+      success: {
+        isOpen: false,
+        title: '',
+        message: '',
+      },
       error: '',
       form: {
         role: '',
@@ -153,7 +169,7 @@ export default {
   },
   computed: {
     initials() {
-      if (!this.profile.name) return "Unable to fetch.";
+      if (!this.profile.name) return '?';
       return this.profile.name
         .split(' ')
         .map(w => w[0])
@@ -168,55 +184,49 @@ export default {
   },
 
   methods: {
-  async fetchProfile() {
-    try {
-      // get jwt token
-      const token = localStorage.getItem('token');
-      if (!token) {
-        this.$router.push('/login');
-        return;
+    // ── Helpers ──────────────────────────────────────
+    isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    },
+
+    async fetchProfile() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) { this.$router.push('/login'); return; }
+
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.sub;
+
+        if (!userId) {
+          console.error('Could not extract user ID from token');
+          this.$router.push('/login');
+          return;
+        }
+
+        const { data, error: dbError } = await supabase
+          .from('Profiles')
+          .select('"Name", "Email", "Role"')
+          .eq('"ID"', userId)
+          .single();
+
+        if (dbError) { console.error('Error fetching profile:', dbError); return; }
+
+        this.userId = userId;
+        this.profile.name = data.Name;
+        this.profile.email = data.Email;
+        this.profile.role = data.Role;
+
+      } catch (err) {
+        console.error('Unexpected error fetching profile:', err);
       }
+    },
 
-      // extract the user's ID
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const userId = payload.sub; // standard JWT subject claim = user UUID
-      // console.log("payload:", payload);
-      // console.log("userId:", userId);
-
-      if (!userId) {
-        console.error('Could not extract user ID from token');
-        this.$router.push('/login');
-        return;
-      }
-
-      // fetch user's information using user ID
-      const { data, error: dbError } = await supabase
-        .from('Profiles')
-        .select('"Name", "Email", "Role"')
-        .eq('"ID"', userId)
-        .single();
-
-      if (dbError) {
-        console.error('Error fetching profile:', dbError);
-        return;
-      }
-
-      this.userId = payload.sub;
-      // NEW: Populate profile with data from DB
-      this.profile.name = data.Name;
-      this.profile.email = data.Email;
-      this.profile.role = data.Role;
-
-    } catch (err) {
-      console.error('Unexpected error fetching profile:', err);
-    }
-  },
+    // ── Modal controls ────────────────────────────────
     openModal(type) {
       this.error = '';
       this.modal.type = type;
       this.modal.isOpen = true;
 
-      if (type === 'role') this.form.role = this.profile.role;
       if (type === 'name') this.form.name = this.profile.name;
       if (type === 'email') { this.form.email = ''; this.form.emailConfirm = ''; }
       if (type === 'password') { this.form.current = ''; this.form.newPass = ''; this.form.confirm = ''; }
@@ -226,17 +236,22 @@ export default {
       this.modal.type = null;
       this.error = '';
     },
-    showToast(msg) {
-      this.toast = msg;
-      setTimeout(() => { this.toast = ''; }, 3000);
+    showSuccess(title, message) {
+      this.success.title = title;
+      this.success.message = message;
+      this.success.isOpen = true;
     },
+    closeSuccess() {
+      this.success.isOpen = false;
+      this.success.title = '';
+      this.success.message = '';
+    },
+
+    // ── Save handlers ─────────────────────────────────
     async saveName() {
       if (!this.form.name.trim()) { this.error = 'Name cannot be empty.'; return; }
 
       try {
-        console.log("userId:", this.userId);
-
-        // update name in the backend
         const { error: dbError } = await supabase
           .from('Profiles')
           .update({ Name: this.form.name.trim() })
@@ -247,69 +262,76 @@ export default {
           console.error('Error updating name:', dbError);
           return;
         }
-      
+
         this.profile.name = this.form.name.trim();
         this.closeModal();
-        this.showToast('Name updated successfully!');
+        this.showSuccess('Name Updated', `Your name has been changed to ${this.profile.name}.`);
 
       } catch (err) {
-          
         this.error = 'An unexpected error occurred.';
         console.error('Unexpected error updating name:', err);
       }
     },
+
     async saveEmail() {
-      if (!this.form.email.trim()) { this.error = 'Email cannot be empty.'; return; }
+      const email = this.form.email.trim();
+
+      if (!email) { this.error = 'Email cannot be empty.'; return; }
+      if (!this.isValidEmail(email)) { this.error = 'Please enter a valid email address.'; return; }
+      if (email !== this.form.emailConfirm.trim()) { this.error = 'Emails do not match.'; return; }
+      if (email === this.profile.email) { this.error = 'New email must be different from your current email.'; return; }
 
       try {
+        // Check if email already exists in Profiles
+        const { data: existing } = await supabase
+          .from('Profiles')
+          .select('ID')
+          .eq('Email', email)
+          .maybeSingle();
 
-        // update name in the backend
+        if (existing) {
+          this.error = 'Email already exists. Please use a different email.';
+          return;
+        }
+
         const { error: dbError } = await supabase
           .from('Profiles')
-          .update({ Email: this.form.email.trim() })
+          .update({ Email: email })
           .eq('"ID"', this.userId);
 
         if (dbError) {
-          this.error = 'Failed to update email. Please try again.';
+          this.error = 'Email already exists. Please use a different email.';
           console.error('Error updating email:', dbError);
           return;
         }
-      
-        if (!this.form.email) { this.error = 'Please enter a new email.'; return; }
-        if (this.form.email !== this.form.emailConfirm) { this.error = 'Emails do not match.'; return; }
-        this.profile.email = this.form.email;
+
+        this.profile.email = email;
         this.closeModal();
-        this.showToast('Email updated successfully!');
+        this.showSuccess('Email Updated', `Your email has been changed to ${this.profile.email}.`);
 
       } catch (err) {
         this.error = 'An unexpected error occurred.';
         console.error('Unexpected error updating email:', err);
       }
     },
+
     async savePassword() {
       if (!this.form.current) { this.error = 'Enter your current password.'; return; }
       if (this.form.newPass.length < 8) { this.error = 'Password must be at least 8 characters.'; return; }
       if (this.form.newPass !== this.form.confirm) { this.error = 'Passwords do not match.'; return; }
 
       try {
-        // NEW: Get token from localStorage
         const token = localStorage.getItem('token');
         if (!token) { this.$router.push('/login'); return; }
 
-        // verify current pw
+        // Verify current password
         const verifyRes = await fetch('http://localhost:3000/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: this.profile.email,
-            password: this.form.current,
-          }),
+          body: JSON.stringify({ email: this.profile.email, password: this.form.current }),
         });
 
-        if (!verifyRes.ok) {
-          this.error = 'Current password is incorrect.';
-          return;
-        }
+        if (!verifyRes.ok) { this.error = 'Current password is incorrect.'; return; }
 
         const res = await fetch('http://localhost:3000/api/auth/change-password', {
           method: 'POST',
@@ -321,20 +343,15 @@ export default {
         });
 
         const result = await res.json();
-
         if (!res.ok) { this.error = result.message || 'Failed to update password.'; return; }
-        
 
         this.closeModal();
-        this.showToast('Password changed successfully!');
+        this.showSuccess('Password Changed', 'Your password has been updated successfully.');
 
       } catch (err) {
         this.error = 'An unexpected error occurred.';
         console.error('Unexpected error changing password:', err);
       }
-
-      this.closeModal();
-      this.showToast('Password changed successfully!');
     },
   },
 };
