@@ -36,7 +36,7 @@ const routes = [
     meta: { requiresAuth: true, roles: ['customer'] },
     component: () => import('../views/customerBookings.vue') },
 
-  { path: '/profile', name: 'profile', component: () => import('../views/Profile.vue') },
+  
   // 🔹 MANAGER ROUTES
   {
     path: '/manager-dashboard',
@@ -77,6 +77,10 @@ const routes = [
   },
   // 🔹 SHARED STAFF ROUTES (manager + technician)
   // to add view all job cards for them
+
+  // Cust + Tech + Manager
+  { path: '/profile', name: 'profile', meta: { requiresAuth: true, roles: ['customer', 'manager', 'technician'] }, component: () => import('../views/Profile.vue') },
+
   {
     path: '/admin-register-user',
     name: 'adminRegisterUser',
