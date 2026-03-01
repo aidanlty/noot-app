@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <div class="jc-header">
-      <h1>🔧 Job Cards</h1>
+      <h1>Job Cards</h1>
     </div>
 
     <!-- Filter Bar -->

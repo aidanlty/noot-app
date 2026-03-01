@@ -11,6 +11,7 @@
   border: 1px solid #2e2e2e;
   border-radius: 10px;
   padding: 1.5rem 2rem;
+  margin-top: 4.5rem;
   margin-bottom: 1.5rem;
 }
 .jc-header h1 {
@@ -349,6 +350,7 @@
 }
 
 /* ── Card Actions ── */
+
 .jc-card-actions {
   padding: 0 1.25rem;
   display: flex;
@@ -361,9 +363,9 @@
 
 .jc-btn-view {
   padding: 0.5rem 1.1rem;
-  background: #FFD700;
+  background: #fdc601;
   color: #111111;
-  border: none;
+  border: 1px solid;
   border-radius: 6px;
   font-weight: 700;
   font-size: 0.82rem;
@@ -372,7 +374,9 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .jc-btn-view:hover {
-  background: #e6c200;
+  background: transparent;
+  color: #fdc601;
+  border-color:#fdc601;
   transform: scale(1.05);
 }
 
@@ -381,7 +385,7 @@
   padding: 0.5rem 1.1rem;
   background: #3b82f6;
   color: #ffffff;
-  border: none;
+  border: 1px;
   border-radius: 6px;
   font-weight: 700;
   font-size: 0.82rem;
@@ -390,7 +394,9 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .jc-btn-assign:hover {
-  background: #2563eb;
+  background: transparent;
+  color: #2563eb;
+  border-color:#2563eb;
   transform: scale(1.05);
 }
 
