@@ -75,6 +75,95 @@ module.exports = (supabase) => {
       res.status(500).json({ error: err.message })
     }
   })
+    // get all appointments with customer and technician
+    router.get('/getAllAppointments', requireRole(supabase, ['manager']), async (req, res) => {
+      try {
+        const { data, error } = await supabase
+          .from('Appointments')
+          .select(`
+            *,
+            Profiles!Appointments_customer_id_fkey (
+              ID,
+              Name,
+              Email
+            ),
+            TechnicianProfile:Profiles!Appointments_technician_id_fkey (
+              ID,
+              Name,
+              Email
+            )
+          `)
+
+        if (error) return res.status(400).json({ error: error.message })
+        res.status(200).json({ message: 'Appointments retrieved successfully', data })
+      } catch (err) {
+        console.error('Get appointments error:', err)
+        res.status(500).json({ error: err.message })
+      }
+    })
+    // update technician id for appointment
+    router.put('/:appointmentId/technician', requireRole(supabase, ['manager']), async (req, res) => {
+        try {
+
+        const { appointmentId } = req.params
+        const { technician_id } = req.body
+
+        if (!technician_id) {
+            return res.status(400).json({ message: 'technician_id is required' })
+        }
+
+        const { data, error } = await supabase
+            .from('Appointments')
+            .update({ technician_id })
+            .eq('id', appointmentId)
+            .select()
+            .single()
+
+        if (error) return res.status(400).json({ error: error.message })
+        if (!data) return res.status(404).json({ message: 'Appointment not found' })
+
+        res.json({ message: 'Technician updated successfully', data })
+        } catch (err) {
+        res.status(500).json({ error: err.message })
+        }
+    })
+  // manager cancel appt
+  router.put('/cancelAppointment/:id', requireRole(supabase, ['manager']), async (req, res) => {
+    try {
+      const { id } = req.params
+      const { cancel_reason } = req.body
+
+      const { data: existing, error: fetchError } = await supabase
+        .from('Appointments')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (fetchError || !existing) {
+        return res.status(404).json({ message: 'Appointment not found' })
+      }
+
+      if (existing.status === 'cancelled') {
+        return res.status(400).json({ message: 'Appointment is already cancelled' })
+      }
+
+      const { data, error } = await supabase
+        .from('Appointments')
+        .update({ 
+          status: 'cancelled',
+          cancel_reason: cancel_reason ?? null
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) return res.status(400).json({ error: error.message })
+      res.status(200).json({ message: 'Appointment cancelled successfully', data })
+    } catch (err) {
+      console.error('Cancel appointment error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
 
   return router
 }

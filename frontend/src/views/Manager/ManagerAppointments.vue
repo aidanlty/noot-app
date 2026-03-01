@@ -6,28 +6,71 @@
       <h1>📅 Appointments</h1>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="pageLoading" class="loading-state">
+      <span class="loading-spinner"></span>
+      <p>Loading appointments...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="appointmentsError" class="error-state">
+      <p>⚠️ {{ appointmentsError }}</p>
+      <button class="btn-retry" @click="fetchAppointments">Retry</button>
+    </div>
+
+    <template v-else>
+    <!-- Status Tabs -->
+    <div class="status-tabs">
+      <button
+        v-for="tab in statusTabs"
+        :key="tab.value"
+        class="status-tab"
+        :class="['status-tab--' + tab.value, { active: activeStatusTab === tab.value }]"
+        @click="setStatusTab(tab.value)"
+      >
+        <span class="tab-label">{{ tab.label }}</span>
+        <span class="tab-badge">{{ getStatusCount(tab.value) }}</span>
+      </button>
+    </div>
+
     <!-- Filter Bar -->
     <div class="filter-bar">
-      <button
-        v-for="f in filters"
-        :key="f.value"
-        class="filter-btn"
-        :class="{ active: activeFilter === f.value && !specificDate }"
-        @click="setFilter(f.value)"
-      >
-        {{ f.label }}
-      </button>
+      <!-- Date Filters (only for active tab) -->
+      <template v-if="activeStatusTab === 'active'">
+        <button
+          v-for="f in filters"
+          :key="f.value"
+          class="filter-btn"
+          :class="{ active: activeFilter === f.value && !specificDate }"
+          @click="setFilter(f.value)"
+        >
+          {{ f.label }}
+        </button>
 
-      <!-- Date Picker -->
-      <div class="date-filter">
+        <!-- Date Picker -->
+        <div class="date-filter">
+          <input
+            type="date"
+            class="date-input"
+            :class="{ active: specificDate }"
+            v-model="specificDate"
+            @change="onDateChange"
+          />
+          <button v-if="specificDate" class="clear-date" @click="clearDate">✕</button>
+        </div>
+      </template>
+
+      <!-- Customer Name Search -->
+      <div class="search-filter" :class="{ 'search-filter--full': activeStatusTab !== 'active' }">
+        <span class="search-icon">🔍</span>
         <input
-          type="date"
-          class="date-input"
-          :class="{ active: specificDate }"
-          v-model="specificDate"
-          @change="onDateChange"
+          type="text"
+          class="search-input"
+          v-model="customerSearch"
+          placeholder="Search by customer name..."
+          @input="currentPage = 1"
         />
-        <button v-if="specificDate" class="clear-date" @click="clearDate">✕</button>
+        <button v-if="customerSearch" class="clear-search" @click="clearSearch">✕</button>
       </div>
 
       <span class="appt-count">
@@ -37,7 +80,8 @@
 
     <!-- Empty -->
     <div v-if="filteredAppointments.length === 0" class="empty-state">
-      No appointments found for this period.
+      <span class="empty-icon">{{ emptyIcon }}</span>
+      <p>{{ emptyMessage }}</p>
     </div>
 
     <!-- List -->
@@ -46,10 +90,19 @@
         v-for="appt in paginatedAppointments"
         :key="appt.id"
         class="appt-card"
-        :class="{ 'today-card': isToday(appt.appointmentDate) }"
+        :class="{
+          'today-card': isToday(appt.appointmentDate) && activeStatusTab === 'active',
+          'card--completed': appt.status === 'completed',
+          'card--cancelled': appt.status === 'cancelled',
+          'card--diagnose': appt.status === 'diagnose',
+        }"
       >
-        <div class="appt-time-col">
-          <span class="appt-day">{{ isToday(appt.appointmentDate) ? 'Today' : getDayName(appt.appointmentDate) }}</span>
+        <div class="appt-time-col" :class="{
+          'time-col--completed': appt.status === 'completed',
+          'time-col--cancelled': appt.status === 'cancelled',
+          'time-col--diagnose': appt.status === 'diagnose',
+        }">
+          <span class="appt-day">{{ isToday(appt.appointmentDate) && activeStatusTab === 'active' ? 'Today' : getDayName(appt.appointmentDate) }}</span>
           <span class="appt-time">{{ appt.appointmentTime }}</span>
         </div>
         <div class="appt-divider"></div>
@@ -57,43 +110,63 @@
           <div class="appt-top">
             <h3 class="appt-title">{{ appt.customerName }}</h3>
             <span class="appt-id">#{{ appt.id }}</span>
+            <span
+              v-if="appt.status === 'completed'"
+              class="status-badge status-badge--completed"
+            >✓ Completed</span>
+            <span
+              v-else-if="appt.status === 'cancelled'"
+              class="status-badge status-badge--cancelled"
+            >✕ Cancelled</span>
+            <span
+              v-else-if="appt.status === 'diagnose'"
+              class="status-badge status-badge--diagnose"
+            >🔬 Diagnose</span>
           </div>
           <p class="appt-vehicle">{{ appt.vehicleYear }} {{ appt.vehicleMake }} {{ appt.vehicleModel }} · {{ appt.licensePlate }}</p>
           <div class="appt-meta">
             <span class="meta-tag date-tag">{{ formatDate(appt.appointmentDate) }}</span>
-            <span class="meta-tag duration-tag">{{ appt.duration }}</span>
             <span v-if="appt.diagnoseTech" class="meta-tag tech-assigned-tag">
               👤 {{ appt.diagnoseTech }}
             </span>
-            <span v-else class="meta-tag tech-unassigned-tag">
+            <span v-else-if="activeStatusTab === 'active' && appt.status !== 'cancelled'" class="meta-tag tech-unassigned-tag">
               Diagnose Tech: Not Assigned
+            </span>
+            <!-- cancel_reason only shown when status is cancelled -->
+            <span v-if="appt.cancelReason && appt.status === 'cancelled'" class="meta-tag cancel-reason-tag">
+              {{ appt.cancelReason }}
             </span>
           </div>
         </div>
         <div class="appt-actions">
           <button class="btn-view" @click="openModal(appt)">View</button>
-          <button
-            v-if="!appt.diagnoseTech"
-            class="btn-assign-tech"
-            @click="openAssignTech(appt)"
-          >
-            Assign
-          </button>
-          <button
-            v-else
-            class="btn-change-tech"
-            @click="openAssignTech(appt)"
-          >
-            Change
-          </button>
-          <button
-            v-if="isPast(appt.appointmentDate, appt.appointmentTime)"
-            class="btn-proceed"
-            @click="openProceedConfirm(appt)"
-          >
-            Proceed
-          </button>
-          <button class="btn-cancel-appt" @click="openCancelConfirm(appt)">Cancel</button>
+          <template v-if="activeStatusTab === 'active'">
+            <button
+              v-if="!appt.diagnoseTech"
+              class="btn-assign-tech"
+              @click="openAssignTech(appt)"
+            >
+              Assign
+            </button>
+            <button
+              v-else
+              class="btn-change-tech"
+              @click="openAssignTech(appt)"
+            >
+              Change
+            </button>
+            <!-- Diagnose button: visible when datetime is past, disabled if no tech — does nothing on click -->
+            <button
+              v-if="isPast(appt.appointmentDate, appt.appointmentTime)"
+              class="btn-diagnose"
+              :class="{ 'btn-proceed--disabled': !appt.diagnoseTech }"
+              :disabled="!appt.diagnoseTech"
+              :title="!appt.diagnoseTech ? 'Assign a technician before proceeding to diagnose' : ''"
+            >
+              Diagnose
+            </button>
+            <button class="btn-cancel-appt" @click="openCancelConfirm(appt)">Cancel</button>
+          </template>
         </div>
       </div>
     </div>
@@ -123,6 +196,10 @@
             <label>Customer</label>
             <p>{{ modal.appt.customerName }}</p>
           </div>
+          <div v-if="modal.appt.customerEmail" class="detail-group">
+            <label>Customer Email</label>
+            <p>{{ modal.appt.customerEmail }}</p>
+          </div>
           <div class="detail-group">
             <label>Vehicle</label>
             <p>{{ modal.appt.vehicleYear }} {{ modal.appt.vehicleMake }} {{ modal.appt.vehicleModel }}</p>
@@ -144,16 +221,20 @@
             <p>{{ modal.appt.duration }}</p>
           </div>
           <div class="detail-group">
-            <label>Price</label>
-            <p>${{ modal.appt.price }}</p>
-          </div>
-          <div class="detail-group">
             <label>Status</label>
             <p>{{ formatStatus(modal.appt.status) }}</p>
           </div>
-          <div class="detail-group">
+          <div v-if="modal.appt.status !== 'cancelled'" class="detail-group">
             <label>Diagnose Technician</label>
             <p>{{ modal.appt.diagnoseTech || 'Not Assigned' }}</p>
+          </div>
+          <div v-if="modal.appt.status !== 'cancelled' && modal.appt.techEmail" class="detail-group">
+            <label>Technician Email</label>
+            <p>{{ modal.appt.techEmail }}</p>
+          </div>
+          <div v-if="modal.appt.cancelReason && modal.appt.status === 'cancelled'" class="detail-group">
+            <label>Cancellation Reason</label>
+            <p>{{ modal.appt.cancelReason }}</p>
           </div>
           <div v-if="modal.appt.notes" class="detail-group">
             <label>Notes</label>
@@ -185,60 +266,34 @@
           </span>
         </div>
 
-        <!-- Technician Dropdown -->
         <div class="tech-select-wrapper">
           <label class="tech-select-label">Diagnose Technician</label>
           <div class="custom-select-container">
-
-            <!-- Loading state -->
             <p v-if="technicianLoading" class="tech-loading">Loading technicians...</p>
-
-            <!-- Error state -->
             <p v-else-if="technicianError" class="reason-error">{{ technicianError }}</p>
-
-            <!-- Dropdown -->
             <select
               v-else
-              v-model="assignTech.selectedTech"
+              v-model="assignTech.selectedTechId"
               class="tech-select"
             >
               <option value="" disabled>— Select a technician —</option>
               <option
                 v-for="tech in technicians"
                 :key="tech.ID"
-                :value="tech.Name"
+                :value="tech.ID"
               >{{ tech.Name }}</option>
             </select>
-
           </div>
         </div>
 
         <p v-if="assignTech.showError" class="reason-error">Please select a technician to continue.</p>
+        <p v-if="assignTech.submitError" class="reason-error">{{ assignTech.submitError }}</p>
 
         <div class="modal-actions confirm-actions">
           <button class="btn-secondary" @click="closeAssignTech">Go Back</button>
-          <button class="btn-confirm-assign" @click="submitAssignTech">
-            {{ assignTech.appt && assignTech.appt.diagnoseTech ? 'Confirm Change' : 'Confirm Assign' }}
+          <button class="btn-confirm-assign" @click="submitAssignTech" :disabled="assignTech.submitting">
+            {{ assignTech.submitting ? 'Saving...' : (assignTech.appt && assignTech.appt.diagnoseTech ? 'Confirm Change' : 'Confirm Assign') }}
           </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Proceed Confirmation Modal -->
-    <div v-if="proceedConfirm.isOpen" class="modal-overlay" @click="closeProceedConfirm">
-      <div class="modal-content confirm-modal-content" @click.stop>
-        <div class="confirm-icon confirm-icon--proceed">✓</div>
-        <h2>Confirm Proceed</h2>
-        <p class="confirm-desc">
-          Are you sure you want to mark this appointment as <strong>proceeded</strong>?
-        </p>
-        <div class="confirm-appt-info">
-          <span class="confirm-name">{{ proceedConfirm.appt.customerName }}</span>
-          <span class="confirm-meta">{{ proceedConfirm.appt.vehicleYear }} {{ proceedConfirm.appt.vehicleMake }} {{ proceedConfirm.appt.vehicleModel }} · #{{ proceedConfirm.appt.id }}</span>
-        </div>
-        <div class="modal-actions confirm-actions">
-          <button class="btn-secondary" @click="closeProceedConfirm">Go Back</button>
-          <button class="btn-confirm-proceed" @click="submitProceed">Yes, Proceed</button>
         </div>
       </div>
     </div>
@@ -274,14 +329,18 @@
         </div>
 
         <p v-if="cancelConfirm.showError" class="reason-error">Please select a reason to continue.</p>
+        <p v-if="cancelConfirm.submitError" class="reason-error">{{ cancelConfirm.submitError }}</p>
 
         <div class="modal-actions confirm-actions">
-          <button class="btn-secondary" @click="closeCancelConfirm">Go Back</button>
-          <button class="btn-confirm-cancel" @click="submitCancel">Confirm Cancel</button>
+          <button class="btn-secondary" @click="closeCancelConfirm" :disabled="cancelConfirm.submitting">Go Back</button>
+          <button class="btn-confirm-cancel" @click="submitCancel" :disabled="cancelConfirm.submitting">
+            {{ cancelConfirm.submitting ? 'Cancelling...' : 'Confirm Cancel' }}
+          </button>
         </div>
       </div>
     </div>
 
+    </template>
   </div>
 </template>
 
@@ -289,20 +348,25 @@
 export default {
   name: 'AppointmentsPage',
   data() {
-    const today = new Date();
-    const addDays = (d, n) => {
-      const x = new Date(d);
-      x.setDate(x.getDate() + n);
-      return x.toISOString().split('T')[0];
-    };
-    const todayStr = today.toISOString().split('T')[0];
-
     return {
+      // ── Loading / Error ──
+      pageLoading: false,
+      appointmentsError: null,
+
+      // ── Tabs & Filters ──
+      activeStatusTab: 'active',
       activeFilter: 'today',
       currentPage: 1,
       itemsPerPage: 5,
       specificDate: '',
+      customerSearch: '',
       now: new Date(),
+
+      statusTabs: [
+        { label: 'Active',    value: 'active'    },
+        { label: 'Completed', value: 'completed' },
+        { label: 'Cancelled', value: 'cancelled' },
+      ],
       filters: [
         { label: 'Today',      value: 'today' },
         { label: 'This Week',  value: 'week'  },
@@ -310,30 +374,24 @@ export default {
         { label: 'All',        value: 'all'   },
       ],
 
-      // Technicians — populated from API
+      // ── Technicians ──
       technicians: [],
       technicianLoading: false,
       technicianError: '',
 
+      // ── Modals ──
       modal: { isOpen: false, appt: null },
-      assignTech: { isOpen: false, appt: null, selectedTech: '', showError: false },
-      proceedConfirm: { isOpen: false, appt: null },
-      cancelConfirm: { isOpen: false, appt: null, reason: '', showError: false },
+      assignTech: { isOpen: false, appt: null, selectedTech: '', selectedTechId: '', showError: false, submitting: false, submitError: '' },
+      cancelConfirm: { isOpen: false, appt: null, reason: '', showError: false, submitting: false, submitError: '' },
       cancelReasons: ['Customer did not show up', 'Reschedule'],
-      appointments: [
-        { id: 101, licensePlate: 'ABC-1234', vehicleMake: 'Toyota',  vehicleModel: 'Camry',    vehicleYear: '2022', customerName: 'James Carter',    price: 75,  status: 'appointment', appointmentDate: todayStr,           appointmentTime: '09:00 AM', duration: '45 min',  diagnoseTech: '',          notes: 'Customer requested synthetic oil.' },
-        { id: 102, licensePlate: 'XYZ-5678', vehicleMake: 'Honda',   vehicleModel: 'Civic',    vehicleYear: '2023', customerName: 'Priya Nair',      price: 60,  status: 'appointment', appointmentDate: todayStr,           appointmentTime: '02:30 PM', duration: '1 hr',    diagnoseTech: 'Ryan Patel', notes: null },
-        { id: 103, licensePlate: 'DEF-9012', vehicleMake: 'Ford',    vehicleModel: 'F-150',    vehicleYear: '2021', customerName: 'Marco Silva',     price: 50,  status: 'appointment', appointmentDate: addDays(today, 2),  appointmentTime: '10:00 AM', duration: '30 min',  diagnoseTech: '',          notes: null },
-        { id: 104, licensePlate: 'GHI-3456', vehicleMake: 'BMW',     vehicleModel: '3 Series', vehicleYear: '2024', customerName: 'Sarah Mitchell',  price: 200, status: 'appointment', appointmentDate: addDays(today, 4),  appointmentTime: '03:30 PM', duration: '2 hrs',   diagnoseTech: 'Chris Lee', notes: 'Front and rear brake pads.' },
-        { id: 105, licensePlate: 'JKL-7890', vehicleMake: 'Tesla',   vehicleModel: 'Model 3',  vehicleYear: '2023', customerName: 'David Okafor',    price: 50,  status: 'appointment', appointmentDate: addDays(today, 5),  appointmentTime: '11:00 AM', duration: '1 hr',    diagnoseTech: '',          notes: null },
-        { id: 106, licensePlate: 'MNO-1122', vehicleMake: 'Audi',    vehicleModel: 'A4',       vehicleYear: '2022', customerName: 'Lena Hoffmann',   price: 350, status: 'appointment', appointmentDate: addDays(today, 10), appointmentTime: '08:30 AM', duration: '3 hrs',   diagnoseTech: '',          notes: 'Annual full service and inspection.' },
-        { id: 107, licensePlate: 'PQR-3344', vehicleMake: 'Mazda',   vehicleModel: 'CX-5',     vehicleYear: '2020', customerName: 'Tom Nguyen',      price: 120, status: 'appointment', appointmentDate: addDays(today, 14), appointmentTime: '01:00 PM', duration: '1.5 hrs', diagnoseTech: '',          notes: null },
-      ],
+
+      // ── Appointments (populated from API) ──
+      appointments: [],
     };
   },
 
   async mounted() {
-    await this.fetchTechnicians();
+    await Promise.all([this.fetchAppointments(), this.fetchTechnicians()]);
     this._nowTimer = setInterval(() => { this.now = new Date(); }, 60000);
   },
   beforeUnmount() {
@@ -354,22 +412,50 @@ export default {
       const today = new Date();
       return new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
     },
+
+    activeAppointments() {
+      return this.appointments.filter(a => a.status === 'appointment' || a.status === 'booked');
+    },
+    completedAppointments() {
+      return this.appointments.filter(a => a.status === 'completed');
+    },
+    cancelledAppointments() {
+      return this.appointments.filter(a => a.status === 'cancelled');
+    },
+
+    tabAppointments() {
+      if (this.activeStatusTab === 'active')    return this.activeAppointments;
+      if (this.activeStatusTab === 'completed') return this.completedAppointments;
+      if (this.activeStatusTab === 'cancelled') return this.cancelledAppointments;
+      return this.appointments;
+    },
+
     filteredAppointments() {
-      let list = this.appointments;
-      if (this.specificDate) {
-        list = list.filter(a => a.appointmentDate === this.specificDate);
-      } else if (this.activeFilter === 'today') {
-        list = list.filter(a => a.appointmentDate === this.todayStr);
-      } else if (this.activeFilter === 'week') {
-        list = list.filter(a => a.appointmentDate >= this.todayStr && a.appointmentDate <= this.endOfWeekStr);
-      } else if (this.activeFilter === 'month') {
-        list = list.filter(a => a.appointmentDate >= this.todayStr && a.appointmentDate <= this.endOfMonthStr);
+      let list = this.tabAppointments;
+
+      if (this.customerSearch.trim()) {
+        const query = this.customerSearch.trim().toLowerCase();
+        list = list.filter(a => a.customerName.toLowerCase().includes(query));
       }
+
+      if (this.activeStatusTab === 'active') {
+        if (this.specificDate) {
+          list = list.filter(a => a.appointmentDate === this.specificDate);
+        } else if (this.activeFilter === 'today') {
+          list = list.filter(a => a.appointmentDate === this.todayStr);
+        } else if (this.activeFilter === 'week') {
+          list = list.filter(a => a.appointmentDate >= this.todayStr && a.appointmentDate <= this.endOfWeekStr);
+        } else if (this.activeFilter === 'month') {
+          list = list.filter(a => a.appointmentDate >= this.todayStr && a.appointmentDate <= this.endOfMonthStr);
+        }
+      }
+
       return [...list].sort((a, b) =>
-        a.appointmentDate.localeCompare(b.appointmentDate) ||
-        this.parseTime(a.appointmentTime) - this.parseTime(b.appointmentTime)
+        b.appointmentDate.localeCompare(a.appointmentDate) ||
+        this.parseTime(b.appointmentTime) - this.parseTime(a.appointmentTime)
       );
     },
+
     totalPages() {
       return Math.max(1, Math.ceil(this.filteredAppointments.length / this.itemsPerPage));
     },
@@ -377,15 +463,74 @@ export default {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       return this.filteredAppointments.slice(start, start + this.itemsPerPage);
     },
+
+    emptyIcon() {
+      if (this.activeStatusTab === 'completed') return '✓';
+      if (this.activeStatusTab === 'cancelled') return '✕';
+      return '📅';
+    },
+    emptyMessage() {
+      if (this.customerSearch.trim()) return 'No appointments found matching that name.';
+      if (this.activeStatusTab === 'completed') return 'No completed appointments yet.';
+      if (this.activeStatusTab === 'cancelled') return 'No cancelled appointments.';
+      return 'No appointments found for this period.';
+    },
   },
 
   methods: {
-    // ── Fetch technicians from API ──────────────────────────────────────
+    async fetchAppointments() {
+      this.pageLoading = true;
+      this.appointmentsError = null;
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Not authenticated. Please log in again.');
+        const res = await fetch('http://localhost:3000/api/manager/getAllAppointments', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json.error || json.message || `Server error ${res.status}`);
+        }
+        this.appointments = (json.data || []).map(a => ({
+          id:              a.id,
+          customerName:    a.Profiles?.Name          || '',
+          customerEmail:   a.Profiles?.Email         || '',
+          licensePlate:    a.license_plate           || a.vehicle_license_plate || '',
+          vehicleMake:     a.vehicle_make            || '',
+          vehicleModel:    a.vehicle_model           || '',
+          vehicleYear:     a.vehicle_year            || '',
+          appointmentDate: a.appointment_date        || '',
+          appointmentTime: a.appointment_time        || '',
+          duration:        a.duration               || '',
+          status:          a.status                 || '',
+          diagnoseTech:    a.TechnicianProfile?.Name  || '',
+          diagnoseTechId:  a.TechnicianProfile?.ID    || '',
+          techEmail:       a.TechnicianProfile?.Email || '',
+          cancelReason:    a.cancel_reason           || null,
+          notes:           a.notes                  || a.customer_notes || null,
+        }));
+      } catch (err) {
+        console.error('Error fetching appointments:', err);
+        this.appointmentsError = err.message;
+      } finally {
+        this.pageLoading = false;
+      }
+    },
+
     async fetchTechnicians() {
       this.technicianLoading = true;
       this.technicianError = '';
       try {
-        const res = await fetch('http://localhost:3000/api/technicians');
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:3000/api/technicians/getTechnicians', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
         if (!res.ok) throw new Error('Failed to fetch technicians');
         const data = await res.json();
         this.technicians = data.technicians;
@@ -395,6 +540,19 @@ export default {
       } finally {
         this.technicianLoading = false;
       }
+    },
+
+    getStatusCount(tabValue) {
+      if (tabValue === 'active')    return this.activeAppointments.length;
+      if (tabValue === 'completed') return this.completedAppointments.length;
+      if (tabValue === 'cancelled') return this.cancelledAppointments.length;
+      return 0;
+    },
+
+    setStatusTab(val) {
+      this.activeStatusTab = val;
+      this.currentPage = 1;
+      this.customerSearch = '';
     },
 
     isToday(date) {
@@ -410,65 +568,117 @@ export default {
       return this.now > apptDate;
     },
 
-    // Assign Tech
+    // ── Assign Tech ──
     openAssignTech(appt) {
       this.assignTech.appt = appt;
+      this.assignTech.selectedTechId = appt.diagnoseTechId || '';
       this.assignTech.selectedTech = appt.diagnoseTech || '';
       this.assignTech.showError = false;
+      this.assignTech.submitError = '';
+      this.assignTech.submitting = false;
       this.assignTech.isOpen = true;
     },
     closeAssignTech() {
       this.assignTech.isOpen = false;
       this.assignTech.appt = null;
       this.assignTech.selectedTech = '';
+      this.assignTech.selectedTechId = '';
       this.assignTech.showError = false;
+      this.assignTech.submitError = '';
+      this.assignTech.submitting = false;
     },
-    submitAssignTech() {
-      if (!this.assignTech.selectedTech) {
+    async submitAssignTech() {
+      if (!this.assignTech.selectedTechId) {
         this.assignTech.showError = true;
         return;
       }
-      this.assignTech.appt.diagnoseTech = this.assignTech.selectedTech;
-      console.log('Tech assigned:', this.assignTech.appt.id, '->', this.assignTech.selectedTech);
-      this.closeAssignTech();
+      this.assignTech.submitting = true;
+      this.assignTech.submitError = '';
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(
+          `http://localhost:3000/api/manager/${this.assignTech.appt.id}/technician`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ technician_id: this.assignTech.selectedTechId }),
+          }
+        );
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || json.message || `Error ${res.status}`);
+
+        const selectedTech = this.technicians.find(t => t.ID === this.assignTech.selectedTechId);
+        this.assignTech.appt.diagnoseTech   = selectedTech?.Name  || '';
+        this.assignTech.appt.diagnoseTechId = selectedTech?.ID    || '';
+        this.assignTech.appt.techEmail      = selectedTech?.Email || '';
+
+        this.closeAssignTech();
+      } catch (err) {
+        console.error('Error assigning technician:', err);
+        this.assignTech.submitError = err.message;
+      } finally {
+        this.assignTech.submitting = false;
+      }
     },
 
-    // Proceed
-    openProceedConfirm(appt) {
-      this.proceedConfirm.appt = appt;
-      this.proceedConfirm.isOpen = true;
-    },
-    closeProceedConfirm() {
-      this.proceedConfirm.isOpen = false;
-      this.proceedConfirm.appt = null;
-    },
-    submitProceed() {
-      this.proceedConfirm.appt.status = 'proceeded';
-      console.log('Proceeded:', this.proceedConfirm.appt.id);
-      this.closeProceedConfirm();
-    },
-
-    // Cancel
+    // ── Cancel Confirm ──
     openCancelConfirm(appt) {
       this.cancelConfirm.appt = appt;
       this.cancelConfirm.reason = '';
       this.cancelConfirm.showError = false;
+      this.cancelConfirm.submitError = '';
+      this.cancelConfirm.submitting = false;
       this.cancelConfirm.isOpen = true;
     },
     closeCancelConfirm() {
       this.cancelConfirm.isOpen = false;
       this.cancelConfirm.appt = null;
+      this.cancelConfirm.reason = '';
+      this.cancelConfirm.showError = false;
+      this.cancelConfirm.submitError = '';
+      this.cancelConfirm.submitting = false;
     },
-    submitCancel() {
+    async submitCancel() {
       if (!this.cancelConfirm.reason) {
         this.cancelConfirm.showError = true;
         return;
       }
-      this.cancelConfirm.appt.status = 'cancelled';
-      console.log('Cancelled:', this.cancelConfirm.appt.id, 'Reason:', this.cancelConfirm.reason);
-      this.closeCancelConfirm();
+
+      this.cancelConfirm.submitting = true;
+      this.cancelConfirm.submitError = '';
+
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(
+          `http://localhost:3000/api/manager/cancelAppointment/${this.cancelConfirm.appt.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cancel_reason: this.cancelConfirm.reason }),
+          }
+        );
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || json.message || `Error ${res.status}`);
+
+        // Update local state only after API confirms success
+        this.cancelConfirm.appt.status = 'cancelled';
+        this.cancelConfirm.appt.cancelReason = this.cancelConfirm.reason;
+        this.closeCancelConfirm();
+      } catch (err) {
+        console.error('Error cancelling appointment:', err);
+        this.cancelConfirm.submitError = err.message;
+      } finally {
+        this.cancelConfirm.submitting = false;
+      }
     },
 
+    // ── Filters / Pagination ──
     setFilter(val) {
       this.activeFilter = val;
       this.specificDate = '';
@@ -479,6 +689,10 @@ export default {
     },
     clearDate() {
       this.specificDate = '';
+      this.currentPage = 1;
+    },
+    clearSearch() {
+      this.customerSearch = '';
       this.currentPage = 1;
     },
     goToPage(page) {
@@ -498,6 +712,8 @@ export default {
       if (modifier === 'PM' && hours !== 12) hours += 12;
       return hours * 60 + minutes;
     },
+
+    // ── Modal ──
     openModal(appt) {
       this.modal.appt = appt;
       this.modal.isOpen = true;

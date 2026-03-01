@@ -1,16 +1,13 @@
 <template>
   <div class="bookings-container">
-
     <!-- Loading Screen -->
     <div v-if="pageLoading" class="page-loading">
       <p>Loading...</p>
     </div>
-
     <template v-else>
       <!-- Header -->
       <div class="bookings-header">
         <h1>My Bookings</h1>
-
         <!-- Tabs -->
         <div class="tab-switcher">
           <button
@@ -39,12 +36,10 @@
           </button>
         </div>
       </div>
-
       <!-- ═══════════════════════════════════════════════════════════ -->
       <!--  TAB 1 — APPOINTMENTS                                       -->
       <!-- ═══════════════════════════════════════════════════════════ -->
       <template v-if="activeTab === 'appointments'">
-
         <div class="filter-sort-container">
           <div class="filter-group">
             <label class="filter-label">Filter by Status:</label>
@@ -60,7 +55,6 @@
               </button>
             </div>
           </div>
-
           <div v-if="statusFilter === 'upcoming'" class="sort-group">
             <label class="sort-label">Sort by Appointment Time:</label>
             <button
@@ -71,7 +65,6 @@
               {{ upcomingSortOrder === 'asc' ? '↑ Ascending (Soonest First)' : '↓ Descending (Latest First)' }}
             </button>
           </div>
-
           <div v-if="statusFilter !== 'upcoming' && statusFilter !== 'ongoing'" class="sort-group">
             <label class="sort-label">Sort by Booking Date:</label>
             <button
@@ -83,14 +76,12 @@
             </button>
           </div>
         </div>
-
         <div v-if="bookingsError" class="no-bookings">
           <p>Error: {{ bookingsError }}</p>
         </div>
         <div v-else-if="bookings.length === 0" class="no-bookings">
           <p>You have no bookings yet.</p>
         </div>
-
         <div v-else class="bookings-list">
           <div
             v-for="booking in paginatedBookings"
@@ -102,13 +93,11 @@
               <span class="next-up-pulse"></span>
               Next Up
             </div>
-
             <div class="row-status">
               <span :class="['status-badge', `status-${booking.status}`]">
                 {{ formatStatus(booking.status) }}
               </span>
             </div>
-
             <div class="row-content">
               <div class="content-main">
                 <div class="booking-title">
@@ -144,7 +133,6 @@
                     <span class="detail-label">❗ Cancel Reason:</span>
                     <span class="detail-value">{{ booking.cancelReason }}</span>
                   </div>
-
                   <!-- Cancelled by Porschify Notice -->
                   <div
                     v-if="booking.status === 'cancelled' && booking.cancelReason"
@@ -156,7 +144,6 @@
               </div>
               <div class="row-actions">
                 <button class="btn-view" @click="openModal('view', booking)">View Details</button>
-
                 <button
                   v-if="booking.status === 'booked' && statusFilter !== 'ongoing'"
                   class="btn-edit"
@@ -165,7 +152,6 @@
                   :title="!canCancelBooking(booking) ? 'Edits are not allowed within 2 days of the appointment' : 'Edit this appointment'"
                   @click="openModal('edit', booking)"
                 >Edit Appointment</button>
-
                 <button
                   v-if="booking.status === 'booked'"
                   class="btn-cancel"
@@ -179,7 +165,6 @@
               </div>
             </div>
           </div>
-
           <div class="pagination-container">
             <button class="pagination-btn" @click="prevPage" :disabled="currentPage === 1">← Previous</button>
             <div class="pagination-info">
@@ -194,12 +179,10 @@
             <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">Next →</button>
           </div>
         </div>
-
         <!-- MODALS -->
         <div v-if="modal.isOpen" class="modal-overlay" @click="closeModal">
           <div class="modal-content" @click.stop>
             <button class="modal-close" @click="closeModal">&times;</button>
-
             <!-- VIEW MODAL -->
             <div v-if="modal.type === 'view'">
               <h2>Booking Details</h2>
@@ -243,7 +226,6 @@
                   <label>Cancel Reason:</label>
                   <p>{{ modal.booking.cancelReason }}</p>
                 </div>
-
                 <div
                   v-if="modal.booking.status === 'cancelled' && modal.booking.cancelReason"
                   class="detail-group cancelled-by-admin-modal"
@@ -256,7 +238,6 @@
                 <button class="btn-secondary" @click="closeModal">Close</button>
               </div>
             </div>
-
             <!-- EDIT MODAL -->
             <div v-if="modal.type === 'edit'">
               <h2>Edit Appointment</h2>
@@ -280,7 +261,10 @@
                 </div>
                 <div class="form-group">
                   <label>Appointment Time:</label>
-                  <select v-model="editForm.appointmentTime" :disabled="!editForm.appointmentDate || editIsSunday">
+                  <select
+                    v-model="editForm.appointmentTime"
+                    :disabled="!editForm.appointmentDate || editIsSunday"
+                  >
                     <option value="">Select time</option>
                     <option
                       v-for="slot in editTimeSlots"
@@ -291,6 +275,11 @@
                       {{ slot.label }}{{ slot.disabled ? ' (Unavailable)' : '' }}
                     </option>
                   </select>
+                  <!-- ── SAME DATE & TIME WARNING ── -->
+                  <div v-if="editIsSameAsOriginal" class="same-slot-warning">
+                    <span class="same-slot-warning__icon">⚠️</span>
+                    <span>This is the same date and time as your current appointment. Please select a different date or time to save.</span>
+                  </div>
                 </div>
               </div>
               <div class="modal-actions">
@@ -298,11 +287,10 @@
                 <button
                   class="btn-primary"
                   @click="saveAppointment"
-                  :disabled="!editForm.appointmentDate || !editForm.appointmentTime || editIsSunday"
+                  :disabled="!editForm.appointmentDate || !editForm.appointmentTime || editIsSunday || editIsSameAsOriginal"
                 >Save Changes</button>
               </div>
             </div>
-
             <!-- CANCEL MODAL -->
             <div v-if="modal.type === 'cancel'">
               <h2>Cancel Appointment</h2>
@@ -333,17 +321,13 @@
                 </button>
               </div>
             </div>
-
           </div>
         </div>
-
       </template>
-
       <!-- ═══════════════════════════════════════════════════════════ -->
       <!--  TAB 2 — ACTIVE JOBS                                        -->
       <!-- ═══════════════════════════════════════════════════════════ -->
       <template v-if="activeTab === 'activejobs'">
-
         <div class="jc-filter-bar">
           <div class="jc-filter-row">
             <div class="jc-filter-row-label">Status</div>
@@ -362,9 +346,7 @@
             <span class="jc-count">{{ filteredJobCards.length }} job{{ filteredJobCards.length !== 1 ? 's' : '' }}</span>
           </div>
         </div>
-
         <div v-if="filteredJobCards.length === 0" class="jc-empty-state">No active jobs found.</div>
-
         <div v-else class="jc-list">
           <div v-for="job in paginatedJobCards" :key="job.id" class="jc-card">
             <div class="jc-status-col" :class="'jc-status-col--' + job.status">
@@ -400,7 +382,6 @@
             </div>
           </div>
         </div>
-
         <div v-if="totalJobPages > 1" class="jc-pagination">
           <button class="jc-pagination-btn" @click="prevJobPage" :disabled="currentJobPage === 1">← Previous</button>
           <div class="jc-pagination-pages">
@@ -408,7 +389,6 @@
           </div>
           <button class="jc-pagination-btn" @click="nextJobPage" :disabled="currentJobPage === totalJobPages">Next →</button>
         </div>
-
         <!-- Active Job View Modal -->
         <div v-if="jobModal.isOpen" class="jc-modal-overlay" @click="closeJobModal">
           <div class="jc-modal" @click.stop>
@@ -424,7 +404,6 @@
               <div class="jc-detail-group"><label>Job Date</label><p>{{ formatDate(jobModal.job.jobDate) }}</p></div>
               <div v-if="jobModal.job.status !== 'diagnose'" class="jc-detail-group"><label>Service Type</label><p>{{ jobModal.job.serviceType }}</p></div>
               <div class="jc-detail-group"><label>Estimated Cost</label><p>${{ jobModal.job.estimatedCost }}</p></div>
-
               <div class="jc-detail-group">
                 <label>Diagnose Technician</label>
                 <div v-if="jobModal.job.diagnoseTechnician">
@@ -436,7 +415,6 @@
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
               </div>
-
               <div class="jc-detail-group">
                 <label>Service Technician</label>
                 <div v-if="jobModal.job.serviceTechnician">
@@ -448,7 +426,6 @@
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
               </div>
-
               <div v-if="jobModal.job.status !== 'diagnose' && jobModal.job.parts && jobModal.job.parts.length" class="jc-detail-group">
                 <label>Parts</label>
                 <div class="jc-item-list">
@@ -458,7 +435,6 @@
                   </div>
                 </div>
               </div>
-
               <div v-if="jobModal.job.status !== 'diagnose' && jobModal.job.services && jobModal.job.services.length" class="jc-detail-group">
                 <label>Services</label>
                 <div class="jc-item-list">
@@ -468,7 +444,6 @@
                   </div>
                 </div>
               </div>
-
               <div v-if="jobModal.job.notes" class="jc-detail-group"><label>Notes</label><p>{{ jobModal.job.notes }}</p></div>
             </div>
             <div class="jc-modal-actions">
@@ -476,14 +451,11 @@
             </div>
           </div>
         </div>
-
       </template>
-
       <!-- ═══════════════════════════════════════════════════════════ -->
       <!--  TAB 3 — FINISHED JOBS                                      -->
       <!-- ═══════════════════════════════════════════════════════════ -->
       <template v-if="activeTab === 'finishedjobs'">
-
         <div class="jc-filter-bar">
           <div class="jc-filter-row">
             <div class="jc-filter-row-label">Status</div>
@@ -502,9 +474,7 @@
             <span class="jc-count">{{ filteredFinishedJobs.length }} job{{ filteredFinishedJobs.length !== 1 ? 's' : '' }}</span>
           </div>
         </div>
-
         <div v-if="filteredFinishedJobs.length === 0" class="jc-empty-state">No finished jobs found.</div>
-
         <div v-else class="jc-list">
           <div v-for="job in paginatedFinishedJobs" :key="job.id" class="jc-card">
             <div class="jc-status-col" :class="'jc-status-col--' + job.status">
@@ -529,7 +499,6 @@
             </div>
           </div>
         </div>
-
         <div v-if="totalFinishedPages > 1" class="jc-pagination">
           <button class="jc-pagination-btn" @click="prevFinishedPage" :disabled="currentFinishedPage === 1">← Previous</button>
           <div class="jc-pagination-pages">
@@ -537,7 +506,6 @@
           </div>
           <button class="jc-pagination-btn" @click="nextFinishedPage" :disabled="currentFinishedPage === totalFinishedPages">Next →</button>
         </div>
-
         <!-- Finished Job View Modal -->
         <div v-if="finishedJobModal.isOpen" class="jc-modal-overlay" @click="closeFinishedJobModal">
           <div class="jc-modal" @click.stop>
@@ -553,7 +521,6 @@
               <div class="jc-detail-group"><label>Job Date</label><p>{{ formatDate(finishedJobModal.job.jobDate) }}</p></div>
               <div class="jc-detail-group"><label>Service Type</label><p>{{ finishedJobModal.job.serviceType }}</p></div>
               <div v-if="finishedJobModal.job.finalCost" class="jc-detail-group"><label>Final Cost</label><p>${{ finishedJobModal.job.finalCost }}</p></div>
-
               <div class="jc-detail-group">
                 <label>Diagnose Technician</label>
                 <div v-if="finishedJobModal.job.diagnoseTechnician">
@@ -565,7 +532,6 @@
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
               </div>
-
               <div class="jc-detail-group">
                 <label>Service Technician</label>
                 <div v-if="finishedJobModal.job.serviceTechnician">
@@ -577,7 +543,6 @@
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
               </div>
-
               <div v-if="finishedJobModal.job.parts && finishedJobModal.job.parts.length" class="jc-detail-group">
                 <label>Parts</label>
                 <div class="jc-item-list">
@@ -587,7 +552,6 @@
                   </div>
                 </div>
               </div>
-
               <div v-if="finishedJobModal.job.services && finishedJobModal.job.services.length" class="jc-detail-group">
                 <label>Services</label>
                 <div class="jc-item-list">
@@ -597,7 +561,6 @@
                   </div>
                 </div>
               </div>
-
               <div v-if="finishedJobModal.job.notes" class="jc-detail-group"><label>Notes</label><p>{{ finishedJobModal.job.notes }}</p></div>
             </div>
             <div class="jc-modal-actions">
@@ -605,9 +568,7 @@
             </div>
           </div>
         </div>
-
       </template>
-
     </template>
   </div>
 </template>
@@ -628,20 +589,16 @@ const EDIT_SATURDAY_SLOTS = EDIT_ALL_SLOTS.filter(s =>
 
 export default {
   name: 'CustomerBookingsView',
-
   data() {
     const today = new Date()
     const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x.toISOString().split('T')[0] }
     const subDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() - n); return x.toISOString().split('T')[0] }
     const todayStr = today.toISOString().split('T')[0]
-
     return {
       // ── Page ──
       pageLoading: true,
-
       // ── Tab ──
       activeTab: 'appointments',
-
       // ── Appointments ──
       currentPage: 1,
       itemsPerPage: 5,
@@ -655,11 +612,10 @@ export default {
       appointmentFilters: [
         { value: 'upcoming',  label: '📅 Upcoming'  },
         { value: 'ongoing',   label: '⏳ Ongoing'   },
-        { value: 'booked',    label: '📋 Booked'    },
+        { value: 'completed', label: '✅ Completed'  },
         { value: 'cancelled', label: '✕ Cancelled'  },
       ],
       bookings: [],
-
       // ── Active Jobs ──
       currentJobPage: 1,
       itemsPerJobPage: 5,
@@ -707,7 +663,6 @@ export default {
           notes: null,
         },
       ],
-
       // ── Finished Jobs ──
       currentFinishedPage: 1,
       itemsPerFinishedPage: 5,
@@ -746,7 +701,6 @@ export default {
           notes: 'Old battery fully dead. New battery installed and tested.',
         },
       ],
-
       // ── Technician contacts ──
       technicianContacts: {
         'Alex Johnson':    { email: 'alex.johnson@workshop.com',    phone: '+1 (555) 201-1001' },
@@ -758,11 +712,9 @@ export default {
       },
     }
   },
-
   async mounted() {
     await this.fetchAppointments()
   },
-
   computed: {
     // ── Appointments ──
     filteredAndSortedBookings() {
@@ -776,7 +728,6 @@ export default {
         if (m === 'AM' && h === 12) h = 0
         return { h, min: min || 0 }
       }
-
       if (this.statusFilter === 'upcoming') {
         const now = new Date()
         filtered = this.bookings.filter(b => {
@@ -800,7 +751,6 @@ export default {
           if (db === null) return -1
           return this.upcomingSortOrder === 'asc' ? da - db : db - da
         })
-
       } else if (this.statusFilter === 'ongoing') {
         const now = new Date()
         filtered = this.bookings.filter(b => {
@@ -811,7 +761,6 @@ export default {
           return now > apptDateTime
         })
         filtered.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
-
       } else {
         filtered = this.bookings.filter(b => b.status === this.statusFilter)
         filtered.sort((a, b) => {
@@ -820,10 +769,8 @@ export default {
           return this.sortOrder === 'asc' ? da - db : db - da
         })
       }
-
       return filtered
     },
-
     nextUpBookingId() {
       const now = new Date()
       const parseTime = (t) => {
@@ -847,7 +794,6 @@ export default {
         .sort((a, b) => new Date(a.appointmentDate + 'T00:00:00') - new Date(b.appointmentDate + 'T00:00:00'))
       return candidates.length ? candidates[0].id : null
     },
-
     paginatedBookings() {
       const s = (this.currentPage - 1) * this.itemsPerPage
       return this.filteredAndSortedBookings.slice(s, s + this.itemsPerPage)
@@ -855,7 +801,6 @@ export default {
     totalPages() {
       return Math.max(1, Math.ceil(this.filteredAndSortedBookings.length / this.itemsPerPage))
     },
-
     // ── Edit modal constraints ──
     editMinDate() {
       const d = new Date()
@@ -879,6 +824,17 @@ export default {
       if (!this.editForm.appointmentDate) return false
       return this.editForm.appointmentDate === new Date().toISOString().split('T')[0]
     },
+    // ── Same-slot check — always active once both fields are filled.
+    //    Blocks saving when the chosen date+time match the original appointment.
+    editIsSameAsOriginal() {
+      if (!this.modal.booking || !this.editForm.appointmentDate || !this.editForm.appointmentTime) return false
+      const originalTime24 = this.timeTo24h(this.modal.booking.appointmentTime)
+      const selectedTime24 = this.timeTo24h(this.editForm.appointmentTime)
+      return (
+        this.editForm.appointmentDate === this.modal.booking.appointmentDate &&
+        selectedTime24 === originalTime24
+      )
+    },
     editTimeSlots() {
       if (!this.editForm.appointmentDate || this.editIsSunday) return []
       const slots = this.editIsSaturday ? EDIT_SATURDAY_SLOTS : EDIT_ALL_SLOTS
@@ -898,7 +854,6 @@ export default {
         return { ...slot, disabled: isPast || isBooked }
       })
     },
-
     // ── Active Jobs ──
     filteredJobCards() {
       let list = this.jobCards
@@ -910,7 +865,6 @@ export default {
       const s = (this.currentJobPage - 1) * this.itemsPerJobPage
       return this.filteredJobCards.slice(s, s + this.itemsPerJobPage)
     },
-
     // ── Finished Jobs ──
     filteredFinishedJobs() {
       let list = this.finishedJobs
@@ -923,7 +877,6 @@ export default {
       return this.filteredFinishedJobs.slice(s, s + this.itemsPerFinishedPage)
     },
   },
-
   methods: {
     // ── API ──────────────────────────────────────────────────────
     async fetchAppointments() {
@@ -936,7 +889,6 @@ export default {
         })
         const json = await response.json()
         if (!response.ok) throw new Error(json.error || json.message || 'Failed to fetch appointments')
-
         this.bookings = (json.data || []).map(a => ({
           id:              a.id,
           appointmentDate: a.appointment_date,
@@ -957,10 +909,8 @@ export default {
         this.pageLoading = false
       }
     },
-
     // ── Tab ──────────────────────────────────────────────────────
     switchTab(tab) { this.activeTab = tab },
-
     // ── Cancellation Guard ───────────────────────────────────────
     canCancelBooking(booking) {
       if (!booking || !booking.appointmentDate) return false
@@ -970,15 +920,17 @@ export default {
       const diffDays = (apptDate - today) / (1000 * 60 * 60 * 24)
       return diffDays > 2
     },
-
     // ── Appointment Modals ───────────────────────────────────────
     async openModal(type, booking) {
       if ((type === 'cancel' || type === 'edit') && !this.canCancelBooking(booking)) return
       this.modal = { type, booking, isOpen: true }
       if (type === 'edit') {
         this.editForm.appointmentDate = booking.appointmentDate
-        this.editForm.appointmentTime = booking.appointmentTime
+        this.editForm.appointmentTime = ''
         await this.fetchEditBookedSlots()
+        // Convert stored time (e.g. "10:00:00") to slot format (e.g. "10:00 AM") before setting
+        await this.$nextTick()
+        this.editForm.appointmentTime = this.time24hToSlotFormat(booking.appointmentTime)
       }
     },
     closeModal() {
@@ -986,7 +938,6 @@ export default {
       this.editForm = { appointmentDate: '', appointmentTime: '' }
       this.editBookedSlots = []
     },
-
     // ── Edit date/time helpers ───────────────────────────────────
     async onEditDateChange() {
       this.editForm.appointmentTime = ''
@@ -1029,8 +980,19 @@ export default {
       return t
     },
     slotValueTo24h(slotValue) { return this.timeTo24h(slotValue) },
-
+    // Converts "10:00:00" or "13:00:00" → "10:00 AM" / "01:00 PM" to match EDIT_ALL_SLOTS values
+    time24hToSlotFormat(t) {
+      if (!t) return ''
+      const parts = t.split(':')
+      let h = parseInt(parts[0])
+      const m = parseInt(parts[1] || 0)
+      const meridiem = h >= 12 ? 'PM' : 'AM'
+      if (h > 12) h -= 12
+      if (h === 0) h = 12
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${meridiem}`
+    },
     async saveAppointment() {
+      if (this.editIsSameAsOriginal) return  // safety net — button should already be disabled
       try {
         const token = localStorage.getItem('token')
         const response = await fetch(`http://localhost:3000/api/customer/editAppointment/${this.modal.booking.id}`, {
@@ -1046,7 +1008,6 @@ export default {
         })
         const json = await response.json()
         if (!response.ok) throw new Error(json.error || json.message)
-
         const idx = this.bookings.findIndex(b => b.id === this.modal.booking.id)
         if (idx !== -1) {
           this.bookings[idx].appointmentDate = this.editForm.appointmentDate
@@ -1059,7 +1020,6 @@ export default {
         alert(`Failed to update appointment: ${err.message}`)
       }
     },
-
     async confirmCancel() {
       if (!this.canCancelBooking(this.modal.booking)) {
         alert('Cancellations are not allowed within 2 days of the appointment.')
@@ -1074,7 +1034,6 @@ export default {
         })
         const json = await response.json()
         if (!response.ok) throw new Error(json.error || json.message)
-
         const idx = this.bookings.findIndex(b => b.id === this.modal.booking.id)
         if (idx !== -1) this.bookings[idx].status = 'cancelled'
         alert('Appointment cancelled successfully!')
@@ -1084,14 +1043,12 @@ export default {
         alert(`Failed to cancel appointment: ${err.message}`)
       }
     },
-
     // ── Formatting ───────────────────────────────────────────────
     formatStatus(status) { return status.charAt(0).toUpperCase() + status.slice(1) },
     formatDate(date) {
       if (!date) return 'N/A'
       return new Date(date + (date.includes('T') ? '' : 'T00:00:00')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
     },
-
     // ── Appointment Pagination ───────────────────────────────────
     goToPage(page) { if (page >= 1 && page <= this.totalPages) this.currentPage = page },
     nextPage() { if (this.currentPage < this.totalPages) this.currentPage++ },
@@ -1099,7 +1056,6 @@ export default {
     applyFilter(s) { this.statusFilter = s; this.currentPage = 1 },
     toggleSortOrder() { this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'; this.currentPage = 1 },
     toggleUpcomingSortOrder() { this.upcomingSortOrder = this.upcomingSortOrder === 'asc' ? 'desc' : 'asc'; this.currentPage = 1 },
-
     // ── Active Jobs ──────────────────────────────────────────────
     setJobStatusFilter(val) { this.activeJobStatusFilter = val; this.currentJobPage = 1 },
     goToJobPage(page) { if (page >= 1 && page <= this.totalJobPages) this.currentJobPage = page },
@@ -1108,7 +1064,6 @@ export default {
     getStatusLabel(status) { const f = this.activeJobStatuses.find(s => s.value === status); return f ? f.label : status },
     openJobModal(job) { this.jobModal = { job, isOpen: true } },
     closeJobModal() { this.jobModal = { isOpen: false, job: null } },
-
     // ── Finished Jobs ────────────────────────────────────────────
     setFinishedStatusFilter(val) { this.finishedStatusFilter = val; this.currentFinishedPage = 1 },
     goToFinishedPage(page) { if (page >= 1 && page <= this.totalFinishedPages) this.currentFinishedPage = page },
@@ -1117,7 +1072,6 @@ export default {
     getFinishedStatusLabel(status) { const f = this.finishedJobStatuses.find(s => s.value === status); return f ? f.label : status },
     openFinishedJobModal(job) { this.finishedJobModal = { job, isOpen: true } },
     closeFinishedJobModal() { this.finishedJobModal = { isOpen: false, job: null } },
-
     // ── Shared ───────────────────────────────────────────────────
     getDayName(date) {
       if (!date) return ''

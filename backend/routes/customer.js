@@ -1,14 +1,11 @@
 const express = require('express')
 const router = express.Router()
-
+const requireRole = require('../middleware/requireRole')  
 module.exports = (supabase) => {
 
-router.post('/createAppointment', async (req, res) => {
+// create appointment when customer book
+router.post('/createAppointment', requireRole(supabase, ['customer']), async (req, res) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '')
-
-    const { data: { user } } = await supabase.auth.getUser(token)
-    if (!user) return res.status(401).json({ message: 'Not authenticated' })
 
     const {
       appointment_date,
@@ -29,7 +26,7 @@ router.post('/createAppointment', async (req, res) => {
       .insert([{
         appointment_date,
         appointment_time,
-        customer_id: user.id,  // taken from the token
+        customer_id: req.user.id,  
         customer_notes,
         status: 'booked',
         vehicle_license_plate,
@@ -66,15 +63,14 @@ router.get('/bookedSlots', async (req, res) => {
   }
 })
 
-router.get('/getAppointments', async (req, res) => {
+// customer's appointments
+router.get('/getAppointments', requireRole(supabase, ['customer']), async (req, res) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '')
-    const { data: { user } } = await supabase.auth.getUser(token)
-    if (!user) return res.status(401).json({ message: 'Not authenticated' })
+
     const { data, error } = await supabase
       .from('Appointments')
       .select('*')
-      .eq('customer_id', user.id)
+      .eq('customer_id', req.user.id)
     if (error) return res.status(400).json({ error: error.message })
     res.status(200).json({ message: 'Appointments retrieved successfully', data })
   } catch (err) {
@@ -83,11 +79,9 @@ router.get('/getAppointments', async (req, res) => {
   }
 })
 
-router.put('/editAppointment/:id', async (req, res) => {
+// edit appointment details
+router.put('/editAppointment/:id', requireRole(supabase, ['customer']), async (req, res) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '')
-    const { data: { user } } = await supabase.auth.getUser(token)
-    if (!user) return res.status(401).json({ message: 'Not authenticated' })
 
     const { id } = req.params
     const { appointment_date, appointment_time } = req.body
@@ -101,7 +95,7 @@ router.put('/editAppointment/:id', async (req, res) => {
       .from('Appointments')
       .select('*')
       .eq('id', id)
-      .eq('customer_id', user.id)
+      .eq('customer_id', req.user.id)
       .single()
 
     if (fetchError || !existing) {
@@ -120,7 +114,7 @@ router.put('/editAppointment/:id', async (req, res) => {
       .from('Appointments')
       .update({ appointment_date, appointment_time })
       .eq('id', id)
-      .eq('customer_id', user.id)
+      .eq('customer_id', req.user.id)
       .select()
       .single()
 
@@ -132,11 +126,9 @@ router.put('/editAppointment/:id', async (req, res) => {
   }
 })
 
-router.put('/cancelAppointment/:id', async (req, res) => {
+// customer cancel appointment
+router.put('/cancelAppointment/:id', requireRole(supabase, ['customer']), async (req, res) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '')
-    const { data: { user } } = await supabase.auth.getUser(token)
-    if (!user) return res.status(401).json({ message: 'Not authenticated' })
 
     const { id } = req.params
 
@@ -145,7 +137,7 @@ router.put('/cancelAppointment/:id', async (req, res) => {
       .from('Appointments')
       .select('*')
       .eq('id', id)
-      .eq('customer_id', user.id)
+      .eq('customer_id', req.user.id)
       .single()
 
     if (fetchError || !existing) {
@@ -168,7 +160,7 @@ router.put('/cancelAppointment/:id', async (req, res) => {
       .from('Appointments')
       .update({ status: 'cancelled' })
       .eq('id', id)
-      .eq('customer_id', user.id)
+      .eq('customer_id', req.user.id)
       .select()
       .single()
 

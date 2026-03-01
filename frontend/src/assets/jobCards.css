@@ -86,12 +86,16 @@
 .jc-status-filter-btn:hover.jc-status-btn--quotation         { border-color: #3b82f6; color: #3b82f6; background: rgba(59, 130, 246, 0.07); }
 .jc-status-filter-btn:hover.jc-status-btn--waiting-for-parts { border-color: #a855f7; color: #a855f7; background: rgba(168, 85, 247, 0.07); }
 .jc-status-filter-btn:hover.jc-status-btn--service           { border-color: #22c55e; color: #22c55e; background: rgba(34, 197, 94, 0.07);  }
+.jc-status-filter-btn:hover.jc-status-btn--ready             { border-color: #06b6d4; color: #06b6d4; background: rgba(6, 182, 212, 0.07);  }
+.jc-status-filter-btn:hover.jc-status-btn--check-out         { border-color: #f43f5e; color: #f43f5e; background: rgba(244, 63, 94, 0.07);  }
 
 /* ── Status Filter Button overrides (active) ── */
 .jc-status-filter-btn.active.jc-status-btn--diagnose          { background: #f59e0b; color: #111111; border-color: #f59e0b; }
 .jc-status-filter-btn.active.jc-status-btn--quotation         { background: #3b82f6; color: #ffffff; border-color: #3b82f6; }
 .jc-status-filter-btn.active.jc-status-btn--waiting-for-parts { background: #a855f7; color: #ffffff; border-color: #a855f7; }
 .jc-status-filter-btn.active.jc-status-btn--service           { background: #22c55e; color: #111111; border-color: #22c55e; }
+.jc-status-filter-btn.active.jc-status-btn--ready             { background: #06b6d4; color: #111111; border-color: #06b6d4; }
+.jc-status-filter-btn.active.jc-status-btn--check-out         { background: #f43f5e; color: #ffffff; border-color: #f43f5e; }
 
 /* ── Date Filter ── */
 .jc-date-filter {
@@ -206,10 +210,12 @@
 }
 
 /* ── Card hover accent by status ── */
-.jc-card:has(.jc-status-col--diagnose):hover          { border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08); }
-.jc-card:has(.jc-status-col--quotation):hover         { border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08); }
-.jc-card:has(.jc-status-col--waiting-for-parts):hover { border-color: rgba(168, 85, 247, 0.4); box-shadow: 0 4px 20px rgba(168, 85, 247, 0.08); }
-.jc-card:has(.jc-status-col--service):hover           { border-color: rgba(34, 197, 94, 0.4);  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.08);  }
+.jc-card:has(.jc-status-col--diagnose):hover          { border-color: rgba(245, 158, 11, 0.4);  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08); }
+.jc-card:has(.jc-status-col--quotation):hover         { border-color: rgba(59, 130, 246, 0.4);  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08); }
+.jc-card:has(.jc-status-col--waiting-for-parts):hover { border-color: rgba(168, 85, 247, 0.4);  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.08); }
+.jc-card:has(.jc-status-col--service):hover           { border-color: rgba(34, 197, 94, 0.4);   box-shadow: 0 4px 20px rgba(34, 197, 94, 0.08);  }
+.jc-card:has(.jc-status-col--ready):hover             { border-color: rgba(6, 182, 212, 0.4);   box-shadow: 0 4px 20px rgba(6, 182, 212, 0.08);  }
+.jc-card:has(.jc-status-col--check-out):hover         { border-color: rgba(244, 63, 94, 0.4);   box-shadow: 0 4px 20px rgba(244, 63, 94, 0.08);  }
 
 /* ── Status Column ── */
 .jc-status-col {
@@ -228,6 +234,8 @@
 .jc-status-col--quotation         { border-left: 3px solid #3b82f6; }
 .jc-status-col--waiting-for-parts { border-left: 3px solid #a855f7; }
 .jc-status-col--service           { border-left: 3px solid #22c55e; }
+.jc-status-col--ready             { border-left: 3px solid #06b6d4; }
+.jc-status-col--check-out         { border-left: 3px solid #f43f5e; }
 
 .jc-card-day {
   font-size: 0.72rem;
@@ -270,6 +278,16 @@
   color: #4ade80;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
+.jc-status-badge--ready {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+.jc-status-badge--check-out {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
 
 /* ── Divider ── */
 .jc-divider {
@@ -281,6 +299,8 @@
 .jc-divider--quotation         { background: rgba(59, 130, 246, 0.35); }
 .jc-divider--waiting-for-parts { background: rgba(168, 85, 247, 0.35); }
 .jc-divider--service           { background: rgba(34, 197, 94, 0.35);  }
+.jc-divider--ready             { background: rgba(6, 182, 212, 0.35);  }
+.jc-divider--check-out         { background: rgba(244, 63, 94, 0.35);  }
 
 /* ── Card Body ── */
 .jc-card-body {
@@ -336,6 +356,7 @@
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .jc-btn-view {
@@ -407,6 +428,22 @@
 .jc-btn-proceed:hover:not(:disabled) {
   background: linear-gradient(135deg, #16a34a, #15803d);
   transform: scale(1.05);
+}
+
+/* Secondary proceed (e.g., Waiting for Parts from Quotation) */
+.jc-btn-proceed--secondary {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+}
+.jc-btn-proceed--secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+}
+
+/* Check Out button */
+.jc-btn-proceed--checkout {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+}
+.jc-btn-proceed--checkout:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e11d48, #be123c);
 }
 
 /* Blocked / disabled state */
@@ -572,6 +609,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 .jc-btn-secondary {
   padding: 0.6rem 1.4rem;
@@ -587,6 +625,9 @@
 .jc-btn-secondary:hover {
   border-color: #666666;
   color: #ffffff;
+}
+.jc-btn-secondary--wide {
+  padding: 0.65rem 2rem;
 }
 
 /* ── Technician Modal ── */
@@ -706,6 +747,226 @@
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ── Card Parts & Services row (quotation+) ── */
+.jc-card-items-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #222222;
+}
+
+.jc-card-items-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.jc-items-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #555555;
+  min-width: 44px;
+  padding-top: 0.18rem;
+  flex-shrink: 0;
+}
+
+.jc-items-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.jc-card-item-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.jc-card-item-pill--part {
+  background: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.jc-card-item-pill--service {
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.jc-card-item-pill--empty {
+  background: rgba(75, 75, 75, 0.15);
+  color: #555555;
+  border: 1px dashed #333333;
+}
+
+/* ── Modal Parts & Services sections ── */
+.jc-modal-divider {
+  height: 1px;
+  background: #2e2e2e;
+  margin: 0.5rem 0 1rem;
+}
+
+.jc-item-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.jc-item-pill {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+}
+
+.jc-item-pill--part {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.jc-item-pill--service {
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.jc-empty-items {
+  font-size: 0.82rem;
+  color: #555555;
+  margin: 0.3rem 0 0;
+  font-style: italic;
+}
+
+/* ── Search Input ── */
+.jc-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 360px;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 0.35rem 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.jc-search-wrapper:focus-within {
+  border-color: #FFD700;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08);
+}
+.jc-search-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.jc-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  min-width: 0;
+}
+.jc-search-input::placeholder {
+  color: #555555;
+}
+
+/* ── ETA meta tag ── */
+.jc-meta-tag--eta {
+  background: rgba(6, 182, 212, 0.1);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+/* ── Arrival date input in modal ── */
+.jc-arrival-date-input {
+  width: 100%;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+/* ── Confirm Modal ── */
+.jc-confirm-modal {
+  max-width: 400px;
+  text-align: center;
+}
+
+.jc-confirm-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1;
+}
+
+.jc-confirm-modal h2 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.jc-confirm-subtitle {
+  font-size: 0.9rem;
+  color: #aaaaaa;
+  margin: 0 0 1.25rem;
+  text-align: center;
+}
+.jc-confirm-subtitle strong {
+  color: #e0e0e0;
+}
+
+.jc-confirm-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+}
+
+.jc-confirm-arrow {
+  font-size: 1.2rem;
+  color: #555555;
+  font-weight: 700;
+}
+
+.jc-confirm-warning {
+  font-size: 0.8rem;
+  color: #666666;
+  margin: 0 0 1.5rem;
+  text-align: center;
+}
+
+.jc-btn-confirm-proceed {
+  padding: 0.65rem 2rem;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.jc-btn-confirm-proceed:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: scale(1.03);
 }
 
 /* ── Responsive ── */

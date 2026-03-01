@@ -153,7 +153,6 @@
   border-color: #FFD700;
 }
 
-/* ── Ongoing filter button — blue "in-progress" palette ── */
 .filter-btn--ongoing.active {
   background: rgba(99, 179, 237, 0.2);
   color: #63b3ed;
@@ -276,12 +275,10 @@
   50% { opacity: 0.8; transform: scale(1.15); box-shadow: 0 0 0 4px rgba(255, 215, 0, 0); }
 }
 
-/* Push card content down to make room for banner */
 .booking-row--next-up .row-status,
 .booking-row--next-up .row-content {
   margin-top: 1.6rem;
 }
-
 
 /* ── Status Column ── */
 .row-status {
@@ -448,7 +445,6 @@
   transform: scale(1.05);
 }
 
-/* ── Edit button disabled state (within 2-day window) ── */
 .btn-edit:disabled,
 .btn-edit--disabled {
   background: rgba(255, 255, 255, 0.03);
@@ -467,7 +463,7 @@
   transform: none;
 }
 
-/* ── Modal form inputs — dark theme matching BookingForm.css ── */
+/* ── Modal form inputs ── */
 .modal-content .form-group input,
 .modal-content .form-group select {
   width: 100%;
@@ -530,7 +526,6 @@
   opacity: 1;
 }
 
-/* Style native <option> elements inside the modal select */
 .modal-content .form-group select option {
   background: #1c1c1c;
   color: #e0e0e0;
@@ -551,7 +546,6 @@
   transform: scale(1.05);
 }
 
-/* ── Cancel button disabled state (within 2-day window) ── */
 .btn-cancel:disabled,
 .btn-cancel--disabled {
   background: rgba(255, 255, 255, 0.03);
@@ -703,6 +697,53 @@
   margin-top: 0.75rem;
 }
 
+/* ══════════════════════════════════════════════════
+   SAME-SLOT WARNING — shown in the Edit modal when
+   the user picks the exact same date + time
+   ══════════════════════════════════════════════════ */
+.same-slot-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+  padding: 0.65rem 0.9rem;
+  background: rgba(251, 146, 60, 0.08);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  border-left: 3px solid #fb923c;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fb923c;
+  line-height: 1.45;
+  animation: fadeSlideIn 0.2s ease;
+}
+
+.same-slot-warning__icon {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* btn-primary disabled when same slot is selected */
+.btn-primary:disabled {
+  background: #3a3a3a;
+  color: #666666;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 1;
+}
+
+.btn-primary:disabled:hover {
+  background: #3a3a3a;
+  transform: none;
+}
+/* ══════════════════════════════════════════════════ */
+
 .modal-actions {
   display: flex;
   gap: 1rem;
@@ -727,7 +768,7 @@
   color: #111111;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: #e6c200;
   transform: scale(1.05);
 }
@@ -755,7 +796,6 @@
   transform: scale(1.05);
 }
 
-/* ── btn-danger disabled state (safety net inside cancel modal) ── */
 .btn-danger:disabled {
   background: rgba(255, 255, 255, 0.03);
   color: #3a3a3a;
@@ -842,7 +882,6 @@
    IN PROGRESS TAB — JOB CARDS
    ════════════════════════════════════════════════════════════════ */
 
-/* ── Job Cards Filter Bar ── */
 .jc-filter-bar {
   background: #1c1c1c;
   border: 1px solid #2e2e2e;
@@ -908,13 +947,11 @@
   font-weight: 700;
 }
 
-/* Status-specific filter button colors */
 .jc-status-btn--diagnose.active    { background: rgba(99, 179, 237, 0.2);  color: #63b3ed; border-color: #63b3ed; }
 .jc-status-btn--quotation.active   { background: rgba(246, 173, 85, 0.2);  color: #f6ad55; border-color: #f6ad55; }
 .jc-status-btn--waiting-for-parts.active { background: rgba(197, 128, 235, 0.2); color: #c580eb; border-color: #c580eb; }
 .jc-status-btn--service.active     { background: rgba(74, 222, 128, 0.2);  color: #4ade80; border-color: #4ade80; }
 
-/* Date input */
 .jc-date-filter {
   display: flex;
   align-items: center;
@@ -954,7 +991,6 @@
   color: #f87171;
 }
 
-/* Count row */
 .jc-count-row {
   padding: 0.5rem 0 0;
 }
@@ -965,7 +1001,6 @@
   font-weight: 600;
 }
 
-/* ── Empty State ── */
 .jc-empty-state {
   text-align: center;
   padding: 3rem;
@@ -977,7 +1012,6 @@
   font-size: 0.95rem;
 }
 
-/* ── Job Cards List ── */
 .jc-list {
   display: flex;
   flex-direction: column;
@@ -1006,7 +1040,6 @@
   border-color: rgba(255, 215, 0, 0.3);
 }
 
-/* ── Status Column ── */
 .jc-status-col {
   display: flex;
   flex-direction: column;
@@ -1047,7 +1080,6 @@
 .jc-status-badge--waiting-for-parts { background: rgba(197, 128, 235, 0.15); color: #c580eb; }
 .jc-status-badge--service           { background: rgba(74, 222, 128, 0.15);  color: #4ade80; }
 
-/* ── Divider ── */
 .jc-divider {
   width: 2px;
   background: #2e2e2e;
@@ -1059,7 +1091,6 @@
 .jc-divider--waiting-for-parts { background: rgba(197, 128, 235, 0.2); }
 .jc-divider--service     { background: rgba(74, 222, 128, 0.2); }
 
-/* ── Card Body ── */
 .jc-card-body {
   flex: 1;
   padding: 1.25rem 1.5rem;
@@ -1111,7 +1142,6 @@
 .jc-meta-tag--technician  { background: rgba(74, 222, 128, 0.1); color: #4ade80; }
 .jc-meta-tag--unassigned  { background: rgba(248, 113, 113, 0.1); color: #f87171; font-style: italic; }
 
-/* ── Card Actions ── */
 .jc-card-actions {
   display: flex;
   flex-direction: column;
@@ -1140,7 +1170,6 @@
   transform: scale(1.05);
 }
 
-/* ── Job Cards Pagination ── */
 .jc-pagination {
   display: flex;
   align-items: center;
@@ -1367,7 +1396,6 @@
     font-size: 0.82rem;
   }
 
-  /* Appointments */
   .filter-sort-container {
     padding: 1rem;
     margin-bottom: 1.5rem;
@@ -1440,7 +1468,6 @@
     min-width: 32px;
   }
 
-  /* Job Cards */
   .jc-filter-bar {
     padding: 1rem;
   }
@@ -1503,7 +1530,7 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
-   TECHNICIAN CONTACT & ITEM LIST (Active / Finished Jobs modals)
+   TECHNICIAN CONTACT & ITEM LIST
    ════════════════════════════════════════════════════════════════ */
 
 .jc-tech-contact {
@@ -1527,7 +1554,6 @@
   font-style: italic;
 }
 
-/* ── Parts / Services item list ── */
 .jc-item-list {
   display: flex;
   flex-direction: column;
@@ -1557,12 +1583,10 @@
   margin-left: 1rem;
 }
 
-/* ── Extra meta tag colours ── */
 .jc-meta-tag--parts    { background: rgba(99, 179, 237, 0.1); color: #63b3ed; }
 .jc-meta-tag--services { background: rgba(154, 230, 180, 0.1); color: #9ae6b4; }
 .jc-meta-tag--cost     { background: rgba(255, 215, 0, 0.1); color: #FFD700; font-weight: 700; }
 
-/* ── Finished job status badge colours ── */
 .jc-status-col--completed  { border-left: 3px solid #4ade80; }
 .jc-status-col--invoiced   { border-left: 3px solid #f6ad55; }
 .jc-status-badge--completed { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
