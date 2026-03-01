@@ -54,7 +54,7 @@ const serviceItems = [
           <span class="hero-accent">Mastery</span>
         </h1>
         <p class="hero-subtitle">
-          20+ years serving Singapore. Precision repairs, tailored upgrades,
+          Precision repairs, tailored upgrades,
           and unmatched craftsmanship for your luxury vehicle.
         </p>
         <div class="hero-buttons">

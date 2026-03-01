@@ -5,7 +5,7 @@
     role="navigation"
   >
     <!-- Brand/Logo -->
-    <router-link to="/" class="navbar-brand">
+    <router-link :to="brandLink" class="navbar-brand">
       <strong>{{ isStaff ? 'PORSCHIFY ADMIN' : 'PORSCHIFY' }}</strong>
     </router-link>
 
@@ -190,6 +190,12 @@ const isTechnician = computed(() => props.user?.role === 'technician')
 const isAdmin     = computed(() => props.user?.role === 'administrator')
 const isStaff     = computed(() => isManager.value || isTechnician.value || isAdmin.value)
 
+const brandLink = computed(() => {
+  if (props.user?.role === 'manager' || props.user?.role === 'administrator') return '/manager-dashboard'
+  if (props.user?.role === 'technician') return '/technician-dashboard'
+  return '/'
+})
+
 const route = useRoute()
 watch(() => route.fullPath, () => {
   const navbar  = document.getElementById('mainNavbar')
@@ -241,6 +247,7 @@ watch(() => route.fullPath, () => {
 
 .navbar-brand:hover {
   color: #ffffff !important;
+  background-color:transparent;
 }
 
 
