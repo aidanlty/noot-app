@@ -196,9 +196,13 @@
             <label>Customer</label>
             <p>{{ modal.appt.customerName }}</p>
           </div>
-          <div v-if="modal.appt.customerEmail" class="detail-group">
+          <div class="detail-group">
             <label>Customer Email</label>
             <p>{{ modal.appt.customerEmail }}</p>
+          </div>
+          <div class="detail-group">
+            <label>Phone Number</label>
+            <p>{{ modal.appt.phoneNumber }}</p>
           </div>
           <div class="detail-group">
             <label>Vehicle</label>
@@ -498,7 +502,8 @@ export default {
           id:              a.id,
           customerName:    a.Profiles?.Name          || '',
           customerEmail:   a.Profiles?.Email         || '',
-          licensePlate:    a.license_plate           || a.vehicle_license_plate || '',
+          phoneNumber:     a.phone_number            || '',         
+          licensePlate:    a.vehicle_license_plate   || '',
           vehicleMake:     a.vehicle_make            || '',
           vehicleModel:    a.vehicle_model           || '',
           vehicleYear:     a.vehicle_year            || '',
@@ -510,7 +515,7 @@ export default {
           diagnoseTechId:  a.TechnicianProfile?.ID    || '',
           techEmail:       a.TechnicianProfile?.Email || '',
           cancelReason:    a.cancel_reason           || null,
-          notes:           a.notes                  || a.customer_notes || null,
+          notes:           a.customer_notes          || null,
         }));
       } catch (err) {
         console.error('Error fetching appointments:', err);
