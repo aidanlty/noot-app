@@ -9,10 +9,11 @@
 /* ── Header ── */
 .bookings-header {
   margin-bottom: 0;
+  margin-top: 4.5rem;
   background: #1c1c1c;
   border: 1px solid #2e2e2e;
-  border-radius: 10px 10px 0 0;
-  padding: 1.5rem 2rem 0;
+  border-radius: 10px;
+  padding: 1.5rem 2.5rem 0;
   border-bottom: none;
 }
 
@@ -33,6 +34,9 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 1.25rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-radius: 8px;
 }
 
 .tab-btn {
@@ -43,13 +47,12 @@
   border: 1px solid #2e2e2e;
   background: #141414;
   color: #888888;
-  border-radius: 8px 8px 0 0;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   font-size: 0.92rem;
   transition: all 0.2s ease;
   position: relative;
-  bottom: -1px;
 }
 
 .tab-btn:hover {
@@ -61,7 +64,6 @@
   background: #1c1c1c;
   color: #FFD700;
   border-color: #FFD700;
-  border-bottom-color: #1c1c1c;
 }
 
 .tab-count {
@@ -88,9 +90,8 @@
 .filter-sort-container {
   background: #1c1c1c;
   border: 1px solid #2e2e2e;
-  border-top: none;
-  border-radius: 0 10px 10px 10px;
-  padding: 1.5rem;
+  border-radius: 10px;
+  padding: 1.5rem 2.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
@@ -271,8 +272,19 @@
 }
 
 @keyframes nextUpPulse {
-  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5); }
-  50% { opacity: 0.8; transform: scale(1.15); box-shadow: 0 0 0 4px rgba(255, 215, 0, 0); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0);
+  }
 }
 
 .booking-row--next-up .row-status,
@@ -725,8 +737,15 @@
 }
 
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* btn-primary disabled when same slot is selected */
@@ -742,6 +761,7 @@
   background: #3a3a3a;
   transform: none;
 }
+
 /* ══════════════════════════════════════════════════ */
 
 .modal-actions {
@@ -947,10 +967,29 @@
   font-weight: 700;
 }
 
-.jc-status-btn--diagnose.active    { background: rgba(99, 179, 237, 0.2);  color: #63b3ed; border-color: #63b3ed; }
-.jc-status-btn--quotation.active   { background: rgba(246, 173, 85, 0.2);  color: #f6ad55; border-color: #f6ad55; }
-.jc-status-btn--waiting-for-parts.active { background: rgba(197, 128, 235, 0.2); color: #c580eb; border-color: #c580eb; }
-.jc-status-btn--service.active     { background: rgba(74, 222, 128, 0.2);  color: #4ade80; border-color: #4ade80; }
+.jc-status-btn--diagnose.active {
+  background: rgba(99, 179, 237, 0.2);
+  color: #63b3ed;
+  border-color: #63b3ed;
+}
+
+.jc-status-btn--quotation.active {
+  background: rgba(246, 173, 85, 0.2);
+  color: #f6ad55;
+  border-color: #f6ad55;
+}
+
+.jc-status-btn--waiting-for-parts.active {
+  background: rgba(197, 128, 235, 0.2);
+  color: #c580eb;
+  border-color: #c580eb;
+}
+
+.jc-status-btn--service.active {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+  border-color: #4ade80;
+}
 
 .jc-date-filter {
   display: flex;
@@ -1051,10 +1090,21 @@
   min-width: 110px;
 }
 
-.jc-status-col--diagnose    { border-left: 3px solid #63b3ed; }
-.jc-status-col--quotation   { border-left: 3px solid #f6ad55; }
-.jc-status-col--waiting-for-parts { border-left: 3px solid #c580eb; }
-.jc-status-col--service     { border-left: 3px solid #4ade80; }
+.jc-status-col--diagnose {
+  border-left: 3px solid #63b3ed;
+}
+
+.jc-status-col--quotation {
+  border-left: 3px solid #f6ad55;
+}
+
+.jc-status-col--waiting-for-parts {
+  border-left: 3px solid #c580eb;
+}
+
+.jc-status-col--service {
+  border-left: 3px solid #4ade80;
+}
 
 .jc-card-day {
   font-size: 0.72rem;
@@ -1075,10 +1125,25 @@
   white-space: nowrap;
 }
 
-.jc-status-badge--diagnose          { background: rgba(99, 179, 237, 0.15);  color: #63b3ed; }
-.jc-status-badge--quotation         { background: rgba(246, 173, 85, 0.15);  color: #f6ad55; }
-.jc-status-badge--waiting-for-parts { background: rgba(197, 128, 235, 0.15); color: #c580eb; }
-.jc-status-badge--service           { background: rgba(74, 222, 128, 0.15);  color: #4ade80; }
+.jc-status-badge--diagnose {
+  background: rgba(99, 179, 237, 0.15);
+  color: #63b3ed;
+}
+
+.jc-status-badge--quotation {
+  background: rgba(246, 173, 85, 0.15);
+  color: #f6ad55;
+}
+
+.jc-status-badge--waiting-for-parts {
+  background: rgba(197, 128, 235, 0.15);
+  color: #c580eb;
+}
+
+.jc-status-badge--service {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+}
 
 .jc-divider {
   width: 2px;
@@ -1086,10 +1151,21 @@
   flex-shrink: 0;
 }
 
-.jc-divider--diagnose    { background: rgba(99, 179, 237, 0.2); }
-.jc-divider--quotation   { background: rgba(246, 173, 85, 0.2); }
-.jc-divider--waiting-for-parts { background: rgba(197, 128, 235, 0.2); }
-.jc-divider--service     { background: rgba(74, 222, 128, 0.2); }
+.jc-divider--diagnose {
+  background: rgba(99, 179, 237, 0.2);
+}
+
+.jc-divider--quotation {
+  background: rgba(246, 173, 85, 0.2);
+}
+
+.jc-divider--waiting-for-parts {
+  background: rgba(197, 128, 235, 0.2);
+}
+
+.jc-divider--service {
+  background: rgba(74, 222, 128, 0.2);
+}
 
 .jc-card-body {
   flex: 1;
@@ -1137,10 +1213,27 @@
   white-space: nowrap;
 }
 
-.jc-meta-tag--date        { background: rgba(255,255,255,0.05); color: #777; }
-.jc-meta-tag--service     { background: rgba(255, 215, 0, 0.08); color: #b89c00; border: 1px solid rgba(255,215,0,0.15); }
-.jc-meta-tag--technician  { background: rgba(74, 222, 128, 0.1); color: #4ade80; }
-.jc-meta-tag--unassigned  { background: rgba(248, 113, 113, 0.1); color: #f87171; font-style: italic; }
+.jc-meta-tag--date {
+  background: rgba(255, 255, 255, 0.05);
+  color: #777;
+}
+
+.jc-meta-tag--service {
+  background: rgba(255, 215, 0, 0.08);
+  color: #b89c00;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+}
+
+.jc-meta-tag--technician {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+}
+
+.jc-meta-tag--unassigned {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  font-style: italic;
+}
 
 .jc-card-actions {
   display: flex;
@@ -1495,12 +1588,25 @@
     border-bottom: 2px solid;
   }
 
-  .jc-status-col--diagnose    { border-bottom-color: #63b3ed; }
-  .jc-status-col--quotation   { border-bottom-color: #f6ad55; }
-  .jc-status-col--waiting-for-parts { border-bottom-color: #c580eb; }
-  .jc-status-col--service     { border-bottom-color: #4ade80; }
+  .jc-status-col--diagnose {
+    border-bottom-color: #63b3ed;
+  }
 
-  .jc-divider { display: none; }
+  .jc-status-col--quotation {
+    border-bottom-color: #f6ad55;
+  }
+
+  .jc-status-col--waiting-for-parts {
+    border-bottom-color: #c580eb;
+  }
+
+  .jc-status-col--service {
+    border-bottom-color: #4ade80;
+  }
+
+  .jc-divider {
+    display: none;
+  }
 
   .jc-card-body {
     padding: 1rem;
@@ -1583,18 +1689,61 @@
   margin-left: 1rem;
 }
 
-.jc-meta-tag--parts    { background: rgba(99, 179, 237, 0.1); color: #63b3ed; }
-.jc-meta-tag--services { background: rgba(154, 230, 180, 0.1); color: #9ae6b4; }
-.jc-meta-tag--cost     { background: rgba(255, 215, 0, 0.1); color: #FFD700; font-weight: 700; }
+.jc-meta-tag--parts {
+  background: rgba(99, 179, 237, 0.1);
+  color: #63b3ed;
+}
 
-.jc-status-col--completed  { border-left: 3px solid #4ade80; }
-.jc-status-col--invoiced   { border-left: 3px solid #f6ad55; }
-.jc-status-badge--completed { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
-.jc-status-badge--invoiced  { background: rgba(246, 173, 85, 0.15);  color: #f6ad55; }
-.jc-divider--completed      { background: rgba(74, 222, 128, 0.2); }
-.jc-divider--invoiced       { background: rgba(246, 173, 85, 0.2); }
-.jc-status-btn--completed.active { background: rgba(74, 222, 128, 0.2); color: #4ade80; border-color: #4ade80; font-weight: 700; }
-.jc-status-btn--invoiced.active  { background: rgba(246, 173, 85, 0.2);  color: #f6ad55; border-color: #f6ad55; font-weight: 700; }
+.jc-meta-tag--services {
+  background: rgba(154, 230, 180, 0.1);
+  color: #9ae6b4;
+}
+
+.jc-meta-tag--cost {
+  background: rgba(255, 215, 0, 0.1);
+  color: #FFD700;
+  font-weight: 700;
+}
+
+.jc-status-col--completed {
+  border-left: 3px solid #4ade80;
+}
+
+.jc-status-col--invoiced {
+  border-left: 3px solid #f6ad55;
+}
+
+.jc-status-badge--completed {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+}
+
+.jc-status-badge--invoiced {
+  background: rgba(246, 173, 85, 0.15);
+  color: #f6ad55;
+}
+
+.jc-divider--completed {
+  background: rgba(74, 222, 128, 0.2);
+}
+
+.jc-divider--invoiced {
+  background: rgba(246, 173, 85, 0.2);
+}
+
+.jc-status-btn--completed.active {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+  border-color: #4ade80;
+  font-weight: 700;
+}
+
+.jc-status-btn--invoiced.active {
+  background: rgba(246, 173, 85, 0.2);
+  color: #f6ad55;
+  border-color: #f6ad55;
+  font-weight: 700;
+}
 
 .page-loading {
   display: flex;

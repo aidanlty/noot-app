@@ -118,11 +118,11 @@
                     <span class="detail-value">{{ booking.customerNotes }}</span>
                   </div>
                   <div class="detail-item appointment-item">
-                    <span class="detail-label">📅 Appointment Date:</span>
+                    <span class="detail-label">Appointment Date:</span>
                     <span class="detail-value">{{ formatDate(booking.appointmentDate) }}</span>
                   </div>
                   <div class="detail-item appointment-item">
-                    <span class="detail-label">🕐 Appointment Time:</span>
+                    <span class="detail-label">Appointment Time:</span>
                     <span class="detail-value">{{ booking.appointmentTime || 'N/A' }}</span>
                   </div>
                   <!-- Cancel Reason -->
@@ -130,7 +130,7 @@
                     v-if="booking.status === 'cancelled' && booking.cancelReason"
                     class="detail-item cancel-reason-item"
                   >
-                    <span class="detail-label">❗ Cancel Reason:</span>
+                    <span class="detail-label">Cancel Reason:</span>
                     <span class="detail-value">{{ booking.cancelReason }}</span>
                   </div>
                   <!-- Cancelled by Porschify Notice -->
@@ -409,8 +409,8 @@
                 <div v-if="jobModal.job.diagnoseTechnician">
                   <p>{{ jobModal.job.diagnoseTechnician }}</p>
                   <div class="jc-tech-contact" v-if="getTechContact(jobModal.job.diagnoseTechnician)">
-                    <span class="jc-tech-contact-item">✉️ {{ getTechContact(jobModal.job.diagnoseTechnician).email }}</span>
-                    <span class="jc-tech-contact-item">📞 {{ getTechContact(jobModal.job.diagnoseTechnician).phone }}</span>
+                    <span class="jc-tech-contact-item">{{ getTechContact(jobModal.job.diagnoseTechnician).email }}</span>
+                    <span class="jc-tech-contact-item">{{ getTechContact(jobModal.job.diagnoseTechnician).phone }}</span>
                   </div>
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
@@ -420,8 +420,8 @@
                 <div v-if="jobModal.job.serviceTechnician">
                   <p>{{ jobModal.job.serviceTechnician }}</p>
                   <div class="jc-tech-contact" v-if="getTechContact(jobModal.job.serviceTechnician)">
-                    <span class="jc-tech-contact-item">✉️ {{ getTechContact(jobModal.job.serviceTechnician).email }}</span>
-                    <span class="jc-tech-contact-item">📞 {{ getTechContact(jobModal.job.serviceTechnician).phone }}</span>
+                    <span class="jc-tech-contact-item">{{ getTechContact(jobModal.job.serviceTechnician).email }}</span>
+                    <span class="jc-tech-contact-item">{{ getTechContact(jobModal.job.serviceTechnician).phone }}</span>
                   </div>
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
@@ -491,7 +491,7 @@
               <div class="jc-card-meta">
                 <span class="jc-meta-tag jc-meta-tag--date">{{ formatDate(job.jobDate) }}</span>
                 <span class="jc-meta-tag jc-meta-tag--service">{{ job.serviceType }}</span>
-                <span v-if="job.finalCost" class="jc-meta-tag jc-meta-tag--cost">💰 ${{ job.finalCost }}</span>
+                <span v-if="job.finalCost" class="jc-meta-tag jc-meta-tag--cost">${{ job.finalCost }}</span>
               </div>
             </div>
             <div class="jc-card-actions">
@@ -526,8 +526,8 @@
                 <div v-if="finishedJobModal.job.diagnoseTechnician">
                   <p>{{ finishedJobModal.job.diagnoseTechnician }}</p>
                   <div class="jc-tech-contact" v-if="getTechContact(finishedJobModal.job.diagnoseTechnician)">
-                    <span class="jc-tech-contact-item">✉️ {{ getTechContact(finishedJobModal.job.diagnoseTechnician).email }}</span>
-                    <span class="jc-tech-contact-item">📞 {{ getTechContact(finishedJobModal.job.diagnoseTechnician).phone }}</span>
+                    <span class="jc-tech-contact-item">{{ getTechContact(finishedJobModal.job.diagnoseTechnician).email }}</span>
+                    <span class="jc-tech-contact-item">{{ getTechContact(finishedJobModal.job.diagnoseTechnician).phone }}</span>
                   </div>
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
@@ -537,8 +537,8 @@
                 <div v-if="finishedJobModal.job.serviceTechnician">
                   <p>{{ finishedJobModal.job.serviceTechnician }}</p>
                   <div class="jc-tech-contact" v-if="getTechContact(finishedJobModal.job.serviceTechnician)">
-                    <span class="jc-tech-contact-item">✉️ {{ getTechContact(finishedJobModal.job.serviceTechnician).email }}</span>
-                    <span class="jc-tech-contact-item">📞 {{ getTechContact(finishedJobModal.job.serviceTechnician).phone }}</span>
+                    <span class="jc-tech-contact-item">{{ getTechContact(finishedJobModal.job.serviceTechnician).email }}</span>
+                    <span class="jc-tech-contact-item">{{ getTechContact(finishedJobModal.job.serviceTechnician).phone }}</span>
                   </div>
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
@@ -610,10 +610,10 @@ export default {
       editBookedSlots: [],
       bookingsError: null,
       appointmentFilters: [
-        { value: 'upcoming',  label: '📅 Upcoming'  },
-        { value: 'ongoing',   label: '⏳ Ongoing'   },
-        { value: 'completed', label: '✅ Completed'  },
-        { value: 'cancelled', label: '✕ Cancelled'  },
+        { value: 'upcoming',  label: 'Upcoming'  },
+        { value: 'ongoing',   label: 'Ongoing'   },
+        { value: 'completed', label: 'Completed'  },
+        { value: 'cancelled', label: 'Cancelled'  },
       ],
       bookings: [],
       // ── Active Jobs ──
