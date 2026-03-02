@@ -105,15 +105,16 @@
                   <span class="booking-id">#{{ booking.id }}</span>
                 </div>
                 <div class="booking-details">
-                  <div class="detail-item">
+                  <!-- Hide license plate, phone, notes for cancelled bookings -->
+                  <div v-if="booking.status !== 'cancelled'" class="detail-item">
                     <span class="detail-label">License Plate:</span>
                     <span class="detail-value">{{ booking.licensePlate || 'N/A' }}</span>
                   </div>
-                  <div class="detail-item">
+                  <div v-if="booking.status !== 'cancelled'" class="detail-item">
                     <span class="detail-label">Phone Number:</span>
                     <span class="detail-value">{{ booking.phoneNumber || 'N/A' }}</span>
                   </div>
-                  <div v-if="booking.customerNotes" class="detail-item">
+                  <div v-if="booking.customerNotes && booking.status !== 'cancelled'" class="detail-item">
                     <span class="detail-label">Notes:</span>
                     <span class="detail-value">{{ booking.customerNotes }}</span>
                   </div>
@@ -136,9 +137,10 @@
                   <!-- Cancelled by Porschify Notice -->
                   <div
                     v-if="booking.status === 'cancelled' && booking.cancelReason"
-                    class="cancelled-by-admin"
+                    class="detail-item appointment-item cancelled-by-admin"
                   >
-                    Cancelled by Porschify
+                    <span class="detail-label">Cancelled By:</span>
+                    <span class="detail-value">Porschify</span>
                   </div>
                 </div>
               </div>
@@ -824,8 +826,6 @@ export default {
       if (!this.editForm.appointmentDate) return false
       return this.editForm.appointmentDate === new Date().toISOString().split('T')[0]
     },
-    // ── Same-slot check — always active once both fields are filled.
-    //    Blocks saving when the chosen date+time match the original appointment.
     editIsSameAsOriginal() {
       if (!this.modal.booking || !this.editForm.appointmentDate || !this.editForm.appointmentTime) return false
       const originalTime24 = this.timeTo24h(this.modal.booking.appointmentTime)
@@ -928,7 +928,6 @@ export default {
         this.editForm.appointmentDate = booking.appointmentDate
         this.editForm.appointmentTime = ''
         await this.fetchEditBookedSlots()
-        // Convert stored time (e.g. "10:00:00") to slot format (e.g. "10:00 AM") before setting
         await this.$nextTick()
         this.editForm.appointmentTime = this.time24hToSlotFormat(booking.appointmentTime)
       }
@@ -980,7 +979,6 @@ export default {
       return t
     },
     slotValueTo24h(slotValue) { return this.timeTo24h(slotValue) },
-    // Converts "10:00:00" or "13:00:00" → "10:00 AM" / "01:00 PM" to match EDIT_ALL_SLOTS values
     time24hToSlotFormat(t) {
       if (!t) return ''
       const parts = t.split(':')
@@ -992,7 +990,7 @@ export default {
       return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${meridiem}`
     },
     async saveAppointment() {
-      if (this.editIsSameAsOriginal) return  // safety net — button should already be disabled
+      if (this.editIsSameAsOriginal) return
       try {
         const token = localStorage.getItem('token')
         const response = await fetch(`http://localhost:3000/api/customer/editAppointment/${this.modal.booking.id}`, {

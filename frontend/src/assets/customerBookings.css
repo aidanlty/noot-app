@@ -416,6 +416,22 @@
   border-left: 3px solid #FFD700;
 }
 
+/* ── Cancelled by Porschify — styled like appointment-item but red ── */
+.cancelled-by-admin {
+  background: rgba(248, 113, 113, 0.08);
+  border-left: 3px solid #f87171;
+}
+
+.cancelled-by-admin .detail-label {
+  color: #f87171;
+}
+
+.cancelled-by-admin .detail-value {
+  color: #f87171;
+  font-weight: 700;
+  font-style: normal;
+}
+
 /* ── Row Actions ── */
 .row-actions {
   display: flex;
@@ -713,8 +729,7 @@
 }
 
 /* ══════════════════════════════════════════════════
-   SAME-SLOT WARNING — shown in the Edit modal when
-   the user picks the exact same date + time
+   SAME-SLOT WARNING
    ══════════════════════════════════════════════════ */
 .same-slot-warning {
   display: flex;
@@ -751,7 +766,6 @@
   }
 }
 
-/* btn-primary disabled when same slot is selected */
 .btn-primary:disabled {
   background: #3a3a3a;
   color: #666666;
@@ -764,8 +778,6 @@
   background: #3a3a3a;
   transform: none;
 }
-
-/* ══════════════════════════════════════════════════ */
 
 .modal-actions {
   display: flex;
@@ -1755,16 +1767,6 @@
   height: 400px;
   font-size: 1.2rem;
   color: #666;
-}
-
-.cancelled-by-admin {
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: rgba(255, 0, 0, 0.1);
-  border-left: 4px solid #ff4d4f;
-  color: #ff4d4f;
-  font-weight: 600;
-  border-radius: 6px;
 }
 
 .cancel-reason-item .detail-value {
