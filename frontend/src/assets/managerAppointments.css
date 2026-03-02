@@ -521,7 +521,9 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .btn-cancel-appt:hover {
-  background: #dc2626;
+  background:transparent;
+  color: #dc2626;
+  border:0.5px solid #dc2626;
   transform: scale(1.05);
 }
 
@@ -852,8 +854,10 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .btn-assign-tech:hover {
-  background: #2563eb;
+  background: transparent;
   transform: scale(1.05);
+  color:#3b82f6;
+  border: 0.5px solid #3b82f6;
 }
 .btn-change-tech {
   padding: 0.5rem 1.1rem;
@@ -868,8 +872,10 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .btn-change-tech:hover {
-  background: #d97706;
+  background:transparent;
   transform: scale(1.05);
+  border:0.5px solid #f59e0b;
+  color:#f59e0b;
 }
 
 /* ── Tech Select ── */
@@ -915,9 +921,9 @@
   -webkit-appearance: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.tech-select:hover { border-color: #3b82f6; }
+.tech-select:hover { border-color:#fdc601; }
 .tech-select:focus {
-  border-color: #3b82f6;
+  border-color: #fdc601;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 .tech-select option {
@@ -935,8 +941,8 @@
 /* ── Confirm Assign ── */
 .btn-confirm-assign {
   padding: 0.6rem 1.4rem;
-  background: #3b82f6;
-  color: #ffffff;
+  background:#fdc601;
+  color:#141414;
   border: none;
   border-radius: 6px;
   font-weight: 700;
@@ -945,8 +951,10 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .btn-confirm-assign:hover {
-  background: #2563eb;
+  background: transparent;
   transform: scale(1.03);
+  border:0.5px solid #fdc601;
+  color:#fdc601;
 }
 
 /* ── Proceed Disabled ── */
@@ -1055,8 +1063,10 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .btn-diagnose:hover {
-  background: #7c3aed;
+  background:transparent;
   transform: scale(1.05);
+  color:#8b5cf6;
+  border:0.5px solid #8b5cf6;
 }
 
 /* ── Confirm Diagnose Icon & Button ── */
