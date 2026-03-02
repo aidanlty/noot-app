@@ -24,6 +24,26 @@ module.exports = (supabase) => {
     }
     })  
 
-    
-  return router
+    // technician's appointments
+    router.get('/getAppointments', requireRole(supabase, ['technician']), async (req, res) => {
+        try {
+            const { data, error } = await supabase
+            .from('Appointments')
+            .select(`
+                *,
+                Profiles:customer_id (
+                Name,
+                Email
+                )
+            `)
+            .eq('technician_id', req.user.id)
+            .eq('status', 'booked')
+            if (error) return res.status(400).json({ error: error.message })
+            res.status(200).json({ message: 'Appointments retrieved successfully', data })
+        } catch (err) {
+            console.error('Get appointments error:', err)
+            res.status(500).json({ error: err.message })
+        }
+    })  
+    return router
 }
