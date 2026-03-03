@@ -42,7 +42,7 @@ const routes = [
     path: '/manager-dashboard',
     name: 'managerDashboard',
     meta: { requiresAuth: true, roles: ['manager'] },
-    component: () => import('../views/ManagerDashboard.vue'), // CREATE THIS
+    component: () => import('../views/Manager/ManagerDashboard.vue'), // CREATE THIS
   },
   {
     path: '/managerAppointments',
