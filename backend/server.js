@@ -45,6 +45,7 @@ app.post('/api/job-orders/:orderId/status', async (req, res) => {
         Order_ID,
         Order_Status,
         Customer_ID,
+        vehicle_license_plate
       `)
       .single()
 
