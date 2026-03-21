@@ -4,6 +4,69 @@ const requireRole = require('../middleware/requireRole')
 
 module.exports = (supabase) => {
 
+    // create job card when diagnose button pressed in mgr appointments
+    router.post('/createJobCard', requireRole(supabase, ['manager', 'technician']), async (req, res) => {
+        try {
+            const { customer_id, appointment_id, diagnose_technician_id } = req.body
+
+            // Check if a job order already exists for this appointment
+            const { data: existing, error: existingError } = await supabase
+                .from('Job_Orders')
+                .select('Order_ID')
+                .eq('appointment_id', appointment_id)
+                .maybeSingle()
+
+            if (existingError) return res.status(500).json({ error: existingError.message })
+            if (existing) return res.status(409).json({ message: 'A job card already exists for this appointment.' })
+
+            // Fetch latest Order_ID
+            const { data: latestOrder, error: fetchError } = await supabase
+                .from('Job_Orders')
+                .select('Order_ID')
+                .order('Order_ID', { ascending: false })
+                .limit(1)
+                .single()
+
+            if (fetchError && fetchError.code !== 'PGRST116') {
+                return res.status(500).json({ error: fetchError.message })
+            }
+
+            let nextOrderId = 'ORD-000001'
+            if (latestOrder?.Order_ID) {
+                const num = parseInt(latestOrder.Order_ID.replace('ORD-', ''), 10)
+                nextOrderId = `ORD-${String(num + 1).padStart(6, '0')}`
+            }
+
+            const today = new Date().toISOString().split('T')[0]
+
+            const { data, error } = await supabase
+                .from('Job_Orders')
+                .insert({
+                    Order_ID:               nextOrderId,
+                    Customer_id:            customer_id,
+                    appointment_id:         appointment_id,
+                    diagnose_technician_id: diagnose_technician_id,
+                    Diagnose:               today,
+                    Order_Status:           'diagnose',
+                })
+                .select()
+                .single()
+
+            if (error) return res.status(500).json({ error: error.message })
+            if (!data) return res.status(404).json({ message: 'Job card not found' })
+
+            const { error: appointmentError } = await supabase
+                .from('Appointments')
+                .update({ status: 'completed' })
+                .eq('id', appointment_id)
+
+            if (appointmentError) return res.status(500).json({ error: appointmentError.message })
+
+            res.status(201).json({ data })
+        } catch (err) {
+            res.status(500).json({ error: err.message })
+        }
+    })
     // update services in a job card
     router.put('/:orderId/services', requireRole(supabase, ['manager', 'technician']), async (req, res) => {
         try {
