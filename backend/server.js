@@ -175,7 +175,7 @@ app.post('/api/appointments/:appointmentId/status', async (req, res) => {
 app.use('/api/auth', require('./routes/auth')(supabase))
 app.use('/api/technicians', require('./routes/technicians')(supabase))
 app.use('/api/manager', require('./routes/manager')(supabase))
-app.use('/api/job-orders', require('./routes/jobOrders')(supabase))   
+app.use('/api/jobOrders', require('./routes/jobOrders')(supabase))   
 app.use('/api/customer', require('./routes/customer')(supabase))
 
 // Health check

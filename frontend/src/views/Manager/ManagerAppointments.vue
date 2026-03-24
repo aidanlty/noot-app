@@ -19,330 +19,346 @@
     </div>
 
     <template v-else>
-    <!-- Status Tabs -->
-    <div class="status-tabs">
-      <button
-        v-for="tab in statusTabs"
-        :key="tab.value"
-        class="status-tab"
-        :class="['status-tab--' + tab.value, { active: activeStatusTab === tab.value }]"
-        @click="setStatusTab(tab.value)"
-      >
-        <span class="tab-label">{{ tab.label }}</span>
-        <span class="tab-badge">{{ getStatusCount(tab.value) }}</span>
-      </button>
-    </div>
 
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <!-- Date Filters (only for active tab) -->
-      <template v-if="activeStatusTab === 'active'">
+      <!-- Status Tabs -->
+      <div class="status-tabs">
         <button
-          v-for="f in filters"
-          :key="f.value"
-          class="filter-btn"
-          :class="{ active: activeFilter === f.value && !specificDate }"
-          @click="setFilter(f.value)"
+          v-for="tab in statusTabs"
+          :key="tab.value"
+          class="status-tab"
+          :class="['status-tab--' + tab.value, { active: activeStatusTab === tab.value }]"
+          @click="setStatusTab(tab.value)"
         >
-          {{ f.label }}
+          <span class="tab-label">{{ tab.label }}</span>
+          <span class="tab-badge">{{ getStatusCount(tab.value) }}</span>
         </button>
-
-        <!-- Date Picker -->
-        <div class="date-filter">
-          <input
-            type="date"
-            class="date-input"
-            :class="{ active: specificDate }"
-            v-model="specificDate"
-            @change="onDateChange"
-          />
-          <button v-if="specificDate" class="clear-date" @click="clearDate">✕</button>
-        </div>
-      </template>
-
-      <!-- Customer Name Search -->
-      <div class="search-filter" :class="{ 'search-filter--full': activeStatusTab !== 'active' }">
-        <span class="search-icon">🔍</span>
-        <input
-          type="text"
-          class="search-input"
-          v-model="customerSearch"
-          placeholder="Search by customer name..."
-          @input="currentPage = 1"
-        />
-        <button v-if="customerSearch" class="clear-search" @click="clearSearch">✕</button>
       </div>
 
-      <span class="appt-count">
-        {{ filteredAppointments.length }} appointment{{ filteredAppointments.length !== 1 ? 's' : '' }}
-      </span>
-    </div>
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <template v-if="activeStatusTab === 'active'">
+          <button
+            v-for="f in filters"
+            :key="f.value"
+            class="filter-btn"
+            :class="{ active: activeFilter === f.value && !specificDate }"
+            @click="setFilter(f.value)"
+          >
+            {{ f.label }}
+          </button>
 
-    <!-- Empty -->
-    <div v-if="filteredAppointments.length === 0" class="empty-state">
-      <span class="empty-icon">{{ emptyIcon }}</span>
-      <p>{{ emptyMessage }}</p>
-    </div>
+          <div class="date-filter">
+            <input
+              type="date"
+              class="date-input"
+              :class="{ active: specificDate }"
+              v-model="specificDate"
+              @change="onDateChange"
+            />
+            <button v-if="specificDate" class="clear-date" @click="clearDate">✕</button>
+          </div>
+        </template>
 
-    <!-- List -->
-    <div v-else class="appointments-list">
-      <div
-        v-for="appt in paginatedAppointments"
-        :key="appt.id"
-        class="appt-card"
-        :class="{
-          'today-card': isToday(appt.appointmentDate) && activeStatusTab === 'active',
-          'card--completed': appt.status === 'completed',
-          'card--cancelled': appt.status === 'cancelled',
-          'card--diagnose': appt.status === 'diagnose',
-        }"
-      >
-        <div class="appt-time-col" :class="{
-          'time-col--completed': appt.status === 'completed',
-          'time-col--cancelled': appt.status === 'cancelled',
-          'time-col--diagnose': appt.status === 'diagnose',
-        }">
-          <span class="appt-day">{{ isToday(appt.appointmentDate) && activeStatusTab === 'active' ? 'Today' : getDayName(appt.appointmentDate) }}</span>
-          <span class="appt-time">{{ appt.appointmentTime }}</span>
+        <div class="search-filter" :class="{ 'search-filter--full': activeStatusTab !== 'active' }">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            class="search-input"
+            v-model="customerSearch"
+            placeholder="Search by customer name..."
+            @input="currentPage = 1"
+          />
+          <button v-if="customerSearch" class="clear-search" @click="clearSearch">✕</button>
         </div>
-        <div class="appt-divider"></div>
-        <div class="appt-body">
-          <div class="appt-top">
-            <h3 class="appt-title">{{ appt.customerName }}</h3>
-            <span class="appt-id">#{{ appt.id }}</span>
-            <span
-              v-if="appt.status === 'completed'"
-              class="status-badge status-badge--completed"
-            >✓ Completed</span>
-            <span
-              v-else-if="appt.status === 'cancelled'"
-              class="status-badge status-badge--cancelled"
-            >✕ Cancelled</span>
-            <span
-              v-else-if="appt.status === 'diagnose'"
-              class="status-badge status-badge--diagnose"
-            >🔬 Diagnose</span>
+
+        <span class="appt-count">
+          {{ filteredAppointments.length }} appointment{{ filteredAppointments.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
+
+      <!-- Empty -->
+      <div v-if="filteredAppointments.length === 0" class="empty-state">
+        <span class="empty-icon">{{ emptyIcon }}</span>
+        <p>{{ emptyMessage }}</p>
+      </div>
+
+      <!-- List -->
+      <div v-else class="appointments-list">
+        <div
+          v-for="appt in paginatedAppointments"
+          :key="appt.id"
+          class="appt-card"
+          :class="{
+            'today-card': isToday(appt.appointmentDate) && activeStatusTab === 'active',
+            'card--completed': appt.status === 'completed',
+            'card--cancelled': appt.status === 'cancelled',
+            'card--diagnose': appt.status === 'diagnose',
+          }"
+        >
+          <div class="appt-time-col" :class="{
+            'time-col--completed': appt.status === 'completed',
+            'time-col--cancelled': appt.status === 'cancelled',
+            'time-col--diagnose': appt.status === 'diagnose',
+          }">
+            <span class="appt-day">{{ isToday(appt.appointmentDate) && activeStatusTab === 'active' ? 'Today' : getDayName(appt.appointmentDate) }}</span>
+            <span class="appt-time">{{ appt.appointmentTime }}</span>
           </div>
-          <p class="appt-vehicle">{{ appt.vehicleYear }} {{ appt.vehicleMake }} {{ appt.vehicleModel }} · {{ appt.licensePlate }}</p>
-          <div class="appt-meta">
-            <span class="meta-tag date-tag">{{ formatDate(appt.appointmentDate) }}</span>
-            <span v-if="appt.diagnoseTech" class="meta-tag tech-assigned-tag">
-              👤 {{ appt.diagnoseTech }}
-            </span>
-            <span v-else-if="activeStatusTab === 'active' && appt.status !== 'cancelled'" class="meta-tag tech-unassigned-tag">
-              Diagnose Tech: Not Assigned
-            </span>
-            <!-- cancel_reason only shown when status is cancelled -->
-            <span v-if="appt.cancelReason && appt.status === 'cancelled'" class="meta-tag cancel-reason-tag">
-              {{ appt.cancelReason }}
-            </span>
+          <div class="appt-divider"></div>
+          <div class="appt-body">
+            <div class="appt-top">
+              <h3 class="appt-title">{{ appt.customerName }}</h3>
+              <span class="appt-id">#{{ appt.id }}</span>
+              <span v-if="appt.status === 'completed'" class="status-badge status-badge--completed">✓ Completed</span>
+              <span v-else-if="appt.status === 'cancelled'" class="status-badge status-badge--cancelled">✕ Cancelled</span>
+              <span v-else-if="appt.status === 'diagnose'" class="status-badge status-badge--diagnose">🔬 Diagnose</span>
+            </div>
+            <p class="appt-vehicle">{{ appt.vehicleYear }} {{ appt.vehicleMake }} {{ appt.vehicleModel }} · {{ appt.licensePlate }}</p>
+            <div class="appt-meta">
+              <span class="meta-tag date-tag">{{ formatDate(appt.appointmentDate) }}</span>
+              <span v-if="appt.diagnoseTech" class="meta-tag tech-assigned-tag">
+                👤 {{ appt.diagnoseTech }}
+              </span>
+              <span v-else-if="activeStatusTab === 'active' && appt.status !== 'cancelled'" class="meta-tag tech-unassigned-tag">
+                Diagnose Tech: Not Assigned
+              </span>
+              <span v-if="appt.cancelReason && appt.status === 'cancelled'" class="meta-tag cancel-reason-tag">
+                {{ appt.cancelReason }}
+              </span>
+            </div>
+          </div>
+          <div class="appt-actions">
+            <button class="btn-view" @click="openModal(appt)">View</button>
+            <template v-if="activeStatusTab === 'active'">
+              <button
+                v-if="!appt.diagnoseTech"
+                class="btn-assign-tech"
+                @click="openAssignTech(appt)"
+              >
+                Assign
+              </button>
+              <button
+                v-else
+                class="btn-change-tech"
+                @click="openAssignTech(appt)"
+              >
+                Change
+              </button>
+              <button
+                v-if="isPast(appt.appointmentDate, appt.appointmentTime)"
+                class="btn-diagnose"
+                :class="{ 'btn-proceed--disabled': !appt.diagnoseTech }"
+                :disabled="!appt.diagnoseTech"
+                :title="!appt.diagnoseTech ? 'Assign a technician before proceeding to diagnose' : ''"
+                @click="openDiagnoseConfirm(appt)"
+              >
+                Diagnose
+              </button>
+              <button class="btn-cancel-appt" @click="openCancelConfirm(appt)">Cancel</button>
+            </template>
           </div>
         </div>
-        <div class="appt-actions">
-          <button class="btn-view" @click="openModal(appt)">View</button>
-          <template v-if="activeStatusTab === 'active'">
-            <button
-              v-if="!appt.diagnoseTech"
-              class="btn-assign-tech"
-              @click="openAssignTech(appt)"
-            >
-              Assign
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="pagination-container">
+        <button class="pagination-btn" @click="prevPage" :disabled="currentPage === 1">← Previous</button>
+        <div class="pagination-info">
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            class="pagination-page"
+            :class="{ active: currentPage === page }"
+            @click="goToPage(page)"
+          >{{ page }}</button>
+        </div>
+        <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">Next →</button>
+      </div>
+
+      <!-- ───────────── MODALS ───────────── -->
+
+      <!-- View Modal -->
+      <div v-if="modal.isOpen" class="modal-overlay" @click="closeModal">
+        <div class="modal-content" @click.stop>
+          <button class="modal-close" @click="closeModal">&times;</button>
+          <h2>Appointment Details</h2>
+          <div class="modal-body">
+            <div class="detail-group">
+              <label>Customer</label>
+              <p>{{ modal.appt.customerName }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Customer Email</label>
+              <p>{{ modal.appt.customerEmail }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Phone Number</label>
+              <p>{{ modal.appt.phoneNumber }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Vehicle</label>
+              <p>{{ modal.appt.vehicleYear }} {{ modal.appt.vehicleMake }} {{ modal.appt.vehicleModel }}</p>
+            </div>
+            <div class="detail-group">
+              <label>License Plate</label>
+              <p>{{ modal.appt.licensePlate }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Appointment Date</label>
+              <p>{{ formatDate(modal.appt.appointmentDate) }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Time</label>
+              <p>{{ modal.appt.appointmentTime }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Duration</label>
+              <p>{{ modal.appt.duration }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Status</label>
+              <p>{{ formatStatus(modal.appt.status) }}</p>
+            </div>
+            <div v-if="modal.appt.status !== 'cancelled'" class="detail-group">
+              <label>Diagnose Technician</label>
+              <p>{{ modal.appt.diagnoseTech || 'Not Assigned' }}</p>
+            </div>
+            <div v-if="modal.appt.status !== 'cancelled' && modal.appt.techEmail" class="detail-group">
+              <label>Technician Email</label>
+              <p>{{ modal.appt.techEmail }}</p>
+            </div>
+            <div v-if="modal.appt.cancelReason && modal.appt.status === 'cancelled'" class="detail-group">
+              <label>Cancellation Reason</label>
+              <p>{{ modal.appt.cancelReason }}</p>
+            </div>
+            <div v-if="modal.appt.notes" class="detail-group">
+              <label>Notes</label>
+              <p>{{ modal.appt.notes }}</p>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" @click="closeModal">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assign Tech Modal -->
+      <div v-if="assignTech.isOpen" class="modal-overlay" @click="closeAssignTech">
+        <div class="modal-content confirm-modal-content" @click.stop>
+          <button class="modal-close" @click="closeAssignTech">&times;</button>
+          <div class="confirm-icon confirm-icon--tech">🔧</div>
+          <h2>{{ assignTech.appt && assignTech.appt.diagnoseTech ? 'Change Technician' : 'Assign Technician' }}</h2>
+          <p class="confirm-desc">Select a diagnose technician for this appointment.</p>
+          <div class="confirm-appt-info">
+            <span class="confirm-name">{{ assignTech.appt && assignTech.appt.customerName }}</span>
+            <span class="confirm-meta">
+              {{ assignTech.appt && assignTech.appt.vehicleYear }}
+              {{ assignTech.appt && assignTech.appt.vehicleMake }}
+              {{ assignTech.appt && assignTech.appt.vehicleModel }}
+              · #{{ assignTech.appt && assignTech.appt.id }}
+            </span>
+          </div>
+          <div class="tech-select-wrapper">
+            <label class="tech-select-label">Diagnose Technician</label>
+            <div class="custom-select-container">
+              <p v-if="technicianLoading" class="tech-loading">Loading technicians...</p>
+              <p v-else-if="technicianError" class="reason-error">{{ technicianError }}</p>
+              <select v-else v-model="assignTech.selectedTechId" class="tech-select">
+                <option value="" disabled>— Select a technician —</option>
+                <option v-for="tech in technicians" :key="tech.ID" :value="tech.ID">{{ tech.Name }}</option>
+              </select>
+            </div>
+          </div>
+          <p v-if="assignTech.showError" class="reason-error">Please select a technician to continue.</p>
+          <p v-if="assignTech.submitError" class="reason-error">{{ assignTech.submitError }}</p>
+          <div class="modal-actions confirm-actions">
+            <button class="btn-secondary" @click="closeAssignTech">Go Back</button>
+            <button class="btn-confirm-assign" @click="submitAssignTech" :disabled="assignTech.submitting">
+              {{ assignTech.submitting ? 'Saving...' : (assignTech.appt && assignTech.appt.diagnoseTech ? 'Confirm Change' : 'Confirm Assign') }}
             </button>
-            <button
-              v-else
-              class="btn-change-tech"
-              @click="openAssignTech(appt)"
-            >
-              Change
-            </button>
-            <!-- Diagnose button: visible when datetime is past, disabled if no tech — does nothing on click -->
-            <button
-              v-if="isPast(appt.appointmentDate, appt.appointmentTime)"
-              class="btn-diagnose"
-              :class="{ 'btn-proceed--disabled': !appt.diagnoseTech }"
-              :disabled="!appt.diagnoseTech"
-              :title="!appt.diagnoseTech ? 'Assign a technician before proceeding to diagnose' : ''"
-            >
-              Diagnose
-            </button>
-            <button class="btn-cancel-appt" @click="openCancelConfirm(appt)">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnose Confirm Modal -->
+      <div v-if="diagnoseConfirm.isOpen" class="modal-overlay" @click="closeDiagnoseConfirm">
+        <div class="modal-content confirm-modal-content" @click.stop>
+          <button class="modal-close" @click="closeDiagnoseConfirm">&times;</button>
+
+          <!-- Success State -->
+          <template v-if="diagnoseConfirm.success">
+            <div class="confirm-icon confirm-icon--success">✓</div>
+            <h2>Job Card Created</h2>
+            <p class="confirm-desc">
+              The job card has been successfully created for
+              <strong>{{ diagnoseConfirm.appt && diagnoseConfirm.appt.customerName }}</strong>.
+              The appointment has been marked as completed.
+            </p>
+            <div class="modal-actions confirm-actions">
+              <button class="btn-confirm-assign" @click="closeDiagnoseConfirm">Done</button>
+            </div>
+          </template>
+
+          <!-- Confirm State -->
+          <template v-else>
+            <div class="confirm-icon confirm-icon--tech">🔬</div>
+            <h2>Proceed to Diagnose?</h2>
+            <p class="confirm-desc">
+              This will create a job card and mark the appointment as completed.
+            </p>
+            <div class="confirm-appt-info">
+              <span class="confirm-name">{{ diagnoseConfirm.appt && diagnoseConfirm.appt.customerName }}</span>
+              <span class="confirm-meta">
+                {{ diagnoseConfirm.appt && diagnoseConfirm.appt.vehicleYear }}
+                {{ diagnoseConfirm.appt && diagnoseConfirm.appt.vehicleMake }}
+                {{ diagnoseConfirm.appt && diagnoseConfirm.appt.vehicleModel }}
+                · #{{ diagnoseConfirm.appt && diagnoseConfirm.appt.id }}
+              </span>
+            </div>
+            <p class="confirm-desc">
+              Assigned Technician: <strong>{{ diagnoseConfirm.appt && diagnoseConfirm.appt.diagnoseTech }}</strong>
+            </p>
+            <p v-if="diagnoseConfirm.submitError" class="reason-error">{{ diagnoseConfirm.submitError }}</p>
+            <div class="modal-actions confirm-actions">
+              <button class="btn-secondary" @click="closeDiagnoseConfirm" :disabled="diagnoseConfirm.submitting">Go Back</button>
+              <button class="btn-confirm-assign" @click="createJobCard(diagnoseConfirm.appt)" :disabled="diagnoseConfirm.submitting">
+                {{ diagnoseConfirm.submitting ? 'Creating...' : 'Confirm' }}
+              </button>
+            </div>
           </template>
         </div>
       </div>
-    </div>
 
-    <!-- Pagination -->
-    <div v-if="totalPages > 1" class="pagination-container">
-      <button class="pagination-btn" @click="prevPage" :disabled="currentPage === 1">← Previous</button>
-      <div class="pagination-info">
-        <button
-          v-for="page in totalPages"
-          :key="page"
-          class="pagination-page"
-          :class="{ active: currentPage === page }"
-          @click="goToPage(page)"
-        >{{ page }}</button>
-      </div>
-      <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">Next →</button>
-    </div>
-
-    <!-- View Modal -->
-    <div v-if="modal.isOpen" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <button class="modal-close" @click="closeModal">&times;</button>
-        <h2>Appointment Details</h2>
-        <div class="modal-body">
-          <div class="detail-group">
-            <label>Customer</label>
-            <p>{{ modal.appt.customerName }}</p>
+      <!-- Cancel Confirmation Modal -->
+      <div v-if="cancelConfirm.isOpen" class="modal-overlay" @click="closeCancelConfirm">
+        <div class="modal-content confirm-modal-content" @click.stop>
+          <div class="confirm-icon confirm-icon--cancel">✕</div>
+          <h2>Cancel Appointment</h2>
+          <p class="confirm-desc">Select a reason for cancelling this appointment.</p>
+          <div class="confirm-appt-info">
+            <span class="confirm-name">{{ cancelConfirm.appt.customerName }}</span>
+            <span class="confirm-meta">{{ cancelConfirm.appt.vehicleYear }} {{ cancelConfirm.appt.vehicleMake }} {{ cancelConfirm.appt.vehicleModel }} · #{{ cancelConfirm.appt.id }}</span>
           </div>
-          <div class="detail-group">
-            <label>Customer Email</label>
-            <p>{{ modal.appt.customerEmail }}</p>
-          </div>
-          <div class="detail-group">
-            <label>Phone Number</label>
-            <p>{{ modal.appt.phoneNumber }}</p>
-          </div>
-          <div class="detail-group">
-            <label>Vehicle</label>
-            <p>{{ modal.appt.vehicleYear }} {{ modal.appt.vehicleMake }} {{ modal.appt.vehicleModel }}</p>
-          </div>
-          <div class="detail-group">
-            <label>License Plate</label>
-            <p>{{ modal.appt.licensePlate }}</p>
-          </div>
-          <div class="detail-group">
-            <label>Appointment Date</label>
-            <p>{{ formatDate(modal.appt.appointmentDate) }}</p>
-          </div>
-          <div class="detail-group">
-            <label>Time</label>
-            <p>{{ modal.appt.appointmentTime }}</p>
-          </div>
-          <div class="detail-group">
-            <label>Duration</label>
-            <p>{{ modal.appt.duration }}</p>
-          </div>
-          <div class="detail-group">
-            <label>Status</label>
-            <p>{{ formatStatus(modal.appt.status) }}</p>
-          </div>
-          <div v-if="modal.appt.status !== 'cancelled'" class="detail-group">
-            <label>Diagnose Technician</label>
-            <p>{{ modal.appt.diagnoseTech || 'Not Assigned' }}</p>
-          </div>
-          <div v-if="modal.appt.status !== 'cancelled' && modal.appt.techEmail" class="detail-group">
-            <label>Technician Email</label>
-            <p>{{ modal.appt.techEmail }}</p>
-          </div>
-          <div v-if="modal.appt.cancelReason && modal.appt.status === 'cancelled'" class="detail-group">
-            <label>Cancellation Reason</label>
-            <p>{{ modal.appt.cancelReason }}</p>
-          </div>
-          <div v-if="modal.appt.notes" class="detail-group">
-            <label>Notes</label>
-            <p>{{ modal.appt.notes }}</p>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button class="btn-secondary" @click="closeModal">Close</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Assign Tech Modal -->
-    <div v-if="assignTech.isOpen" class="modal-overlay" @click="closeAssignTech">
-      <div class="modal-content confirm-modal-content" @click.stop>
-        <button class="modal-close" @click="closeAssignTech">&times;</button>
-        <div class="confirm-icon confirm-icon--tech">🔧</div>
-        <h2>{{ assignTech.appt && assignTech.appt.diagnoseTech ? 'Change Technician' : 'Assign Technician' }}</h2>
-        <p class="confirm-desc">
-          Select a diagnose technician for this appointment.
-        </p>
-        <div class="confirm-appt-info">
-          <span class="confirm-name">{{ assignTech.appt && assignTech.appt.customerName }}</span>
-          <span class="confirm-meta">
-            {{ assignTech.appt && assignTech.appt.vehicleYear }}
-            {{ assignTech.appt && assignTech.appt.vehicleMake }}
-            {{ assignTech.appt && assignTech.appt.vehicleModel }}
-            · #{{ assignTech.appt && assignTech.appt.id }}
-          </span>
-        </div>
-
-        <div class="tech-select-wrapper">
-          <label class="tech-select-label">Diagnose Technician</label>
-          <div class="custom-select-container">
-            <p v-if="technicianLoading" class="tech-loading">Loading technicians...</p>
-            <p v-else-if="technicianError" class="reason-error">{{ technicianError }}</p>
-            <select
-              v-else
-              v-model="assignTech.selectedTechId"
-              class="tech-select"
+          <div class="cancel-reasons">
+            <label
+              v-for="reason in cancelReasons"
+              :key="reason"
+              class="reason-option"
+              :class="{ selected: cancelConfirm.reason === reason }"
             >
-              <option value="" disabled>— Select a technician —</option>
-              <option
-                v-for="tech in technicians"
-                :key="tech.ID"
-                :value="tech.ID"
-              >{{ tech.Name }}</option>
-            </select>
+              <input type="radio" name="cancelReason" :value="reason" v-model="cancelConfirm.reason" />
+              <span class="reason-label">{{ reason }}</span>
+            </label>
+          </div>
+          <p v-if="cancelConfirm.showError" class="reason-error">Please select a reason to continue.</p>
+          <p v-if="cancelConfirm.submitError" class="reason-error">{{ cancelConfirm.submitError }}</p>
+          <div class="modal-actions confirm-actions">
+            <button class="btn-secondary" @click="closeCancelConfirm" :disabled="cancelConfirm.submitting">Go Back</button>
+            <button class="btn-confirm-cancel" @click="submitCancel" :disabled="cancelConfirm.submitting">
+              {{ cancelConfirm.submitting ? 'Cancelling...' : 'Confirm Cancel' }}
+            </button>
           </div>
         </div>
-
-        <p v-if="assignTech.showError" class="reason-error">Please select a technician to continue.</p>
-        <p v-if="assignTech.submitError" class="reason-error">{{ assignTech.submitError }}</p>
-
-        <div class="modal-actions confirm-actions">
-          <button class="btn-secondary" @click="closeAssignTech">Go Back</button>
-          <button class="btn-confirm-assign" @click="submitAssignTech" :disabled="assignTech.submitting">
-            {{ assignTech.submitting ? 'Saving...' : (assignTech.appt && assignTech.appt.diagnoseTech ? 'Confirm Change' : 'Confirm Assign') }}
-          </button>
-        </div>
       </div>
-    </div>
-
-    <!-- Cancel Confirmation Modal -->
-    <div v-if="cancelConfirm.isOpen" class="modal-overlay" @click="closeCancelConfirm">
-      <div class="modal-content confirm-modal-content" @click.stop>
-        <div class="confirm-icon confirm-icon--cancel">✕</div>
-        <h2>Cancel Appointment</h2>
-        <p class="confirm-desc">
-          Select a reason for cancelling this appointment.
-        </p>
-        <div class="confirm-appt-info">
-          <span class="confirm-name">{{ cancelConfirm.appt.customerName }}</span>
-          <span class="confirm-meta">{{ cancelConfirm.appt.vehicleYear }} {{ cancelConfirm.appt.vehicleMake }} {{ cancelConfirm.appt.vehicleModel }} · #{{ cancelConfirm.appt.id }}</span>
-        </div>
-
-        <div class="cancel-reasons">
-          <label
-            v-for="reason in cancelReasons"
-            :key="reason"
-            class="reason-option"
-            :class="{ selected: cancelConfirm.reason === reason }"
-          >
-            <input
-              type="radio"
-              name="cancelReason"
-              :value="reason"
-              v-model="cancelConfirm.reason"
-            />
-            <span class="reason-label">{{ reason }}</span>
-          </label>
-        </div>
-
-        <p v-if="cancelConfirm.showError" class="reason-error">Please select a reason to continue.</p>
-        <p v-if="cancelConfirm.submitError" class="reason-error">{{ cancelConfirm.submitError }}</p>
-
-        <div class="modal-actions confirm-actions">
-          <button class="btn-secondary" @click="closeCancelConfirm" :disabled="cancelConfirm.submitting">Go Back</button>
-          <button class="btn-confirm-cancel" @click="submitCancel" :disabled="cancelConfirm.submitting">
-            {{ cancelConfirm.submitting ? 'Cancelling...' : 'Confirm Cancel' }}
-          </button>
-        </div>
-      </div>
-    </div>
 
     </template>
   </div>
@@ -385,11 +401,23 @@ export default {
 
       // ── Modals ──
       modal: { isOpen: false, appt: null },
-      assignTech: { isOpen: false, appt: null, selectedTech: '', selectedTechId: '', showError: false, submitting: false, submitError: '' },
-      cancelConfirm: { isOpen: false, appt: null, reason: '', showError: false, submitting: false, submitError: '' },
+      assignTech: {
+        isOpen: false, appt: null,
+        selectedTech: '', selectedTechId: '',
+        showError: false, submitting: false, submitError: '',
+      },
+      diagnoseConfirm: {
+        isOpen: false, appt: null,
+        submitting: false, submitError: '',
+        success: false,
+      },
+      cancelConfirm: {
+        isOpen: false, appt: null,
+        reason: '', showError: false, submitting: false, submitError: '',
+      },
       cancelReasons: ['Customer did not show up', 'Reschedule'],
 
-      // ── Appointments (populated from API) ──
+      // ── Appointments ──
       appointments: [],
     };
   },
@@ -482,6 +510,7 @@ export default {
   },
 
   methods: {
+    // ── Fetch ──
     async fetchAppointments() {
       this.pageLoading = true;
       this.appointmentsError = null;
@@ -495,14 +524,13 @@ export default {
           },
         });
         const json = await res.json();
-        if (!res.ok) {
-          throw new Error(json.error || json.message || `Server error ${res.status}`);
-        }
+        if (!res.ok) throw new Error(json.error || json.message || `Server error ${res.status}`);
         this.appointments = (json.data || []).map(a => ({
           id:              a.id,
+          customerId:      a.Profiles?.ID            || '',
           customerName:    a.Profiles?.Name          || '',
           customerEmail:   a.Profiles?.Email         || '',
-          phoneNumber:     a.phone_number            || '',         
+          phoneNumber:     a.phone_number            || '',
           licensePlate:    a.vehicle_license_plate   || '',
           vehicleMake:     a.vehicle_make            || '',
           vehicleModel:    a.vehicle_model           || '',
@@ -547,30 +575,54 @@ export default {
       }
     },
 
-    getStatusCount(tabValue) {
-      if (tabValue === 'active')    return this.activeAppointments.length;
-      if (tabValue === 'completed') return this.completedAppointments.length;
-      if (tabValue === 'cancelled') return this.cancelledAppointments.length;
-      return 0;
+    // ── Diagnose Confirm ──
+    openDiagnoseConfirm(appt) {
+      this.diagnoseConfirm.appt = appt;
+      this.diagnoseConfirm.submitting = false;
+      this.diagnoseConfirm.submitError = '';
+      this.diagnoseConfirm.success = false;
+      this.diagnoseConfirm.isOpen = true;
+    },
+    closeDiagnoseConfirm() {
+      // Move card out of active tab only after user dismisses success screen
+      if (this.diagnoseConfirm.success && this.diagnoseConfirm.appt) {
+        this.diagnoseConfirm.appt.status = 'completed';
+      }
+      this.diagnoseConfirm.isOpen = false;
+      this.diagnoseConfirm.appt = null;
+      this.diagnoseConfirm.submitting = false;
+      this.diagnoseConfirm.submitError = '';
+      this.diagnoseConfirm.success = false;
     },
 
-    setStatusTab(val) {
-      this.activeStatusTab = val;
-      this.currentPage = 1;
-      this.customerSearch = '';
-    },
+    async createJobCard(appt) {
+      this.diagnoseConfirm.submitting = true;
+      this.diagnoseConfirm.submitError = '';
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:3000/api/jobOrders/createJobCard', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            customer_id:            appt.customerId,
+            appointment_id:         appt.id,
+            diagnose_technician_id: appt.diagnoseTechId,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || json.message || `Error ${res.status}`);
 
-    isToday(date) {
-      return date === this.todayStr;
-    },
-    isPast(date, time) {
-      const [timePart, modifier] = time.split(' ');
-      let [hours, minutes] = timePart.split(':').map(Number);
-      if (modifier === 'AM' && hours === 12) hours = 0;
-      if (modifier === 'PM' && hours !== 12) hours += 12;
-      const apptDate = new Date(date + 'T00:00:00');
-      apptDate.setHours(hours, minutes, 0, 0);
-      return this.now > apptDate;
+        // Show success screen inside the modal
+        this.diagnoseConfirm.success = true;
+      } catch (err) {
+        console.error('Error creating job card:', err);
+        this.diagnoseConfirm.submitError = err.message;
+      } finally {
+        this.diagnoseConfirm.submitting = false;
+      }
     },
 
     // ── Assign Tech ──
@@ -651,10 +703,8 @@ export default {
         this.cancelConfirm.showError = true;
         return;
       }
-
       this.cancelConfirm.submitting = true;
       this.cancelConfirm.submitError = '';
-
       try {
         const token = localStorage.getItem('token');
         const res = await fetch(
@@ -671,7 +721,6 @@ export default {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || json.message || `Error ${res.status}`);
 
-        // Update local state only after API confirms success
         this.cancelConfirm.appt.status = 'cancelled';
         this.cancelConfirm.appt.cancelReason = this.cancelConfirm.reason;
         this.closeCancelConfirm();
@@ -689,9 +738,7 @@ export default {
       this.specificDate = '';
       this.currentPage = 1;
     },
-    onDateChange() {
-      this.currentPage = 1;
-    },
+    onDateChange() { this.currentPage = 1; },
     clearDate() {
       this.specificDate = '';
       this.currentPage = 1;
@@ -703,12 +750,8 @@ export default {
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages) this.currentPage = page;
     },
-    prevPage() {
-      if (this.currentPage > 1) this.currentPage--;
-    },
-    nextPage() {
-      if (this.currentPage < this.totalPages) this.currentPage++;
-    },
+    prevPage() { if (this.currentPage > 1) this.currentPage--; },
+    nextPage() { if (this.currentPage < this.totalPages) this.currentPage++; },
     parseTime(timeStr) {
       if (!timeStr) return 0;
       const [time, modifier] = timeStr.split(' ');
@@ -718,15 +761,30 @@ export default {
       return hours * 60 + minutes;
     },
 
-    // ── Modal ──
-    openModal(appt) {
-      this.modal.appt = appt;
-      this.modal.isOpen = true;
+    // ── Helpers ──
+    getStatusCount(tabValue) {
+      if (tabValue === 'active')    return this.activeAppointments.length;
+      if (tabValue === 'completed') return this.completedAppointments.length;
+      if (tabValue === 'cancelled') return this.cancelledAppointments.length;
+      return 0;
     },
-    closeModal() {
-      this.modal.isOpen = false;
-      this.modal.appt = null;
+    setStatusTab(val) {
+      this.activeStatusTab = val;
+      this.currentPage = 1;
+      this.customerSearch = '';
     },
+    isToday(date) { return date === this.todayStr; },
+    isPast(date, time) {
+      const [timePart, modifier] = time.split(' ');
+      let [hours, minutes] = timePart.split(':').map(Number);
+      if (modifier === 'AM' && hours === 12) hours = 0;
+      if (modifier === 'PM' && hours !== 12) hours += 12;
+      const apptDate = new Date(date + 'T00:00:00');
+      apptDate.setHours(hours, minutes, 0, 0);
+      return this.now > apptDate;
+    },
+    openModal(appt) { this.modal.appt = appt; this.modal.isOpen = true; },
+    closeModal() { this.modal.isOpen = false; this.modal.appt = null; },
     formatDate(date) {
       if (!date) return 'N/A';
       return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
