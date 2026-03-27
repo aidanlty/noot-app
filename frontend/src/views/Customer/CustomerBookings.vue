@@ -32,10 +32,11 @@
             @click="switchTab('finishedjobs')"
           >
             Finished Jobs
-            <span class="tab-count">{{ filteredFinishedJobs.length }}</span>
+            <span class="tab-count">{{ finishedJobs.length }}</span>
           </button>
         </div>
       </div>
+
       <!-- ═══════════════════════════════════════════════════════════ -->
       <!--  TAB 1 — APPOINTMENTS                                       -->
       <!-- ═══════════════════════════════════════════════════════════ -->
@@ -105,7 +106,6 @@
                   <span class="booking-id">#{{ booking.id }}</span>
                 </div>
                 <div class="booking-details">
-                  <!-- Hide license plate, phone, notes for cancelled bookings -->
                   <div v-if="booking.status !== 'cancelled'" class="detail-item">
                     <span class="detail-label">License Plate:</span>
                     <span class="detail-value">{{ booking.licensePlate || 'N/A' }}</span>
@@ -126,7 +126,6 @@
                     <span class="detail-label">Appointment Time:</span>
                     <span class="detail-value">{{ booking.appointmentTime || 'N/A' }}</span>
                   </div>
-                  <!-- Cancel Reason -->
                   <div
                     v-if="booking.status === 'cancelled' && booking.cancelReason"
                     class="detail-item cancel-reason-item"
@@ -134,7 +133,6 @@
                     <span class="detail-label">Cancel Reason:</span>
                     <span class="detail-value">{{ booking.cancelReason }}</span>
                   </div>
-                  <!-- Cancelled by Porschify Notice -->
                   <div
                     v-if="booking.status === 'cancelled' && booking.cancelReason"
                     class="detail-item appointment-item cancelled-by-admin"
@@ -181,6 +179,7 @@
             <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">Next →</button>
           </div>
         </div>
+
         <!-- MODALS -->
         <div v-if="modal.isOpen" class="modal-overlay" @click="closeModal">
           <div class="modal-content" @click.stop>
@@ -189,51 +188,19 @@
             <div v-if="modal.type === 'view'">
               <h2>Booking Details</h2>
               <div class="modal-body">
-                <div class="detail-group">
-                  <label>Vehicle:</label>
-                  <p>{{ modal.booking.vehicleYear }} {{ modal.booking.vehicleMake }}</p>
+                <div class="detail-group"><label>Vehicle:</label><p>{{ modal.booking.vehicleYear }} {{ modal.booking.vehicleMake }}</p></div>
+                <div class="detail-group"><label>License Plate:</label><p>{{ modal.booking.licensePlate || 'N/A' }}</p></div>
+                <div class="detail-group"><label>Booking ID:</label><p>#{{ modal.booking.id }}</p></div>
+                <div class="detail-group"><label>Status:</label><p>{{ formatStatus(modal.booking.status) }}</p></div>
+                <div class="detail-group"><label>Phone Number:</label><p>{{ modal.booking.phoneNumber || 'N/A' }}</p></div>
+                <div class="detail-group"><label>Appointment Date:</label><p>{{ formatDate(modal.booking.appointmentDate) }}</p></div>
+                <div class="detail-group"><label>Appointment Time:</label><p>{{ modal.booking.appointmentTime || 'N/A' }}</p></div>
+                <div v-if="modal.booking.customerNotes" class="detail-group"><label>Notes:</label><p>{{ modal.booking.customerNotes }}</p></div>
+                <div v-if="modal.booking.status === 'cancelled' && modal.booking.cancelReason" class="detail-group">
+                  <label>Cancel Reason:</label><p>{{ modal.booking.cancelReason }}</p>
                 </div>
-                <div class="detail-group">
-                  <label>License Plate:</label>
-                  <p>{{ modal.booking.licensePlate || 'N/A' }}</p>
-                </div>
-                <div class="detail-group">
-                  <label>Booking ID:</label>
-                  <p>#{{ modal.booking.id }}</p>
-                </div>
-                <div class="detail-group">
-                  <label>Status:</label>
-                  <p>{{ formatStatus(modal.booking.status) }}</p>
-                </div>
-                <div class="detail-group">
-                  <label>Phone Number:</label>
-                  <p>{{ modal.booking.phoneNumber || 'N/A' }}</p>
-                </div>
-                <div class="detail-group">
-                  <label>Appointment Date:</label>
-                  <p>{{ formatDate(modal.booking.appointmentDate) }}</p>
-                </div>
-                <div class="detail-group">
-                  <label>Appointment Time:</label>
-                  <p>{{ modal.booking.appointmentTime || 'N/A' }}</p>
-                </div>
-                <div v-if="modal.booking.customerNotes" class="detail-group">
-                  <label>Notes:</label>
-                  <p>{{ modal.booking.customerNotes }}</p>
-                </div>
-                <div
-                  v-if="modal.booking.status === 'cancelled' && modal.booking.cancelReason"
-                  class="detail-group"
-                >
-                  <label>Cancel Reason:</label>
-                  <p>{{ modal.booking.cancelReason }}</p>
-                </div>
-                <div
-                  v-if="modal.booking.status === 'cancelled' && modal.booking.cancelReason"
-                  class="detail-group cancelled-by-admin-modal"
-                >
-                  <label>Cancelled By:</label>
-                  <p>Porschify</p>
+                <div v-if="modal.booking.status === 'cancelled' && modal.booking.cancelReason" class="detail-group cancelled-by-admin-modal">
+                  <label>Cancelled By:</label><p>Porschify</p>
                 </div>
               </div>
               <div class="modal-actions">
@@ -250,34 +217,17 @@
                 </div>
                 <div class="form-group">
                   <label>Appointment Date:</label>
-                  <input
-                    type="date"
-                    v-model="editForm.appointmentDate"
-                    :min="editMinDate"
-                    :max="editMaxDate"
-                    @change="onEditDateChange"
-                  >
-                  <p v-if="editIsSunday" class="warning-text" style="font-size:0.82rem; margin-top:4px;">
-                    Sundays are not available. Please select another date.
-                  </p>
+                  <input type="date" v-model="editForm.appointmentDate" :min="editMinDate" :max="editMaxDate" @change="onEditDateChange">
+                  <p v-if="editIsSunday" class="warning-text" style="font-size:0.82rem; margin-top:4px;">Sundays are not available. Please select another date.</p>
                 </div>
                 <div class="form-group">
                   <label>Appointment Time:</label>
-                  <select
-                    v-model="editForm.appointmentTime"
-                    :disabled="!editForm.appointmentDate || editIsSunday"
-                  >
+                  <select v-model="editForm.appointmentTime" :disabled="!editForm.appointmentDate || editIsSunday">
                     <option value="">Select time</option>
-                    <option
-                      v-for="slot in editTimeSlots"
-                      :key="slot.value"
-                      :value="slot.value"
-                      :disabled="slot.disabled"
-                    >
+                    <option v-for="slot in editTimeSlots" :key="slot.value" :value="slot.value" :disabled="slot.disabled">
                       {{ slot.label }}{{ slot.disabled ? ' (Unavailable)' : '' }}
                     </option>
                   </select>
-                  <!-- ── SAME DATE & TIME WARNING ── -->
                   <div v-if="editIsSameAsOriginal" class="same-slot-warning">
                     <span class="same-slot-warning__icon">⚠️</span>
                     <span>This is the same date and time as your current appointment. Please select a different date or time to save.</span>
@@ -286,11 +236,7 @@
               </div>
               <div class="modal-actions">
                 <button class="btn-secondary" @click="closeModal">Cancel</button>
-                <button
-                  class="btn-primary"
-                  @click="saveAppointment"
-                  :disabled="!editForm.appointmentDate || !editForm.appointmentTime || editIsSunday || editIsSameAsOriginal"
-                >Save Changes</button>
+                <button class="btn-primary" @click="saveAppointment" :disabled="!editForm.appointmentDate || !editForm.appointmentTime || editIsSunday || editIsSameAsOriginal">Save Changes</button>
               </div>
             </div>
             <!-- CANCEL MODAL -->
@@ -298,34 +244,20 @@
               <h2>Cancel Appointment</h2>
               <div class="modal-body">
                 <p>Are you sure you want to cancel this appointment?</p>
-                <div class="detail-group">
-                  <label>Vehicle:</label>
-                  <p>{{ modal.booking.vehicleYear }} {{ modal.booking.vehicleMake }}</p>
-                </div>
-                <div class="detail-group">
-                  <label>Appointment Date:</label>
-                  <p>{{ formatDate(modal.booking.appointmentDate) }}</p>
-                </div>
-                <div class="detail-group">
-                  <label>Appointment Time:</label>
-                  <p>{{ modal.booking.appointmentTime || 'N/A' }}</p>
-                </div>
+                <div class="detail-group"><label>Vehicle:</label><p>{{ modal.booking.vehicleYear }} {{ modal.booking.vehicleMake }}</p></div>
+                <div class="detail-group"><label>Appointment Date:</label><p>{{ formatDate(modal.booking.appointmentDate) }}</p></div>
+                <div class="detail-group"><label>Appointment Time:</label><p>{{ modal.booking.appointmentTime || 'N/A' }}</p></div>
                 <p class="warning-text">This action cannot be undone.</p>
               </div>
               <div class="modal-actions">
                 <button class="btn-secondary" @click="closeModal">Keep Appointment</button>
-                <button
-                  class="btn-danger"
-                  :disabled="!canCancelBooking(modal.booking)"
-                  @click="confirmCancel"
-                >
-                  Yes, Cancel Appointment
-                </button>
+                <button class="btn-danger" :disabled="!canCancelBooking(modal.booking)" @click="confirmCancel">Yes, Cancel Appointment</button>
               </div>
             </div>
           </div>
         </div>
       </template>
+
       <!-- ═══════════════════════════════════════════════════════════ -->
       <!--  TAB 2 — ACTIVE JOBS                                        -->
       <!-- ═══════════════════════════════════════════════════════════ -->
@@ -348,11 +280,11 @@
             <span class="jc-count">{{ filteredJobCards.length }} job{{ filteredJobCards.length !== 1 ? 's' : '' }}</span>
           </div>
         </div>
-        <div v-if="filteredJobCards.length === 0" class="jc-empty-state">No active jobs found.</div>
+        <div v-if="jobCardsError" class="jc-empty-state">Error: {{ jobCardsError }}</div>
+        <div v-else-if="filteredJobCards.length === 0" class="jc-empty-state">No active jobs found.</div>
         <div v-else class="jc-list">
           <div v-for="job in paginatedJobCards" :key="job.id" class="jc-card">
             <div class="jc-status-col" :class="'jc-status-col--' + job.status">
-              <span class="jc-card-day">{{ getDayName(job.jobDate) }}</span>
               <span class="jc-status-badge" :class="'jc-status-badge--' + job.status">{{ getStatusLabel(job.status) }}</span>
             </div>
             <div class="jc-divider" :class="'jc-divider--' + job.status"></div>
@@ -364,17 +296,49 @@
               <p class="jc-card-vehicle">{{ job.licensePlate }}</p>
               <div class="jc-card-meta">
                 <span class="jc-meta-tag jc-meta-tag--date">{{ formatDate(job.jobDate) }}</span>
-                <span v-if="job.status !== 'diagnose'" class="jc-meta-tag jc-meta-tag--service">{{ job.serviceType }}</span>
-                <template v-if="job.status !== 'diagnose'">
-                  <span v-if="job.parts && job.parts.length" class="jc-meta-tag jc-meta-tag--parts">🔩 {{ job.parts.length }} part{{ job.parts.length !== 1 ? 's' : '' }}</span>
-                  <span v-if="job.services && job.services.length" class="jc-meta-tag jc-meta-tag--services">🔧 {{ job.services.length }} service{{ job.services.length !== 1 ? 's' : '' }}</span>
-                </template>
+
+                <!-- Diagnose: show diagnose technician only -->
                 <template v-if="job.status === 'diagnose'">
-                  <span v-if="job.diagnoseTechnician" class="jc-meta-tag jc-meta-tag--technician">👤 {{ job.diagnoseTechnician }}</span>
+                  <span v-if="job.diagnoseTechnicianName" class="jc-meta-tag jc-meta-tag--technician">
+                    👤 {{ job.diagnoseTechnicianName }}
+                  </span>
                   <span v-else class="jc-meta-tag jc-meta-tag--unassigned">Tech: Not Assigned</span>
                 </template>
-                <template v-if="job.status === 'service'">
-                  <span v-if="job.serviceTechnician" class="jc-meta-tag jc-meta-tag--technician">👤 {{ job.serviceTechnician }}</span>
+
+                <!-- Quotation: show services names + parts count + diagnose technician -->
+                <template v-else-if="job.status === 'quotation'">
+                  <span v-if="job.serviceNames" class="jc-meta-tag jc-meta-tag--service">{{ job.serviceNames }}</span>
+                  <span v-if="job.parts && job.parts.length" class="jc-meta-tag jc-meta-tag--parts">🔩 {{ job.parts.length }} part{{ job.parts.length !== 1 ? 's' : '' }}</span>
+                  <span v-if="job.diagnoseTechnicianName" class="jc-meta-tag jc-meta-tag--technician">👤 {{ job.diagnoseTechnicianName }}</span>
+                  <span v-else class="jc-meta-tag jc-meta-tag--unassigned">Tech: Not Assigned</span>
+                </template>
+
+                <!-- Waiting For Parts: services names + parts count + expected arrival + diagnose technician -->
+                <template v-else-if="job.status === 'waiting-for-parts'">
+                  <span v-if="job.serviceNames" class="jc-meta-tag jc-meta-tag--service">{{ job.serviceNames }}</span>
+                  <span v-if="job.parts && job.parts.length" class="jc-meta-tag jc-meta-tag--parts">🔩 {{ job.parts.length }} part{{ job.parts.length !== 1 ? 's' : '' }}</span>
+                  <span v-if="job.expectedPartsArrival" class="jc-meta-tag jc-meta-tag--eta">
+                    📦 ETA for parts: {{ formatDate(job.expectedPartsArrival) }}
+                  </span>
+                  <span v-else class="jc-meta-tag jc-meta-tag--eta-missing">📦 ETA: Not Set</span>
+                  <span v-if="job.diagnoseTechnicianName" class="jc-meta-tag jc-meta-tag--technician">👤 {{ job.diagnoseTechnicianName }}</span>
+                  <span v-else class="jc-meta-tag jc-meta-tag--unassigned">Tech: Not Assigned</span>
+                </template>
+                <!-- Service: show services names + parts + services count + service technician -->
+                <template v-else-if="job.status === 'service'">
+                  <span v-if="job.serviceNames" class="jc-meta-tag jc-meta-tag--service">{{ job.serviceNames }}</span>
+                  <span v-if="job.parts && job.parts.length" class="jc-meta-tag jc-meta-tag--parts">🔩 {{ job.parts.length }} part{{ job.parts.length !== 1 ? 's' : '' }}</span>
+                  <span v-if="job.services && job.services.length" class="jc-meta-tag jc-meta-tag--services">🔧 {{ job.services.length }} service{{ job.services.length !== 1 ? 's' : '' }}</span>
+                  <span v-if="job.serviceTechnicianName" class="jc-meta-tag jc-meta-tag--technician">👤 {{ job.serviceTechnicianName }}</span>
+                  <span v-else class="jc-meta-tag jc-meta-tag--unassigned">Tech: Not Assigned</span>
+                </template>
+
+                <!-- Ready: show services names + parts + services count + service technician -->
+                <template v-else-if="job.status === 'ready'">
+                  <span v-if="job.serviceNames" class="jc-meta-tag jc-meta-tag--service">{{ job.serviceNames }}</span>
+                  <span v-if="job.parts && job.parts.length" class="jc-meta-tag jc-meta-tag--parts">🔩 {{ job.parts.length }} part{{ job.parts.length !== 1 ? 's' : '' }}</span>
+                  <span v-if="job.services && job.services.length" class="jc-meta-tag jc-meta-tag--services">🔧 {{ job.services.length }} service{{ job.services.length !== 1 ? 's' : '' }}</span>
+                  <span v-if="job.serviceTechnicianName" class="jc-meta-tag jc-meta-tag--technician">👤 {{ job.serviceTechnicianName }}</span>
                   <span v-else class="jc-meta-tag jc-meta-tag--unassigned">Tech: Not Assigned</span>
                 </template>
               </div>
@@ -391,12 +355,18 @@
           </div>
           <button class="jc-pagination-btn" @click="nextJobPage" :disabled="currentJobPage === totalJobPages">Next →</button>
         </div>
+
         <!-- Active Job View Modal -->
         <div v-if="jobModal.isOpen" class="jc-modal-overlay" @click="closeJobModal">
           <div class="jc-modal" @click.stop>
             <button class="jc-modal-close" @click="closeJobModal">&times;</button>
             <h2>Job Details</h2>
             <div class="jc-modal-body">
+              <!-- Order ID -->
+              <div class="jc-detail-group">
+                <label>Order ID</label>
+                <p>#{{ jobModal.job.id }}</p>
+              </div>
               <div class="jc-detail-group">
                 <label>Status</label>
                 <p><span class="jc-status-badge" :class="'jc-status-badge--' + jobModal.job.status">{{ getStatusLabel(jobModal.job.status) }}</span></p>
@@ -404,49 +374,51 @@
               <div class="jc-detail-group"><label>Vehicle</label><p>{{ jobModal.job.vehicleYear }} {{ jobModal.job.vehicleMake }} {{ jobModal.job.vehicleModel }}</p></div>
               <div class="jc-detail-group"><label>License Plate</label><p>{{ jobModal.job.licensePlate }}</p></div>
               <div class="jc-detail-group"><label>Job Date</label><p>{{ formatDate(jobModal.job.jobDate) }}</p></div>
-              <div v-if="jobModal.job.status !== 'diagnose'" class="jc-detail-group"><label>Service Type</label><p>{{ jobModal.job.serviceType }}</p></div>
-              <div class="jc-detail-group"><label>Estimated Cost</label><p>${{ jobModal.job.estimatedCost }}</p></div>
-              <div class="jc-detail-group">
+
+              <!-- Service type: shown for quotation and beyond -->
+              <div v-if="jobModal.job.status !== 'diagnose' && jobModal.job.serviceNames" class="jc-detail-group">
+                <label>Service Type</label><p>{{ jobModal.job.serviceNames }}</p>
+              </div>
+
+              <!-- Expected parts arrival: only for waiting-for-parts -->
+              <div v-if="jobModal.job.status === 'waiting-for-parts' && jobModal.job.expectedPartsArrival" class="jc-detail-group">
+                <label>Expected Parts Arrival</label><p>{{ formatDate(jobModal.job.expectedPartsArrival) }}</p>
+              </div>
+
+              <!-- DIAGNOSE technician: shown for diagnose, quotation, waiting-for-parts -->
+              <div v-if="['diagnose', 'quotation', 'waiting-for-parts'].includes(jobModal.job.status)" class="jc-detail-group">
                 <label>Diagnose Technician</label>
-                <div v-if="jobModal.job.diagnoseTechnician">
-                  <p>{{ jobModal.job.diagnoseTechnician }}</p>
-                  <div class="jc-tech-contact" v-if="getTechContact(jobModal.job.diagnoseTechnician)">
-                    <span class="jc-tech-contact-item">{{ getTechContact(jobModal.job.diagnoseTechnician).email }}</span>
-                    <span class="jc-tech-contact-item">{{ getTechContact(jobModal.job.diagnoseTechnician).phone }}</span>
+                <div v-if="jobModal.job.diagnoseTechnicianName">
+                  <p>{{ jobModal.job.diagnoseTechnicianName }}</p>
+                  <div class="jc-tech-contact" v-if="jobModal.job.diagnoseTechContact">
+                    <span class="jc-tech-contact-item">{{ jobModal.job.diagnoseTechContact.email }}</span>
                   </div>
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
               </div>
-              <div class="jc-detail-group">
+
+              <!-- SERVICE technician: shown for service and ready statuses -->
+              <div v-if="['service', 'ready'].includes(jobModal.job.status)" class="jc-detail-group">
                 <label>Service Technician</label>
-                <div v-if="jobModal.job.serviceTechnician">
-                  <p>{{ jobModal.job.serviceTechnician }}</p>
-                  <div class="jc-tech-contact" v-if="getTechContact(jobModal.job.serviceTechnician)">
-                    <span class="jc-tech-contact-item">{{ getTechContact(jobModal.job.serviceTechnician).email }}</span>
-                    <span class="jc-tech-contact-item">{{ getTechContact(jobModal.job.serviceTechnician).phone }}</span>
+                <div v-if="jobModal.job.serviceTechnicianName">
+                  <p>{{ jobModal.job.serviceTechnicianName }}</p>
+                  <div class="jc-tech-contact" v-if="jobModal.job.serviceTechContact">
+                    <span class="jc-tech-contact-item">{{ jobModal.job.serviceTechContact.email }}</span>
                   </div>
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
               </div>
-              <div v-if="jobModal.job.status !== 'diagnose' && jobModal.job.parts && jobModal.job.parts.length" class="jc-detail-group">
+
+              <!-- Parts: shown for quotation, waiting-for-parts, service, ready -->
+              <div v-if="['quotation', 'waiting-for-parts', 'service', 'ready'].includes(jobModal.job.status) && jobModal.job.parts && jobModal.job.parts.length" class="jc-detail-group">
                 <label>Parts</label>
                 <div class="jc-item-list">
                   <div v-for="(part, i) in jobModal.job.parts" :key="i" class="jc-item-row">
                     <span class="jc-item-name">{{ part.name }}</span>
-                    <span class="jc-item-price">${{ part.price }}</span>
                   </div>
                 </div>
               </div>
-              <div v-if="jobModal.job.status !== 'diagnose' && jobModal.job.services && jobModal.job.services.length" class="jc-detail-group">
-                <label>Services</label>
-                <div class="jc-item-list">
-                  <div v-for="(svc, i) in jobModal.job.services" :key="i" class="jc-item-row">
-                    <span class="jc-item-name">{{ svc.name }}</span>
-                    <span class="jc-item-price">${{ svc.price }}</span>
-                  </div>
-                </div>
-              </div>
-              <div v-if="jobModal.job.notes" class="jc-detail-group"><label>Notes</label><p>{{ jobModal.job.notes }}</p></div>
+
             </div>
             <div class="jc-modal-actions">
               <button class="jc-btn-secondary" @click="closeJobModal">Close</button>
@@ -454,36 +426,19 @@
           </div>
         </div>
       </template>
+
       <!-- ═══════════════════════════════════════════════════════════ -->
       <!--  TAB 3 — FINISHED JOBS                                      -->
       <!-- ═══════════════════════════════════════════════════════════ -->
       <template v-if="activeTab === 'finishedjobs'">
-        <div class="jc-filter-bar">
-          <div class="jc-filter-row">
-            <div class="jc-filter-row-label">Status</div>
-            <div class="jc-filter-row-controls">
-              <button class="jc-filter-btn jc-status-filter-btn" :class="{ active: finishedStatusFilter === '' }" @click="setFinishedStatusFilter('')">All</button>
-              <button
-                v-for="s in finishedJobStatuses"
-                :key="s.value"
-                class="jc-filter-btn jc-status-filter-btn"
-                :class="['jc-status-btn--' + s.value, { active: finishedStatusFilter === s.value }]"
-                @click="setFinishedStatusFilter(s.value)"
-              >{{ s.label }}</button>
-            </div>
-          </div>
-          <div class="jc-count-row">
-            <span class="jc-count">{{ filteredFinishedJobs.length }} job{{ filteredFinishedJobs.length !== 1 ? 's' : '' }}</span>
-          </div>
-        </div>
-        <div v-if="filteredFinishedJobs.length === 0" class="jc-empty-state">No finished jobs found.</div>
-        <div v-else class="jc-list">
+        <div v-if="finishedJobsError" class="jc-empty-state">Error: {{ finishedJobsError }}</div>
+        <div v-else-if="finishedJobs.length === 0" class="jc-empty-state">No finished jobs found.</div>
+        <div v-else class="jc-list" style="margin-top: 1.5rem;">
           <div v-for="job in paginatedFinishedJobs" :key="job.id" class="jc-card">
-            <div class="jc-status-col" :class="'jc-status-col--' + job.status">
-              <span class="jc-card-day">{{ getDayName(job.jobDate) }}</span>
-              <span class="jc-status-badge" :class="'jc-status-badge--' + job.status">{{ getFinishedStatusLabel(job.status) }}</span>
+            <div class="jc-status-col jc-status-col--completed">
+              <span class="jc-status-badge jc-status-badge--completed">Checked Out</span>
             </div>
-            <div class="jc-divider" :class="'jc-divider--' + job.status"></div>
+            <div class="jc-divider jc-divider--completed"></div>
             <div class="jc-card-body">
               <div class="jc-card-top">
                 <h3 class="jc-card-name">{{ job.vehicleYear }} {{ job.vehicleMake }} {{ job.vehicleModel }}</h3>
@@ -492,8 +447,7 @@
               <p class="jc-card-vehicle">{{ job.licensePlate }}</p>
               <div class="jc-card-meta">
                 <span class="jc-meta-tag jc-meta-tag--date">{{ formatDate(job.jobDate) }}</span>
-                <span class="jc-meta-tag jc-meta-tag--service">{{ job.serviceType }}</span>
-                <span v-if="job.finalCost" class="jc-meta-tag jc-meta-tag--cost">${{ job.finalCost }}</span>
+                <span v-if="job.serviceNames" class="jc-meta-tag jc-meta-tag--service">{{ job.serviceNames }}</span>
               </div>
             </div>
             <div class="jc-card-actions">
@@ -508,62 +462,52 @@
           </div>
           <button class="jc-pagination-btn" @click="nextFinishedPage" :disabled="currentFinishedPage === totalFinishedPages">Next →</button>
         </div>
+
         <!-- Finished Job View Modal -->
         <div v-if="finishedJobModal.isOpen" class="jc-modal-overlay" @click="closeFinishedJobModal">
           <div class="jc-modal" @click.stop>
             <button class="jc-modal-close" @click="closeFinishedJobModal">&times;</button>
             <h2>Finished Job Details</h2>
             <div class="jc-modal-body">
+              <!-- Order ID -->
+              <div class="jc-detail-group">
+                <label>Order ID</label>
+                <p>#{{ finishedJobModal.job.id }}</p>
+              </div>
               <div class="jc-detail-group">
                 <label>Status</label>
-                <p><span class="jc-status-badge" :class="'jc-status-badge--' + finishedJobModal.job.status">{{ getFinishedStatusLabel(finishedJobModal.job.status) }}</span></p>
+                <p><span class="jc-status-badge jc-status-badge--completed">Checked Out</span></p>
               </div>
               <div class="jc-detail-group"><label>Vehicle</label><p>{{ finishedJobModal.job.vehicleYear }} {{ finishedJobModal.job.vehicleMake }} {{ finishedJobModal.job.vehicleModel }}</p></div>
               <div class="jc-detail-group"><label>License Plate</label><p>{{ finishedJobModal.job.licensePlate }}</p></div>
-              <div class="jc-detail-group"><label>Job Date</label><p>{{ formatDate(finishedJobModal.job.jobDate) }}</p></div>
-              <div class="jc-detail-group"><label>Service Type</label><p>{{ finishedJobModal.job.serviceType }}</p></div>
-              <div v-if="finishedJobModal.job.finalCost" class="jc-detail-group"><label>Final Cost</label><p>${{ finishedJobModal.job.finalCost }}</p></div>
-              <div class="jc-detail-group">
-                <label>Diagnose Technician</label>
-                <div v-if="finishedJobModal.job.diagnoseTechnician">
-                  <p>{{ finishedJobModal.job.diagnoseTechnician }}</p>
-                  <div class="jc-tech-contact" v-if="getTechContact(finishedJobModal.job.diagnoseTechnician)">
-                    <span class="jc-tech-contact-item">{{ getTechContact(finishedJobModal.job.diagnoseTechnician).email }}</span>
-                    <span class="jc-tech-contact-item">{{ getTechContact(finishedJobModal.job.diagnoseTechnician).phone }}</span>
-                  </div>
-                </div>
-                <p v-else class="jc-not-assigned">Not Assigned</p>
+              <div v-if="finishedJobModal.job.checkOut" class="jc-detail-group">
+                <label>Check-Out Date</label><p>{{ formatDate(finishedJobModal.job.checkOut) }}</p>
               </div>
+              <!-- Service type from Services names -->
+              <div v-if="finishedJobModal.job.serviceNames" class="jc-detail-group">
+                <label>Service Type</label><p>{{ finishedJobModal.job.serviceNames }}</p>
+              </div>
+              <!-- Service Technician for finished jobs -->
               <div class="jc-detail-group">
                 <label>Service Technician</label>
-                <div v-if="finishedJobModal.job.serviceTechnician">
-                  <p>{{ finishedJobModal.job.serviceTechnician }}</p>
-                  <div class="jc-tech-contact" v-if="getTechContact(finishedJobModal.job.serviceTechnician)">
-                    <span class="jc-tech-contact-item">{{ getTechContact(finishedJobModal.job.serviceTechnician).email }}</span>
-                    <span class="jc-tech-contact-item">{{ getTechContact(finishedJobModal.job.serviceTechnician).phone }}</span>
+                <div v-if="finishedJobModal.job.serviceTechnicianName">
+                  <p>{{ finishedJobModal.job.serviceTechnicianName }}</p>
+                  <div class="jc-tech-contact" v-if="finishedJobModal.job.serviceTechContact">
+                    <span class="jc-tech-contact-item">{{ finishedJobModal.job.serviceTechContact.email }}</span>
                   </div>
                 </div>
                 <p v-else class="jc-not-assigned">Not Assigned</p>
               </div>
+              <!-- Parts -->
               <div v-if="finishedJobModal.job.parts && finishedJobModal.job.parts.length" class="jc-detail-group">
                 <label>Parts</label>
                 <div class="jc-item-list">
                   <div v-for="(part, i) in finishedJobModal.job.parts" :key="i" class="jc-item-row">
                     <span class="jc-item-name">{{ part.name }}</span>
-                    <span class="jc-item-price">${{ part.price }}</span>
                   </div>
                 </div>
               </div>
-              <div v-if="finishedJobModal.job.services && finishedJobModal.job.services.length" class="jc-detail-group">
-                <label>Services</label>
-                <div class="jc-item-list">
-                  <div v-for="(svc, i) in finishedJobModal.job.services" :key="i" class="jc-item-row">
-                    <span class="jc-item-name">{{ svc.name }}</span>
-                    <span class="jc-item-price">${{ svc.price }}</span>
-                  </div>
-                </div>
-              </div>
-              <div v-if="finishedJobModal.job.notes" class="jc-detail-group"><label>Notes</label><p>{{ finishedJobModal.job.notes }}</p></div>
+
             </div>
             <div class="jc-modal-actions">
               <button class="jc-btn-secondary" @click="closeFinishedJobModal">Close</button>
@@ -589,19 +533,98 @@ const EDIT_SATURDAY_SLOTS = EDIT_ALL_SLOTS.filter(s =>
   ['10:00 AM', '11:00 AM', '12:00 PM'].includes(s.value)
 )
 
+/**
+ * Map the raw Order_Status string from the API directly to the
+ * internal status key used throughout the frontend.
+ *
+ * API values  → internal key
+ * ─────────────────────────────
+ * diagnose         → diagnose
+ * quotation        → quotation
+ * waiting-for-parts→ waiting-for-parts
+ * service          → service
+ * ready            → ready
+ * check-out        → completed   (finished-jobs tab)
+ */
+const ORDER_STATUS_MAP = {
+  'diagnose':          'diagnose',
+  'quotation':         'quotation',
+  'waiting-for-parts': 'waiting-for-parts',
+  'service':           'service',
+  'ready':             'ready',
+  'check-out':         'completed',
+}
+
+// Statuses that belong in the Active Jobs tab (no Check_Out yet)
+const ACTIVE_STATUSES = new Set(['diagnose', 'quotation', 'waiting-for-parts', 'service', 'ready'])
+
+function mapJobOrder(row) {
+  const rawStatus = (row.Order_Status || '').toLowerCase().trim()
+  const status    = ORDER_STATUS_MAP[rawStatus] || 'diagnose'
+
+  // jobDate must match the CURRENT status's date column
+  const statusDateMap = {
+    'diagnose':          row.Diagnose,
+    'quotation':         row.Quotation,
+    'waiting-for-parts': row.Waiting_For_Parts,
+    'service':           row.Service,
+    'ready':             row.Ready,
+    'completed':         row.Check_Out,
+  }
+  const jobDate = statusDateMap[status] || null
+
+  // Parts: stored as a comma-separated string e.g. "part1,part2"
+  // Parse into array of { name, price } objects (price unknown from this field)
+  const rawParts = row.Parts || ''
+  const parts = typeof rawParts === 'string' && rawParts.trim()
+    ? rawParts.split(',').map(s => ({ name: s.trim(), price: 'N/A' }))
+    : Array.isArray(rawParts)
+      ? rawParts
+      : []
+
+  // Services: same pattern
+  const rawServices = row.Services || ''
+  const services = typeof rawServices === 'string' && rawServices.trim()
+    ? rawServices.split(',').map(s => ({ name: s.trim(), price: 'N/A' }))
+    : Array.isArray(rawServices)
+      ? rawServices
+      : []
+
+  const serviceNames = services.length
+    ? services.map(s => s.name).filter(Boolean).join(', ')
+    : null
+
+  const diagTech = row.diagnose_technician || null
+  const svcTech  = row.service_technician  || null
+
+  return {
+    id:                   row.Order_ID,
+    orderStatus:          row.Order_Status,
+    status,
+    jobDate,
+    checkOut:             row.Check_Out                   || null,
+    expectedPartsArrival: row.expected_parts_arrival_date || null,
+    licensePlate:         row.vehicle_license_plate       || 'N/A',
+    vehicleMake:          row.vehicle_make                || 'N/A',
+    vehicleModel:         row.vehicle_model               || '',
+    vehicleYear:          row.vehicle_year                || '',
+    serviceNames,
+    parts,
+    services,
+    diagnoseTechnicianName: diagTech ? diagTech.name  : null,
+    diagnoseTechContact:    diagTech ? { email: diagTech.email } : null,
+    serviceTechnicianName:  svcTech  ? svcTech.name   : null,
+    serviceTechContact:     svcTech  ? { email: svcTech.email }  : null,
+  }
+}
 export default {
   name: 'CustomerBookingsView',
+
   data() {
-    const today = new Date()
-    const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x.toISOString().split('T')[0] }
-    const subDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() - n); return x.toISOString().split('T')[0] }
-    const todayStr = today.toISOString().split('T')[0]
     return {
-      // ── Page ──
       pageLoading: true,
-      // ── Tab ──
       activeTab: 'appointments',
-      // ── Appointments ──
+
       currentPage: 1,
       itemsPerPage: 5,
       statusFilter: 'upcoming',
@@ -614,113 +637,43 @@ export default {
       appointmentFilters: [
         { value: 'upcoming',  label: 'Upcoming'  },
         { value: 'ongoing',   label: 'Ongoing'   },
-        { value: 'completed', label: 'Completed'  },
-        { value: 'cancelled', label: 'Cancelled'  },
+        { value: 'completed', label: 'Completed' },
+        { value: 'cancelled', label: 'Cancelled' },
       ],
       bookings: [],
-      // ── Active Jobs ──
+
       currentJobPage: 1,
       itemsPerJobPage: 5,
       activeJobStatusFilter: '',
       jobModal: { isOpen: false, job: null },
+      jobCardsError: null,
+      // Active Jobs tab filter buttons — ready added
       activeJobStatuses: [
         { value: 'diagnose',          label: 'Diagnose'          },
         { value: 'quotation',         label: 'Quotation'         },
         { value: 'waiting-for-parts', label: 'Waiting For Parts' },
         { value: 'service',           label: 'Service'           },
+        { value: 'ready',             label: 'Ready'             },
       ],
-      jobCards: [
-        {
-          id: 'JC-001', licensePlate: 'ABC-1234', vehicleMake: 'Toyota', vehicleModel: 'Camry', vehicleYear: '2022',
-          status: 'diagnose', jobDate: todayStr, serviceType: 'Engine Check',
-          diagnoseTechnician: 'Alex Johnson', serviceTechnician: null,
-          estimatedCost: 120, parts: [], services: [],
-          notes: 'Customer reports unusual engine noise at idle.',
-        },
-        {
-          id: 'JC-002', licensePlate: 'ABC-1234', vehicleMake: 'Toyota', vehicleModel: 'Camry', vehicleYear: '2022',
-          status: 'quotation', jobDate: addDays(today, 1), serviceType: 'Brake Replacement',
-          diagnoseTechnician: 'Alex Johnson', serviceTechnician: null,
-          estimatedCost: 350,
-          parts:    [{ name: 'Brake Pads (Set of 4)', price: 95 }, { name: 'Brake Rotors x2', price: 140 }],
-          services: [{ name: 'Brake Replacement Labour', price: 115 }],
-          notes: 'Awaiting customer approval on parts quote.',
-        },
-        {
-          id: 'JC-003', licensePlate: 'GHI-3456', vehicleMake: 'BMW', vehicleModel: '3 Series', vehicleYear: '2024',
-          status: 'waiting-for-parts', jobDate: addDays(today, 2), serviceType: 'Suspension Repair',
-          diagnoseTechnician: 'Ryan Patel', serviceTechnician: null,
-          estimatedCost: 780,
-          parts:    [{ name: 'Front Control Arm', price: 320 }, { name: 'Ball Joint', price: 85 }],
-          services: [{ name: 'Suspension Labour', price: 200 }, { name: 'Wheel Alignment', price: 80 }],
-          notes: 'Parts ordered — ETA 2 days.',
-        },
-        {
-          id: 'JC-004', licensePlate: 'GHI-3456', vehicleMake: 'BMW', vehicleModel: '3 Series', vehicleYear: '2024',
-          status: 'service', jobDate: addDays(today, 3), serviceType: 'Full Service',
-          diagnoseTechnician: 'Alex Johnson', serviceTechnician: 'Chris Lee',
-          estimatedCost: 500,
-          parts:    [{ name: 'Oil Filter', price: 25 }, { name: 'Air Filter', price: 30 }, { name: 'Spark Plugs x4', price: 60 }],
-          services: [{ name: 'Oil Change', price: 80 }, { name: 'Full Inspection', price: 120 }],
-          notes: null,
-        },
-      ],
-      // ── Finished Jobs ──
+      jobCards: [],
+
       currentFinishedPage: 1,
       itemsPerFinishedPage: 5,
-      finishedStatusFilter: '',
       finishedJobModal: { isOpen: false, job: null },
-      finishedJobStatuses: [
-        { value: 'completed', label: 'Completed' },
-        { value: 'invoiced',  label: 'Invoiced'  },
-      ],
-      finishedJobs: [
-        {
-          id: 'JC-F01', licensePlate: 'ABC-1234', vehicleMake: 'Toyota', vehicleModel: 'Camry', vehicleYear: '2022',
-          status: 'completed', jobDate: subDays(today, 5), serviceType: 'Oil Change & Filter',
-          diagnoseTechnician: 'Ryan Patel', serviceTechnician: 'Chris Lee',
-          finalCost: 95,
-          parts:    [{ name: 'Engine Oil (5L)', price: 45 }, { name: 'Oil Filter', price: 20 }],
-          services: [{ name: 'Oil Change Labour', price: 30 }],
-          notes: 'Completed without issues.',
-        },
-        {
-          id: 'JC-F02', licensePlate: 'GHI-3456', vehicleMake: 'BMW', vehicleModel: '3 Series', vehicleYear: '2024',
-          status: 'invoiced', jobDate: subDays(today, 12), serviceType: 'Tyre Rotation & Alignment',
-          diagnoseTechnician: 'Maria Santos', serviceTechnician: 'Sam Okafor',
-          finalCost: 210,
-          parts:    [{ name: 'Valve Stems x4', price: 20 }],
-          services: [{ name: 'Tyre Rotation', price: 60 }, { name: 'Wheel Alignment', price: 80 }, { name: 'Wheel Balancing', price: 50 }],
-          notes: null,
-        },
-        {
-          id: 'JC-F03', licensePlate: 'ABC-1234', vehicleMake: 'Toyota', vehicleModel: 'Camry', vehicleYear: '2022',
-          status: 'completed', jobDate: subDays(today, 20), serviceType: 'Battery Replacement',
-          diagnoseTechnician: 'Alex Johnson', serviceTechnician: 'Jordan Williams',
-          finalCost: 175,
-          parts:    [{ name: 'Car Battery 60Ah', price: 120 }],
-          services: [{ name: 'Battery Replacement Labour', price: 55 }],
-          notes: 'Old battery fully dead. New battery installed and tested.',
-        },
-      ],
-      // ── Technician contacts ──
-      technicianContacts: {
-        'Alex Johnson':    { email: 'alex.johnson@workshop.com',    phone: '+1 (555) 201-1001' },
-        'Maria Santos':    { email: 'maria.santos@workshop.com',    phone: '+1 (555) 201-1002' },
-        'Ryan Patel':      { email: 'ryan.patel@workshop.com',      phone: '+1 (555) 201-1003' },
-        'Chris Lee':       { email: 'chris.lee@workshop.com',       phone: '+1 (555) 201-1004' },
-        'Jordan Williams': { email: 'jordan.williams@workshop.com', phone: '+1 (555) 201-1005' },
-        'Sam Okafor':      { email: 'sam.okafor@workshop.com',      phone: '+1 (555) 201-1006' },
-      },
+      finishedJobsError: null,
+      finishedJobs: [],
     }
   },
+
   async mounted() {
-    await this.fetchAppointments()
+    await Promise.all([
+      this.fetchAppointments(),
+      this.fetchJobOrders(),
+    ])
   },
+
   computed: {
-    // ── Appointments ──
     filteredAndSortedBookings() {
-      let filtered
       const parseTime = (t) => {
         if (!t) return { h: 0, min: 0 }
         const parts = t.trim().split(' ')
@@ -730,6 +683,7 @@ export default {
         if (m === 'AM' && h === 12) h = 0
         return { h, min: min || 0 }
       }
+      let filtered
       if (this.statusFilter === 'upcoming') {
         const now = new Date()
         filtered = this.bookings.filter(b => {
@@ -803,7 +757,7 @@ export default {
     totalPages() {
       return Math.max(1, Math.ceil(this.filteredAndSortedBookings.length / this.itemsPerPage))
     },
-    // ── Edit modal constraints ──
+
     editMinDate() {
       const d = new Date()
       d.setDate(d.getDate() + 3)
@@ -844,8 +798,8 @@ export default {
         const slotHour = parseInt(slot24.split(':')[0])
         const isPast = this.editIsToday && slotHour <= currentHour
         const ownSlot24 = this.modal.booking ? this.timeTo24h(this.modal.booking.appointmentTime) : ''
-        const ownDate = this.modal.booking ? this.modal.booking.appointmentDate : ''
-        const isBooked = this.editBookedSlots.some(b => {
+        const ownDate   = this.modal.booking ? this.modal.booking.appointmentDate : ''
+        const isBooked  = this.editBookedSlots.some(b => {
           const dateMatch = b.appointment_date === this.editForm.appointmentDate
           const timeMatch = b.appointment_time_24 === slot24
           const isOwnOriginalSlot = b.appointment_date === ownDate && b.appointment_time_24 === ownSlot24
@@ -854,33 +808,28 @@ export default {
         return { ...slot, disabled: isPast || isBooked }
       })
     },
-    // ── Active Jobs ──
+
+    // Active jobs: rows whose status is NOT 'completed' (check-out)
     filteredJobCards() {
-      let list = this.jobCards
+      let list = this.jobCards.filter(j => j.status !== 'completed')
       if (this.activeJobStatusFilter) list = list.filter(j => j.status === this.activeJobStatusFilter)
-      return [...list].sort((a, b) => a.jobDate.localeCompare(b.jobDate))
+      return [...list].sort((a, b) => (a.jobDate || '').localeCompare(b.jobDate || ''))
     },
     totalJobPages() { return Math.max(1, Math.ceil(this.filteredJobCards.length / this.itemsPerJobPage)) },
     paginatedJobCards() {
       const s = (this.currentJobPage - 1) * this.itemsPerJobPage
       return this.filteredJobCards.slice(s, s + this.itemsPerJobPage)
     },
-    // ── Finished Jobs ──
-    filteredFinishedJobs() {
-      let list = this.finishedJobs
-      if (this.finishedStatusFilter) list = list.filter(j => j.status === this.finishedStatusFilter)
-      return [...list].sort((a, b) => b.jobDate.localeCompare(a.jobDate))
-    },
-    totalFinishedPages() { return Math.max(1, Math.ceil(this.filteredFinishedJobs.length / this.itemsPerFinishedPage)) },
+
+    totalFinishedPages() { return Math.max(1, Math.ceil(this.finishedJobs.length / this.itemsPerFinishedPage)) },
     paginatedFinishedJobs() {
       const s = (this.currentFinishedPage - 1) * this.itemsPerFinishedPage
-      return this.filteredFinishedJobs.slice(s, s + this.itemsPerFinishedPage)
+      return this.finishedJobs.slice(s, s + this.itemsPerFinishedPage)
     },
   },
+
   methods: {
-    // ── API ──────────────────────────────────────────────────────
     async fetchAppointments() {
-      this.pageLoading = true
       this.bookingsError = null
       try {
         const token = localStorage.getItem('token')
@@ -905,13 +854,44 @@ export default {
       } catch (err) {
         console.error('fetchAppointments error:', err)
         this.bookingsError = err.message
+      }
+    },
+
+    async fetchJobOrders() {
+      this.jobCardsError     = null
+      this.finishedJobsError = null
+      try {
+        const token    = localStorage.getItem('token')
+        const response = await fetch('http://localhost:3000/api/jobOrders/getJobOrders', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (response.status === 404) {
+          this.jobCards     = []
+          this.finishedJobs = []
+          return
+        }
+        const json = await response.json()
+        if (!response.ok) throw new Error(json.error || json.message || 'Failed to fetch job orders')
+
+        const rows = json.data || []
+        const mapped = rows.map(r => mapJobOrder(r))
+
+        // Split by mapped status: 'completed' → finished tab; everything else → active tab
+        this.jobCards = mapped.filter(j => j.status !== 'completed')
+        this.finishedJobs = mapped
+          .filter(j => j.status === 'completed')
+          .sort((a, b) => (b.checkOut || '').localeCompare(a.checkOut || ''))
+      } catch (err) {
+        console.error('fetchJobOrders error:', err)
+        this.jobCardsError     = err.message
+        this.finishedJobsError = err.message
       } finally {
         this.pageLoading = false
       }
     },
-    // ── Tab ──────────────────────────────────────────────────────
+
     switchTab(tab) { this.activeTab = tab },
-    // ── Cancellation Guard ───────────────────────────────────────
+
     canCancelBooking(booking) {
       if (!booking || !booking.appointmentDate) return false
       const today = new Date()
@@ -920,7 +900,7 @@ export default {
       const diffDays = (apptDate - today) / (1000 * 60 * 60 * 24)
       return diffDays > 2
     },
-    // ── Appointment Modals ───────────────────────────────────────
+
     async openModal(type, booking) {
       if ((type === 'cancel' || type === 'edit') && !this.canCancelBooking(booking)) return
       this.modal = { type, booking, isOpen: true }
@@ -937,7 +917,7 @@ export default {
       this.editForm = { appointmentDate: '', appointmentTime: '' }
       this.editBookedSlots = []
     },
-    // ── Edit date/time helpers ───────────────────────────────────
+
     async onEditDateChange() {
       this.editForm.appointmentTime = ''
       if (!this.editForm.appointmentDate || this.editIsSunday) return
@@ -950,7 +930,7 @@ export default {
           headers: { Authorization: `Bearer ${token}` },
         })
         const data = await response.json()
-        const raw = data.data || []
+        const raw  = data.data || []
         this.editBookedSlots = raw.map(b => ({
           appointment_date:    b.appointment_date || b.appointmentDate || '',
           appointment_time_24: this.timeTo24h(b.appointment_time || b.appointmentTime || ''),
@@ -995,10 +975,7 @@ export default {
         const token = localStorage.getItem('token')
         const response = await fetch(`http://localhost:3000/api/customer/editAppointment/${this.modal.booking.id}`, {
           method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             appointment_date: this.editForm.appointmentDate,
             appointment_time: this.editForm.appointmentTime,
@@ -1041,41 +1018,41 @@ export default {
         alert(`Failed to cancel appointment: ${err.message}`)
       }
     },
-    // ── Formatting ───────────────────────────────────────────────
+
     formatStatus(status) { return status.charAt(0).toUpperCase() + status.slice(1) },
     formatDate(date) {
       if (!date) return 'N/A'
-      return new Date(date + (date.includes('T') ? '' : 'T00:00:00')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      return new Date(date + (date.includes('T') ? '' : 'T00:00:00')).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+      })
     },
-    // ── Appointment Pagination ───────────────────────────────────
-    goToPage(page) { if (page >= 1 && page <= this.totalPages) this.currentPage = page },
-    nextPage() { if (this.currentPage < this.totalPages) this.currentPage++ },
-    prevPage() { if (this.currentPage > 1) this.currentPage-- },
-    applyFilter(s) { this.statusFilter = s; this.currentPage = 1 },
-    toggleSortOrder() { this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'; this.currentPage = 1 },
+
+    goToPage(page)            { if (page >= 1 && page <= this.totalPages) this.currentPage = page },
+    nextPage()                { if (this.currentPage < this.totalPages) this.currentPage++ },
+    prevPage()                { if (this.currentPage > 1) this.currentPage-- },
+    applyFilter(s)            { this.statusFilter = s; this.currentPage = 1 },
+    toggleSortOrder()         { this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'; this.currentPage = 1 },
     toggleUpcomingSortOrder() { this.upcomingSortOrder = this.upcomingSortOrder === 'asc' ? 'desc' : 'asc'; this.currentPage = 1 },
-    // ── Active Jobs ──────────────────────────────────────────────
+
     setJobStatusFilter(val) { this.activeJobStatusFilter = val; this.currentJobPage = 1 },
-    goToJobPage(page) { if (page >= 1 && page <= this.totalJobPages) this.currentJobPage = page },
-    prevJobPage() { if (this.currentJobPage > 1) this.currentJobPage-- },
-    nextJobPage() { if (this.currentJobPage < this.totalJobPages) this.currentJobPage++ },
-    getStatusLabel(status) { const f = this.activeJobStatuses.find(s => s.value === status); return f ? f.label : status },
-    openJobModal(job) { this.jobModal = { job, isOpen: true } },
-    closeJobModal() { this.jobModal = { isOpen: false, job: null } },
-    // ── Finished Jobs ────────────────────────────────────────────
-    setFinishedStatusFilter(val) { this.finishedStatusFilter = val; this.currentFinishedPage = 1 },
-    goToFinishedPage(page) { if (page >= 1 && page <= this.totalFinishedPages) this.currentFinishedPage = page },
-    prevFinishedPage() { if (this.currentFinishedPage > 1) this.currentFinishedPage-- },
-    nextFinishedPage() { if (this.currentFinishedPage < this.totalFinishedPages) this.currentFinishedPage++ },
-    getFinishedStatusLabel(status) { const f = this.finishedJobStatuses.find(s => s.value === status); return f ? f.label : status },
-    openFinishedJobModal(job) { this.finishedJobModal = { job, isOpen: true } },
-    closeFinishedJobModal() { this.finishedJobModal = { isOpen: false, job: null } },
-    // ── Shared ───────────────────────────────────────────────────
-    getDayName(date) {
-      if (!date) return ''
-      return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' })
+    goToJobPage(page)       { if (page >= 1 && page <= this.totalJobPages) this.currentJobPage = page },
+    prevJobPage()           { if (this.currentJobPage > 1) this.currentJobPage-- },
+    nextJobPage()           { if (this.currentJobPage < this.totalJobPages) this.currentJobPage++ },
+    getStatusLabel(status)  {
+      // Check active job statuses first, then handle 'completed' for finished jobs
+      const f = this.activeJobStatuses.find(s => s.value === status)
+      if (f) return f.label
+      if (status === 'completed') return 'Checked Out'
+      return status
     },
-    getTechContact(name) { return this.technicianContacts[name] || null },
+    openJobModal(job)  { this.jobModal = { job, isOpen: true } },
+    closeJobModal()    { this.jobModal = { isOpen: false, job: null } },
+
+    goToFinishedPage(page)    { if (page >= 1 && page <= this.totalFinishedPages) this.currentFinishedPage = page },
+    prevFinishedPage()        { if (this.currentFinishedPage > 1) this.currentFinishedPage-- },
+    nextFinishedPage()        { if (this.currentFinishedPage < this.totalFinishedPages) this.currentFinishedPage++ },
+    openFinishedJobModal(job) { this.finishedJobModal = { job, isOpen: true } },
+    closeFinishedJobModal()   { this.finishedJobModal = { isOpen: false, job: null } },
   },
 }
 </script>
