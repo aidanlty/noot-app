@@ -67,7 +67,66 @@ module.exports = (supabase) => {
             res.status(500).json({ error: err.message })
         }
     })
-    // update services in a job card
+
+    router.get('/getJobOrders', requireRole(supabase, ['customer']), async (req, res) => {
+    try {
+        // 1. Fetch job orders for this customer
+        const { data: orders, error: ordersError } = await supabase
+        .from('Job_Orders')
+        .select('*')
+        .eq('Customer_id', req.user.id)
+        .order('Order_ID', { ascending: false })
+
+        if (ordersError) return res.status(500).json({ error: ordersError.message })
+        if (!orders || orders.length === 0)
+        return res.status(404).json({ message: 'No job orders found for this customer.' })
+
+        // 2. Collect all unique appointment IDs and technician IDs
+        const appointmentIds = [...new Set(orders.map(o => o.appointment_id).filter(Boolean))]
+        const techIds = [...new Set([
+        ...orders.map(o => o.diagnose_technician_id),
+        ...orders.map(o => o.service_technician_id),
+        ].filter(Boolean))]
+
+        // 3. Fetch related appointments
+        const { data: appointments, error: apptError } = appointmentIds.length
+        ? await supabase.from('Appointments').select('*').in('id', appointmentIds)
+        : { data: [], error: null }
+        if (apptError) return res.status(500).json({ error: apptError.message })
+
+        // 4. Fetch technician profiles
+        const { data: profiles, error: profilesError } = techIds.length
+        ? await supabase.from('Profiles').select('ID, Name, Email').in('ID', techIds)
+        : { data: [], error: null }
+        if (profilesError) return res.status(500).json({ error: profilesError.message })
+
+        // 5. Build lookup maps
+        const apptMap = Object.fromEntries((appointments || []).map(a => [a.id, a]))
+        const profileMap = Object.fromEntries((profiles || []).map(p => [p.ID, p]))
+
+        // 6. Merge everything
+        const enriched = orders.map(order => {
+        const appt = apptMap[order.appointment_id] || {}
+        const diagTech = profileMap[order.diagnose_technician_id] || null
+        const svcTech  = profileMap[order.service_technician_id]  || null
+
+        return {
+            ...order,
+            // from Appointments
+            vehicle_license_plate: appt.vehicle_license_plate || null,
+            vehicle_make:          appt.vehicle_make          || null,
+            vehicle_year:          appt.vehicle_year          || null,
+            // technician objects
+            diagnose_technician:   diagTech ? { name: diagTech.Name, email: diagTech.Email } : null,
+            service_technician:    svcTech  ? { name: svcTech.Name,  email: svcTech.Email  } : null,
+        }
+        })
+
+        res.status(200).json({ data: enriched })
+    } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+})    // update services in a job card
     router.put('/:orderId/services', requireRole(supabase, ['manager', 'technician']), async (req, res) => {
         try {
             const { orderId } = req.params

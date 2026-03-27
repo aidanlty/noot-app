@@ -1781,3 +1781,24 @@
   border-left: 4px solid #ff4d4f;
   border-radius: 6px;
 }
+
+/* ETA tag — prominent amber pill */
+.jc-meta-tag--eta {
+  background-color: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* ETA missing — muted warning */
+.jc-meta-tag--eta-missing {
+  background-color: rgba(156, 163, 175, 0.12);
+  color: #9ca3af;
+  border: 1px dashed rgba(156, 163, 175, 0.4);
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
