@@ -70,7 +70,7 @@
           <router-link to="/jobCards" class="nav-link" active-class="active">Job Cards</router-link>
         </li>
         <li v-if="isManager" class="nav-item">
-          <router-link to="/manager-reports" class="nav-link" active-class="active">Reports</router-link>
+          <router-link to="/managerReports" class="nav-link" active-class="active">Reports</router-link>
         </li>
 
         <!-- TECHNICIAN MENU -->

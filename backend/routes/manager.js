@@ -30,7 +30,7 @@ module.exports = (supabase) => {
   })
 
   // GET all job cards with appointment and technician info
-  router.get('/job-cards', requireRole(supabase, ['manager']), async (req, res) => {   // MODIFIED - replaced inline auth block with requireRole middleware
+  router.get('/jobCards', requireRole(supabase, ['manager']), async (req, res) => {   // MODIFIED - replaced inline auth block with requireRole middleware
     try {
       const page = Math.max(1, parseInt(req.query.page) || 1)
       const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10))
@@ -42,22 +42,26 @@ module.exports = (supabase) => {
         .from('Job_Orders')
         .select(`
           *,
-          customer:Customers!Job_Orders_Customer_ID_fkey (
-            "Customer_ID", "Customer_Name", "Email"
-          ),
           appointment:Appointments!Job_Orders_appointment_id_fkey (
             *,
-            customer:Profiles!Appointments_customer_id_fkey (
-              "ID", "Name", "Email"
+            CustomerProfile:Profiles!Appointments_customer_id_fkey (
+              ID,
+              Name,
+              Email
             ),
-            technician:Profiles!Appointments_technician_id_fkey (
-              "ID", "Name", "Email"
+            DiagnoseTechnicianProfile:Profiles!Appointments_technician_id_fkey (
+              ID,
+              Name,
+              Email
             )
           ),
-          technician:Profiles!Job_Orders_technician_id_fkey (
-            "ID", "Name", "Email"
+          ServiceTechnicianProfile:Profiles!Job_Orders_service_technician_id_fkey (
+            ID,
+            Name,
+            Email
           )
         `, { count: 'exact' })
+        .order('Order_ID', { ascending: true })
         .range(from, to)
 
       if (error) return res.status(500).json({ error: error.message })
@@ -75,58 +79,61 @@ module.exports = (supabase) => {
       res.status(500).json({ error: err.message })
     }
   })
-    // get all appointments with customer and technician
-    router.get('/getAllAppointments', requireRole(supabase, ['manager']), async (req, res) => {
+
+  // get all appointments with customer and technician
+  router.get('/getAllAppointments', requireRole(supabase, ['manager']), async (req, res) => {
+    try {
+      const { data, error } = await supabase
+        .from('Appointments')
+        .select(`
+          *,
+          Profiles!Appointments_customer_id_fkey (
+            ID,
+            Name,
+            Email
+          ),
+          TechnicianProfile:Profiles!Appointments_technician_id_fkey (
+            ID,
+            Name,
+            Email
+          )
+        `)
+
+      if (error) return res.status(400).json({ error: error.message })
+      res.status(200).json({ message: 'Appointments retrieved successfully', data })
+    } catch (err) {
+      console.error('Get appointments error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+  
+  // update technician id for appointment
+  router.put('/:appointmentId/technician', requireRole(supabase, ['manager']), async (req, res) => {
       try {
-        const { data, error } = await supabase
-          .from('Appointments')
-          .select(`
-            *,
-            Profiles!Appointments_customer_id_fkey (
-              ID,
-              Name,
-              Email
-            ),
-            TechnicianProfile:Profiles!Appointments_technician_id_fkey (
-              ID,
-              Name,
-              Email
-            )
-          `)
 
-        if (error) return res.status(400).json({ error: error.message })
-        res.status(200).json({ message: 'Appointments retrieved successfully', data })
-      } catch (err) {
-        console.error('Get appointments error:', err)
-        res.status(500).json({ error: err.message })
+      const { appointmentId } = req.params
+      const { technician_id } = req.body
+
+      if (!technician_id) {
+          return res.status(400).json({ message: 'technician_id is required' })
       }
-    })
-    // update technician id for appointment
-    router.put('/:appointmentId/technician', requireRole(supabase, ['manager']), async (req, res) => {
-        try {
 
-        const { appointmentId } = req.params
-        const { technician_id } = req.body
+      const { data, error } = await supabase
+          .from('Appointments')
+          .update({ technician_id })
+          .eq('id', appointmentId)
+          .select()
+          .single()
 
-        if (!technician_id) {
-            return res.status(400).json({ message: 'technician_id is required' })
-        }
+      if (error) return res.status(400).json({ error: error.message })
+      if (!data) return res.status(404).json({ message: 'Appointment not found' })
 
-        const { data, error } = await supabase
-            .from('Appointments')
-            .update({ technician_id })
-            .eq('id', appointmentId)
-            .select()
-            .single()
-
-        if (error) return res.status(400).json({ error: error.message })
-        if (!data) return res.status(404).json({ message: 'Appointment not found' })
-
-        res.json({ message: 'Technician updated successfully', data })
-        } catch (err) {
-        res.status(500).json({ error: err.message })
-        }
-    })
+      res.json({ message: 'Technician updated successfully', data })
+      } catch (err) {
+      res.status(500).json({ error: err.message })
+      }
+  })
+  
   // manager cancel appt
   router.put('/cancelAppointment/:id', requireRole(supabase, ['manager']), async (req, res) => {
     try {
@@ -147,7 +154,7 @@ module.exports = (supabase) => {
         return res.status(400).json({ message: 'Appointment is already cancelled' })
       }
 
-      const { data, error } = await supabase
+     const { data, error } = await supabase
         .from('Appointments')
         .update({ 
           status: 'cancelled',
@@ -157,7 +164,7 @@ module.exports = (supabase) => {
         .select()
         .single()
 
-      if (error) return res.status(400).json({ error: error.message })
+     if (error) return res.status(400).json({ error: error.message })
       res.status(200).json({ message: 'Appointment cancelled successfully', data })
     } catch (err) {
       console.error('Cancel appointment error:', err)
@@ -165,5 +172,5 @@ module.exports = (supabase) => {
     }
   })
 
-  return router
+return router
 }
