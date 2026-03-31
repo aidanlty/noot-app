@@ -606,6 +606,7 @@ export default {
 
       try {
         const token = localStorage.getItem('token');
+        if (!token) throw new Error('Not authenticated. Please log in again.');
 
         // 1) Create the job card
         const res = await fetch('http://localhost:3000/api/jobOrders/createJobCard', {
@@ -631,16 +632,12 @@ export default {
           appt.customerEmail
         );
 
-        const statusJson = await statusRes.json();
-        if (!statusRes.ok) {
-          throw new Error(statusJson.error || statusJson.message || `Error ${statusRes.status}`);
+        // 3) Update UI state
+        this.diagnoseConfirm.success = true;
+        if (this.diagnoseConfirm.appt) {
+          this.diagnoseConfirm.appt.status = 'completed';
         }
 
-        // Optional frontend debug log
-        console.log('Appointment status updated:', statusJson);
-
-        // 3) Show success modal
-        this.diagnoseConfirm.success = true;
       } catch (err) {
         console.error('Error creating job card:', err);
         this.diagnoseConfirm.submitError = err.message;

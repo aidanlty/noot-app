@@ -692,8 +692,7 @@ export default {
         this.partsArrivalModal.showError = true;
         return;
       }
-      
-      // Update local first
+
       this.partsArrivalModal.job.partsArrivalDate = this.partsArrivalModal.date;
       this.partsArrivalModal.job.status = 'waiting-for-parts';
 
@@ -718,53 +717,57 @@ export default {
       this.confirmModal.targetStatus = '';
     },
     async confirmProceed() {
-      if (this.confirmModal.job && this.confirmModal.targetStatus) {
-        try {
-          const orderId = this.confirmModal.job.id
-          const newStatus = this.confirmModal.targetStatus
-          
-          console.log('🔄 Calling:', `/api/job-orders/${orderId}/status`)
-          
-          const response = await fetch(`http://localhost:3000/api/job-orders/${orderId}/status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-          })
+      if (!this.confirmModal.job || !this.confirmModal.targetStatus) return;
 
-          // ✅ CHECK RESPONSE FIRST
-          if (!response.ok) {
-            const text = await response.text()
-            console.error('❌ Backend error:', response.status, text)
-            alert(`❌ Server error ${response.status}: ${text}`)
-            return
-          }
+      try {
+        const jobId = this.confirmModal.job.id;
+        const newStatus = this.confirmModal.targetStatus;
+        const customerEmail = this.confirmModal.job.customerEmail || '';
 
-          // ✅ CHECK IF RESPONSE HAS BODY
-          const text = await response.text()
-          console.log('📥 Raw response:', text)
-          
-          if (!text.trim()) {
-            console.error('❌ Empty response from server')
-            alert('❌ Server returned empty response')
-            return
-          }
+        console.log('🔄 Calling:', `/api/job-orders/${jobId}/status`);
 
-          // ✅ NOW SAFE TO PARSE
-          const result = JSON.parse(text)
-          
-          if (result.success) {
-            this.confirmModal.job.status = newStatus
-            alert('✅ Status updated!')
-          } else {
-            alert(`❌ ${result.error || 'Unknown error'}`)
-          }
-          
-        } catch (error) {
-          console.error('❌ Network error:', error)
-          alert('❌ Network error. Check server.')
+        const response = await fetch(`http://localhost:3000/api/job-orders/${jobId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('❌ Backend error:', response.status, text);
+          alert(`❌ Server error ${response.status}: ${text}`);
+          return;
         }
+
+        const text = await response.text();
+        console.log('📥 Raw response:', text);
+
+        if (!text.trim()) {
+          console.error('❌ Empty response from server');
+          alert('❌ Server returned empty response');
+          return;
+        }
+
+        const result = JSON.parse(text);
+
+        if (result.success) {
+          this.confirmModal.job.status = newStatus;
+
+          // Send email / notify status update
+          await this.notifyJobCardStatusUpdate(jobId, newStatus, customerEmail);
+
+          alert('✅ Status updated!');
+        } else {
+          alert(`❌ ${result.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('❌ Network error:', error);
+        alert('❌ Network error. Check server.');
       }
-      this.closeConfirmModal()
+
+      this.closeConfirmModal();
     },
 
 
@@ -789,6 +792,30 @@ export default {
       if (!hasParts)    return 'Add at least one part before proceeding';
       if (!hasServices) return 'Add at least one service before proceeding';
       return '';
+    },
+    async notifyJobCardStatusUpdate(jobId, status, customerEmail) {
+      const token = localStorage.getItem('token');
+
+      const res = await fetch(`http://localhost:3000/api/job-orders/${jobId}/status`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status,
+          customerEmail,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || json.message || `Error ${res.status}`);
+      }
+
+      console.log('Job card status updated:', json);
+      return json;
     },
   },
 };
