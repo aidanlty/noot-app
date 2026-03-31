@@ -603,8 +603,11 @@ export default {
     async createJobCard(appt) {
       this.diagnoseConfirm.submitting = true;
       this.diagnoseConfirm.submitError = '';
+
       try {
         const token = localStorage.getItem('token');
+
+        // 1) Create the job card
         const res = await fetch('http://localhost:3000/api/jobOrders/createJobCard', {
           method: 'POST',
           headers: {
@@ -612,15 +615,34 @@ export default {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            customer_id:            appt.customerId,
-            appointment_id:         appt.id,
+            customer_id: appt.customerId,
+            appointment_id: appt.id,
             diagnose_technician_id: appt.diagnoseTechId,
           }),
         });
+
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || json.message || `Error ${res.status}`);
 
-        // Show success screen inside the modal
+        // 2) Call your existing email/status endpoint
+        const statusRes = await fetch(`http://localhost:3000/api/appointments/${appt.id}/status`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'completed', customerEmail: appt.customerEmail , customerName: appt.customerName}),
+        });
+
+        const statusJson = await statusRes.json();
+        if (!statusRes.ok) {
+          throw new Error(statusJson.error || statusJson.message || `Error ${statusRes.status}`);
+        }
+
+        // Optional frontend debug log
+        console.log('Appointment status updated:', statusJson);
+
+        // 3) Show success modal
         this.diagnoseConfirm.success = true;
       } catch (err) {
         console.error('Error creating job card:', err);
@@ -725,6 +747,12 @@ export default {
         );
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || json.message || `Error ${res.status}`);
+        
+        await this.notifyAppointmentStatusUpdate(
+          this.cancelConfirm.appt.id,
+          'cancelled',
+          this.cancelConfirm.appt.customerEmail
+        );
 
         this.cancelConfirm.appt.status = 'cancelled';
         this.cancelConfirm.appt.cancelReason = this.cancelConfirm.reason;
@@ -735,6 +763,30 @@ export default {
       } finally {
         this.cancelConfirm.submitting = false;
       }
+    },
+
+    // -Send Email --
+    async notifyAppointmentStatusUpdate(appointmentId, status, customerEmail) {
+      const token = localStorage.getItem('token');
+
+      const res = await fetch(`http://localhost:3000/api/appointments/${appointmentId}/status`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status, customerEmail }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || json.message || `Error ${res.status}`);
+      }
+
+      console.log('Appointment status updated:', json);
+
+      return json;
     },
 
     // ── Filters / Pagination ──

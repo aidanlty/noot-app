@@ -560,6 +560,7 @@ export default {
         { id: 'JC-010', licensePlate: 'YZA-9900', vehicleMake: 'Subaru',  vehicleModel: 'Forester', vehicleYear: '2022', customerName: 'Chloe Kim',      status: 'check-out',         jobDate: subDays(today, 2), serviceType: 'Timing Belt Replacement',  diagnoseTechnician: 'Maria Santos', serviceTechnician: 'Sam Rivera',    notes: null,                                            parts: ['Timing Belt', 'Tensioner Pulley', 'Water Pump', 'Idler Pulley'], services: ['Timing Belt Replacement', 'Coolant Flush'],              partsArrivalDate: null },
       ],
     };
+    
   },
 
   computed: {
@@ -658,12 +659,19 @@ export default {
       this.techModal.isOpen = false;
       this.techModal.job = null;
     },
-    submitTech() {
+    async submitTech() {
       if (!this.techModal.selected) {
         this.techModal.showError = true;
         return;
       }
-      this.techModal.job.serviceTechnician = this.techModal.selected;
+      
+      // Update local first (optimistic)
+      if (this.techModal.techType === 'service') {
+        this.techModal.job.serviceTechnician = this.techModal.selected;
+      } else {
+        this.techModal.job.diagnoseTechnician = this.techModal.selected;
+      }
+      
       this.closeTechModal();
     },
 
@@ -679,11 +687,13 @@ export default {
       this.partsArrivalModal.job = null;
       this.partsArrivalModal.date = '';
     },
-    confirmPartsArrival() {
+    async confirmPartsArrival() {
       if (!this.partsArrivalModal.date) {
         this.partsArrivalModal.showError = true;
         return;
       }
+      
+      // Update local first
       this.partsArrivalModal.job.partsArrivalDate = this.partsArrivalModal.date;
       this.partsArrivalModal.job.status = 'waiting-for-parts';
       this.closePartsArrivalModal();
@@ -700,12 +710,57 @@ export default {
       this.confirmModal.job = null;
       this.confirmModal.targetStatus = '';
     },
-    confirmProceed() {
+    async confirmProceed() {
       if (this.confirmModal.job && this.confirmModal.targetStatus) {
-        this.confirmModal.job.status = this.confirmModal.targetStatus;
+        try {
+          const orderId = this.confirmModal.job.id
+          const newStatus = this.confirmModal.targetStatus
+          
+          console.log('🔄 Calling:', `/api/job-orders/${orderId}/status`)
+          
+          const response = await fetch(`http://localhost:3000/api/job-orders/${orderId}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+          })
+
+          // ✅ CHECK RESPONSE FIRST
+          if (!response.ok) {
+            const text = await response.text()
+            console.error('❌ Backend error:', response.status, text)
+            alert(`❌ Server error ${response.status}: ${text}`)
+            return
+          }
+
+          // ✅ CHECK IF RESPONSE HAS BODY
+          const text = await response.text()
+          console.log('📥 Raw response:', text)
+          
+          if (!text.trim()) {
+            console.error('❌ Empty response from server')
+            alert('❌ Server returned empty response')
+            return
+          }
+
+          // ✅ NOW SAFE TO PARSE
+          const result = JSON.parse(text)
+          
+          if (result.success) {
+            this.confirmModal.job.status = newStatus
+            alert('✅ Status updated!')
+          } else {
+            alert(`❌ ${result.error || 'Unknown error'}`)
+          }
+          
+        } catch (error) {
+          console.error('❌ Network error:', error)
+          alert('❌ Network error. Check server.')
+        }
       }
-      this.closeConfirmModal();
+      this.closeConfirmModal()
     },
+
+
 
     formatDate(date) {
       if (!date) return 'N/A';
@@ -730,6 +785,8 @@ export default {
     },
   },
 };
+
+
 </script>
 
 <style scoped src="@/assets/jobCards.css"></style>
