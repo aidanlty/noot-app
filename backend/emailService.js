@@ -26,7 +26,7 @@ async function sendStatusEmail({
     ${licensePlate ? `<p>Vehicle: <strong>${licensePlate}</strong></p>` : ''}
     ${appointmentDate ? `<p>Appointment: <strong>${appointmentDate}</strong> ${appointmentTime || ''}</p>` : ''}
     <p>If you have questions, reply to this email.</p>
-    <p>– Precision Auto</p>
+    <p>– Porschify</p>
   `;
 
   console.log('Subject:', subject);
