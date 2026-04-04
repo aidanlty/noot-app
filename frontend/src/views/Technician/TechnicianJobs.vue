@@ -123,7 +123,7 @@
               <div class="tech-card-meta">
                 <span class="tech-meta-tag tech-meta-tag--day">{{ isToday(appt.appointmentDate) ? 'Today' : getDayName(appt.appointmentDate) }}</span>
               </div>
-              <p v-if="appt.customerNotes" class="tech-card-notes"><span class="tech-card-notes-label">Customer Notes:</span> {{ appt.customerNotes }}</p>
+              <div v-if="appt.customerNotes" class="jc-card-notes-box">📝 {{ appt.customerNotes }}</div>
             </div>
             <div class="tech-card-actions">
               <button class="tech-btn-view" @click="openApptModal(appt)">View</button>
@@ -160,7 +160,10 @@
             <div class="tech-detail-group"><label>License Plate</label><p>{{ apptModal.appt.licensePlate }}</p></div>
             <div class="tech-detail-group"><label>Appointment Date</label><p>{{ formatDate(apptModal.appt.appointmentDate) }}</p></div>
             <div class="tech-detail-group"><label>Appointment Time</label><p>{{ apptModal.appt.appointmentTime || 'N/A' }}</p></div>
-            <div v-if="apptModal.appt.customerNotes" class="tech-detail-group"><label>Customer Notes</label><p>{{ apptModal.appt.customerNotes }}</p></div>
+            <div v-if="apptModal.appt.customerNotes" class="tech-detail-group">
+              <label>Customer Notes</label>
+              <div class="jc-notes-box">{{ apptModal.appt.customerNotes }}</div>
+            </div>
           </div>
           <div class="tech-modal-actions">
             <button class="tech-btn-secondary" @click="apptModal.isOpen = false">Close</button>
@@ -295,7 +298,7 @@
                 <span v-if="job.myRole === 'diagnose'" class="tech-meta-tag tech-meta-tag--role-diagnose">🔍 Diagnose Tech</span>
                 <span v-if="job.myRole === 'service'"  class="tech-meta-tag tech-meta-tag--role-service">🔧 Service Tech</span>
               </div>
-              <p v-if="job.customerNotes" class="tech-card-notes"><span class="tech-card-notes-label">Customer Notes:</span> {{ job.customerNotes }}</p>
+              <div v-if="job.notes" class="jc-card-notes-box">📝 {{ job.notes }}</div>
             </div>
             <div class="tech-card-actions">
               <button class="tech-btn-view" @click="openJobModal(job)">View</button>
@@ -390,7 +393,10 @@
                 <span v-for="s in jobModal.job.addedServices" :key="s" class="tech-detail-tag tech-detail-tag--services">{{ s }}</span>
               </div>
             </div>
-            <div v-if="jobModal.job.notes" class="tech-detail-group"><label>Customer Notes</label><p>{{ jobModal.job.notes }}</p></div>
+            <div v-if="jobModal.job.notes" class="tech-detail-group">
+              <label>Customer Notes</label>
+              <div class="jc-notes-box">{{ jobModal.job.notes }}</div>
+            </div>
           </div>
           <div class="tech-modal-actions">
             <button class="tech-btn-secondary" @click="closeJobModal">Close</button>
@@ -469,7 +475,6 @@
           <div class="tech-confirm-card-info">
             <span class="tech-confirm-name">{{ updateModal.job.customerName }}</span>
             <span class="tech-confirm-meta">{{ updateModal.job.vehicleYear }} {{ updateModal.job.vehicleMake }} {{ updateModal.job.vehicleModel }} · #{{ updateModal.job.id }}</span>
-            <span class="tech-confirm-meta">Order #{{ updateModal.job.id }}</span>
           </div>
           <div class="tech-modal-actions tech-confirm-actions">
             <button class="tech-btn-secondary" @click="closeUpdateModal">Go Back</button>
@@ -484,6 +489,8 @@
 </template>
 
 <script>
+import { sgEndOfMonthStr, sgEndOfWeekStr, sgLocaleDate, sgStartOfMonthStr, sgStartOfWeekStr, sgTodayStr } from '@/utils/sgTime.js'
+
 export default {
   name: 'TechnicianJobsView',
   data() {
@@ -557,11 +564,11 @@ export default {
   },
 
   computed: {
-    todayStr()        { return new Date().toISOString().split('T')[0]; },
-    startOfWeekStr()  { const t = new Date(); const s = new Date(t); s.setDate(t.getDate() - t.getDay()); return s.toISOString().split('T')[0]; },
-    endOfWeekStr()    { const t = new Date(); const e = new Date(t); e.setDate(t.getDate() + (6 - t.getDay())); return e.toISOString().split('T')[0]; },
-    startOfMonthStr() { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), 1).toISOString().split('T')[0]; },
-    endOfMonthStr()   { const t = new Date(); return new Date(t.getFullYear(), t.getMonth() + 1, 0).toISOString().split('T')[0]; },
+    todayStr()        { return sgTodayStr(); },
+    startOfWeekStr()  { return sgStartOfWeekStr(); },
+    endOfWeekStr()    { return sgEndOfWeekStr(); },
+    startOfMonthStr() { return sgStartOfMonthStr(); },
+    endOfMonthStr()   { return sgEndOfMonthStr(); },
 
     // ── Header stats ──
     diagnosedCount() { return this.jobCards.filter(j => j.myRole === 'diagnose').length; },
@@ -587,7 +594,7 @@ export default {
 
     // ── Job Orders ──
     filteredJobs() {
-      let list = this.jobCards;
+      let list = this.jobCards.filter(j => j.status === 'diagnose' || j.status === 'service');
       if (this.jobSpecificDate) {
         list = list.filter(j => j.jobDate === this.jobSpecificDate);
       } else if (this.jobDateFilter === 'today') {
@@ -699,11 +706,11 @@ export default {
     isToday(date)  { return date === this.todayStr; },
     formatDate(date) {
       if (!date) return 'N/A';
-      return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      return sgLocaleDate(`${date}T00:00:00+08:00`, 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     },
     getDayName(date) {
       if (!date) return '';
-      return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' });
+      return sgLocaleDate(`${date}T00:00:00+08:00`, 'en-US', { weekday: 'short' });
     },
 
     // ── Appointment methods ──
@@ -739,7 +746,7 @@ export default {
 
         // Update local state on success
         job.status  = 'ready';
-        job.jobDate = new Date().toISOString().split('T')[0];
+        job.jobDate = sgTodayStr();
 
         this.closeUpdateModal();
       } catch (err) {
