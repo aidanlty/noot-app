@@ -114,10 +114,9 @@
                     <span class="detail-label">Phone Number:</span>
                     <span class="detail-value">{{ booking.phoneNumber || 'N/A' }}</span>
                   </div>
-                  <div v-if="booking.customerNotes && booking.status !== 'cancelled'" class="detail-item">
-                    <span class="detail-label">Notes:</span>
-                    <span class="detail-value">{{ booking.customerNotes }}</span>
-                  </div>
+
+                  <div v-if="booking.customerNotes && booking.status !== 'cancelled'" class="jc-card-notes-box">📝 {{ booking.customerNotes }}</div>
+
                   <div class="detail-item appointment-item">
                     <span class="detail-label">Appointment Date:</span>
                     <span class="detail-value">{{ formatDate(booking.appointmentDate) }}</span>
@@ -195,7 +194,10 @@
                 <div class="detail-group"><label>Phone Number:</label><p>{{ modal.booking.phoneNumber || 'N/A' }}</p></div>
                 <div class="detail-group"><label>Appointment Date:</label><p>{{ formatDate(modal.booking.appointmentDate) }}</p></div>
                 <div class="detail-group"><label>Appointment Time:</label><p>{{ modal.booking.appointmentTime || 'N/A' }}</p></div>
-                <div v-if="modal.booking.customerNotes" class="detail-group"><label>Notes:</label><p>{{ modal.booking.customerNotes }}</p></div>
+                <div v-if="modal.booking.customerNotes" class="detail-group">
+                  <label>Notes:</label>
+                  <div class="jc-notes-box">{{ modal.booking.customerNotes }}</div>
+                </div>
                 <div v-if="modal.booking.status === 'cancelled' && modal.booking.cancelReason" class="detail-group">
                   <label>Cancel Reason:</label><p>{{ modal.booking.cancelReason }}</p>
                 </div>
@@ -294,6 +296,7 @@
                 <span class="jc-card-id">#{{ job.id }}</span>
               </div>
               <p class="jc-card-vehicle">{{ job.licensePlate }}</p>
+              <div v-if="job.notes" class="jc-card-notes-box">📝 {{ job.notes }}</div>
               <div class="jc-card-meta">
                 <span class="jc-meta-tag jc-meta-tag--date">{{ formatDate(job.jobDate) }}</span>
 
@@ -373,6 +376,10 @@
               </div>
               <div class="jc-detail-group"><label>Vehicle</label><p>{{ jobModal.job.vehicleYear }} {{ jobModal.job.vehicleMake }} {{ jobModal.job.vehicleModel }}</p></div>
               <div class="jc-detail-group"><label>License Plate</label><p>{{ jobModal.job.licensePlate }}</p></div>
+              <div v-if="jobModal.job.notes" class="jc-detail-group">
+                <label>Customer Notes</label>
+                <div class="jc-notes-box">{{ jobModal.job.notes }}</div>
+              </div>
               <div class="jc-detail-group"><label>Job Date</label><p>{{ formatDate(jobModal.job.jobDate) }}</p></div>
 
               <!-- Service type: shown for quotation and beyond -->
@@ -480,6 +487,10 @@
               </div>
               <div class="jc-detail-group"><label>Vehicle</label><p>{{ finishedJobModal.job.vehicleYear }} {{ finishedJobModal.job.vehicleMake }} {{ finishedJobModal.job.vehicleModel }}</p></div>
               <div class="jc-detail-group"><label>License Plate</label><p>{{ finishedJobModal.job.licensePlate }}</p></div>
+              <div v-if="finishedJobModal.job.notes" class="jc-detail-group">
+                <label>Customer Notes</label>
+                <div class="jc-notes-box">{{ finishedJobModal.job.notes }}</div>
+              </div>
               <div v-if="finishedJobModal.job.checkOut" class="jc-detail-group">
                 <label>Check-Out Date</label><p>{{ formatDate(finishedJobModal.job.checkOut) }}</p>
               </div>
@@ -520,6 +531,8 @@
 </template>
 
 <script>
+import { formatYmd, sgDateFromYmd, sgDateTimeFrom, sgHourNow, sgLocaleDate, sgNow, sgTodayStr } from '@/utils/sgTime.js'
+
 const EDIT_ALL_SLOTS = [
   { value: '10:00 AM', label: '10:00 AM' },
   { value: '11:00 AM', label: '11:00 AM' },
@@ -549,7 +562,7 @@ const EDIT_SATURDAY_SLOTS = EDIT_ALL_SLOTS.filter(s =>
 const ORDER_STATUS_MAP = {
   'diagnose':          'diagnose',
   'quotation':         'quotation',
-  'waiting-for-parts': 'waiting-for-parts',
+  'waiting_for_parts': 'waiting-for-parts',
   'service':           'service',
   'ready':             'ready',
   'check-out':         'completed',
@@ -615,6 +628,8 @@ function mapJobOrder(row) {
     diagnoseTechContact:    diagTech ? { email: diagTech.email } : null,
     serviceTechnicianName:  svcTech  ? svcTech.name   : null,
     serviceTechContact:     svcTech  ? { email: svcTech.email }  : null,
+    notes:  row.notes ?? null,
+
   }
 }
 export default {
@@ -685,19 +700,15 @@ export default {
       }
       let filtered
       if (this.statusFilter === 'upcoming') {
-        const now = new Date()
+        const now = sgNow()
         filtered = this.bookings.filter(b => {
           if (b.status !== 'booked' || !b.appointmentDate) return false
-          const { h, min } = parseTime(b.appointmentTime)
-          const apptDateTime = new Date(b.appointmentDate + 'T00:00:00')
-          apptDateTime.setHours(h, min, 0, 0)
+          const apptDateTime = sgDateTimeFrom(b.appointmentDate, b.appointmentTime)
           return apptDateTime >= now
         })
         const getDateTime = (b) => {
           if (!b.appointmentDate) return null
-          const { h, min } = parseTime(b.appointmentTime)
-          const dt = new Date(b.appointmentDate + 'T00:00:00')
-          dt.setHours(h, min, 0, 0)
+          const dt = sgDateTimeFrom(b.appointmentDate, b.appointmentTime)
           return dt.getTime()
         }
         filtered.sort((a, b) => {
@@ -708,27 +719,25 @@ export default {
           return this.upcomingSortOrder === 'asc' ? da - db : db - da
         })
       } else if (this.statusFilter === 'ongoing') {
-        const now = new Date()
+        const now = sgNow()
         filtered = this.bookings.filter(b => {
           if (b.status !== 'booked' || !b.appointmentDate || !b.appointmentTime) return false
-          const { h, min } = parseTime(b.appointmentTime)
-          const apptDateTime = new Date(b.appointmentDate + 'T00:00:00')
-          apptDateTime.setHours(h, min, 0, 0)
+          const apptDateTime = sgDateTimeFrom(b.appointmentDate, b.appointmentTime)
           return now > apptDateTime
         })
-        filtered.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+        filtered.sort((a, b) => sgDateFromYmd(b.appointmentDate) - sgDateFromYmd(a.appointmentDate))
       } else {
         filtered = this.bookings.filter(b => b.status === this.statusFilter)
         filtered.sort((a, b) => {
-          const da = new Date(a.createdAt || 0)
-          const db = new Date(b.createdAt || 0)
+          const da = Date.parse(a.createdAt || 0)
+          const db = Date.parse(b.createdAt || 0)
           return this.sortOrder === 'asc' ? da - db : db - da
         })
       }
       return filtered
     },
     nextUpBookingId() {
-      const now = new Date()
+      const now = sgNow()
       const parseTime = (t) => {
         if (!t) return { h: 0, min: 0 }
         const parts = t.trim().split(' ')
@@ -741,13 +750,11 @@ export default {
       const candidates = this.bookings
         .filter(b => {
           if (b.status !== 'booked' || !b.appointmentDate) return false
-          const { h, min } = parseTime(b.appointmentTime)
-          const apptDateTime = new Date(b.appointmentDate + 'T00:00:00')
-          apptDateTime.setHours(h, min, 0, 0)
+          const apptDateTime = sgDateTimeFrom(b.appointmentDate, b.appointmentTime)
           return apptDateTime >= now
         })
         .slice()
-        .sort((a, b) => new Date(a.appointmentDate + 'T00:00:00') - new Date(b.appointmentDate + 'T00:00:00'))
+        .sort((a, b) => sgDateFromYmd(a.appointmentDate) - sgDateFromYmd(b.appointmentDate))
       return candidates.length ? candidates[0].id : null
     },
     paginatedBookings() {
@@ -759,26 +766,26 @@ export default {
     },
 
     editMinDate() {
-      const d = new Date()
+      const d = sgNow()
       d.setDate(d.getDate() + 3)
-      return d.toISOString().split('T')[0]
+      return formatYmd(d)
     },
     editMaxDate() {
-      const d = new Date()
+      const d = sgNow()
       d.setMonth(d.getMonth() + 1)
-      return d.toISOString().split('T')[0]
+      return formatYmd(d)
     },
     editIsSunday() {
       if (!this.editForm.appointmentDate) return false
-      return new Date(this.editForm.appointmentDate + 'T00:00:00').getDay() === 0
+      return sgDateFromYmd(this.editForm.appointmentDate).getUTCDay() === 0
     },
     editIsSaturday() {
       if (!this.editForm.appointmentDate) return false
-      return new Date(this.editForm.appointmentDate + 'T00:00:00').getDay() === 6
+      return sgDateFromYmd(this.editForm.appointmentDate).getUTCDay() === 6
     },
     editIsToday() {
       if (!this.editForm.appointmentDate) return false
-      return this.editForm.appointmentDate === new Date().toISOString().split('T')[0]
+      return this.editForm.appointmentDate === sgTodayStr()
     },
     editIsSameAsOriginal() {
       if (!this.modal.booking || !this.editForm.appointmentDate || !this.editForm.appointmentTime) return false
@@ -792,7 +799,7 @@ export default {
     editTimeSlots() {
       if (!this.editForm.appointmentDate || this.editIsSunday) return []
       const slots = this.editIsSaturday ? EDIT_SATURDAY_SLOTS : EDIT_ALL_SLOTS
-      const currentHour = new Date().getHours()
+      const currentHour = sgHourNow()
       return slots.map(slot => {
         const slot24 = this.slotValueTo24h(slot.value)
         const slotHour = parseInt(slot24.split(':')[0])
@@ -894,9 +901,8 @@ export default {
 
     canCancelBooking(booking) {
       if (!booking || !booking.appointmentDate) return false
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const apptDate = new Date(booking.appointmentDate + 'T00:00:00')
+      const today = sgDateFromYmd(sgTodayStr())
+      const apptDate = sgDateFromYmd(booking.appointmentDate)
       const diffDays = (apptDate - today) / (1000 * 60 * 60 * 24)
       return diffDays > 2
     },
@@ -1022,7 +1028,8 @@ export default {
     formatStatus(status) { return status.charAt(0).toUpperCase() + status.slice(1) },
     formatDate(date) {
       if (!date) return 'N/A'
-      return new Date(date + (date.includes('T') ? '' : 'T00:00:00')).toLocaleDateString('en-US', {
+      const normalizedDate = date.includes('T') ? date : `${date}T00:00:00+08:00`
+      return sgLocaleDate(normalizedDate, 'en-US', {
         year: 'numeric', month: 'short', day: 'numeric',
       })
     },

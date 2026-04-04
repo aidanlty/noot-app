@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const requireRole = require('../middleware/requireRole')  
+const { sgDateFromYmd, sgStartOfToday } = require('../utils/sgTime')
 module.exports = (supabase) => {
 
 // create appointment when customer book
@@ -102,9 +103,8 @@ router.put('/editAppointment/:id', requireRole(supabase, ['customer']), async (r
       return res.status(404).json({ message: 'Appointment not found' })
     }
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const apptDate = new Date(existing.appointment_date)
+    const today = sgStartOfToday()
+    const apptDate = sgDateFromYmd(existing.appointment_date)
     const diffDays = (apptDate - today) / (1000 * 60 * 60 * 24)
     if (diffDays <= 2) {
       return res.status(400).json({ message: 'Cannot edit an appointment within 2 days of the scheduled date' })
@@ -148,9 +148,8 @@ router.put('/cancelAppointment/:id', requireRole(supabase, ['customer']), async 
       return res.status(400).json({ message: 'Appointment is already cancelled' })
     }
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const apptDate = new Date(existing.appointment_date)
+    const today = sgStartOfToday()
+    const apptDate = sgDateFromYmd(existing.appointment_date)
     const diffDays = (apptDate - today) / (1000 * 60 * 60 * 24)
     if (diffDays <= 2) {
       return res.status(400).json({ message: 'Cannot cancel an appointment within 2 days of the scheduled date' })

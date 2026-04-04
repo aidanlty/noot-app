@@ -30,15 +30,9 @@ module.exports = (supabase) => {
   })
 
   // GET all job cards with appointment and technician info
-  router.get('/jobCards', requireRole(supabase, ['manager']), async (req, res) => {   // MODIFIED - replaced inline auth block with requireRole middleware
+  router.get('/jobCards', requireRole(supabase, ['manager']), async (req, res) => {
     try {
-      const page = Math.max(1, parseInt(req.query.page) || 1)
-      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10))
-      const from = (page - 1) * limit
-      const to = from + limit - 1
-
-      // works (tested in testConnection.js
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from('Job_Orders')
         .select(`
           *,
@@ -60,27 +54,18 @@ module.exports = (supabase) => {
             Name,
             Email
           )
-        `, { count: 'exact' })
+        `)
         .order('Order_ID', { ascending: true })
-        .range(from, to)
 
       if (error) return res.status(500).json({ error: error.message })
 
-      res.json({
-        data,
-        pagination: {
-          page,
-          limit,
-          total: count,
-          totalPages: Math.ceil(count / limit)
-        }
-      })
+      res.json({ data })
     } catch (err) {
       res.status(500).json({ error: err.message })
     }
   })
 
-  // get all appointments with customer and technician
+// get all appointments with customer and technician
   router.get('/getAllAppointments', requireRole(supabase, ['manager']), async (req, res) => {
     try {
       const { data, error } = await supabase
@@ -171,6 +156,7 @@ module.exports = (supabase) => {
       res.status(500).json({ error: err.message })
     }
   })
+
 
 return router
 }

@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const requireRole = require('../middleware/requireRole')
+const { getSgTodayStr } = require('../utils/sgTime')
 
 module.exports = (supabase) => {
 
@@ -37,7 +38,7 @@ module.exports = (supabase) => {
                 nextOrderId = `ORD-${String(num + 1).padStart(6, '0')}`
             }
 
-            const today = new Date().toISOString().split('T')[0]
+            const today = getSgTodayStr()
 
             const { data, error } = await supabase
                 .from('Job_Orders')
@@ -116,6 +117,7 @@ module.exports = (supabase) => {
             vehicle_license_plate: appt.vehicle_license_plate || null,
             vehicle_make:          appt.vehicle_make          || null,
             vehicle_year:          appt.vehicle_year          || null,
+            notes:                 appt.customer_notes        || null,
             // technician objects
             diagnose_technician:   diagTech ? { name: diagTech.Name, email: diagTech.Email } : null,
             service_technician:    svcTech  ? { name: svcTech.Name,  email: svcTech.Email  } : null,
@@ -284,7 +286,7 @@ module.exports = (supabase) => {
                 return res.status(400).json({ message: `Invalid status. Must be one of: ${Object.keys(statusDateMap).join(', ')}` })
             }
 
-            const today = new Date().toISOString().split('T')[0]
+            const today = getSgTodayStr()
 
             const { data, error } = await supabase
                 .from('Job_Orders')
@@ -305,5 +307,58 @@ module.exports = (supabase) => {
         }
     })
     
+    // update expected_parts_arrival_date
+    router.put('/:orderId/partsArrival', requireRole(supabase, ['manager']), async (req, res) => {
+    try {
+        const { orderId } = req.params
+        const { expected_parts_arrival_date } = req.body
+
+        if (!expected_parts_arrival_date) {
+        return res.status(400).json({ message: 'expected_parts_arrival_date field is required' })
+        }
+
+        const { data, error } = await supabase
+        .from('Job_Orders')
+        .update({ expected_parts_arrival_date })
+        .eq('Order_ID', orderId)
+        .select()
+        .single()
+
+        if (error) return res.status(500).json({ error: error.message })
+        if (!data)  return res.status(404).json({ message: 'Job order not found' })
+
+        res.status(200).json({ data })
+    } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+    })
+
+      // update service tech in job orders
+    router.put('/:orderId/serviceTechnician', requireRole(supabase, ['manager']), async (req, res) => {
+        try {
+        const { orderId } = req.params
+        const { technician_id } = req.body
+
+        if (!technician_id) {
+            return res.status(400).json({ message: 'technician_id is required' })
+        }
+
+        const { data, error } = await supabase
+            .from('Job_Orders')
+            .update({ service_technician_id: technician_id })
+            .eq('Order_ID', orderId)
+            .select()
+            .single()
+
+        if (error) return res.status(400).json({ error: error.message })
+        if (!data)  return res.status(404).json({ message: 'Job order not found' })
+
+        res.json({ message: 'Service technician updated successfully', data })
+        } catch (err) {
+        res.status(500).json({ error: err.message })
+        }
+    })
+
+
     return router
 }

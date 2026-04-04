@@ -111,6 +111,7 @@
               <span v-else-if="appt.status === 'diagnose'" class="status-badge status-badge--diagnose">🔬 Diagnose</span>
             </div>
             <p class="appt-vehicle">{{ appt.vehicleYear }} {{ appt.vehicleMake }} {{ appt.vehicleModel }} · {{ appt.licensePlate }}</p>
+            <div v-if="appt.notes" class="jc-card-notes-box">📝 {{ appt.notes }}</div>
             <div class="appt-meta">
               <span class="meta-tag date-tag">{{ formatDate(appt.appointmentDate) }}</span>
               <span v-if="appt.diagnoseTech" class="meta-tag tech-assigned-tag">
@@ -230,8 +231,8 @@
             </div>
             <div v-if="modal.appt.notes" class="detail-group">
               <label>Notes</label>
-              <p>{{ modal.appt.notes }}</p>
-            </div>
+              <div class="jc-notes-box">{{ modal.appt.notes }}</div>
+            </div>            
           </div>
           <div class="modal-actions">
             <button class="btn-secondary" @click="closeModal">Close</button>
@@ -363,6 +364,8 @@
 </template>
 
 <script>
+import { sgDateTimeFrom, sgEndOfMonthStr, sgEndOfWeekStr, sgLocaleDate, sgNow, sgStartOfMonthStr, sgStartOfWeekStr, sgTodayStr } from '@/utils/sgTime.js'
+
 export default {
   name: 'AppointmentsPage',
   data() {
@@ -378,7 +381,7 @@ export default {
       itemsPerPage: 5,
       specificDate: '',
       customerSearch: '',
-      now: new Date(),
+      now: sgNow(),
 
       statusTabs: [
         { label: 'Active',    value: 'active'    },
@@ -422,7 +425,7 @@ export default {
 
   async mounted() {
     await Promise.all([this.fetchAppointments(), this.fetchTechnicians()]);
-    this._nowTimer = setInterval(() => { this.now = new Date(); }, 60000);
+    this._nowTimer = setInterval(() => { this.now = sgNow(); }, 60000);
   },
   beforeUnmount() {
     clearInterval(this._nowTimer);
@@ -430,27 +433,19 @@ export default {
 
   computed: {
     todayStr() {
-      return new Date().toISOString().split('T')[0];
+      return sgTodayStr();
     },
     startOfWeekStr() {
-      const today = new Date();
-      const start = new Date(today);
-      start.setDate(today.getDate() - today.getDay());
-      return start.toISOString().split('T')[0];
+      return sgStartOfWeekStr();
     },
     endOfWeekStr() {
-      const today = new Date();
-      const end = new Date(today);
-      end.setDate(today.getDate() + (6 - today.getDay()));
-      return end.toISOString().split('T')[0];
+      return sgEndOfWeekStr();
     },
     startOfMonthStr() {
-      const today = new Date();
-      return new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+      return sgStartOfMonthStr();
     },
     endOfMonthStr() {
-      const today = new Date();
-      return new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+      return sgEndOfMonthStr();
     },
     activeAppointments() {
       return this.appointments.filter(a => a.status === 'appointment' || a.status === 'booked');
@@ -828,23 +823,18 @@ export default {
     },
     isToday(date) { return date === this.todayStr; },
     isPast(date, time) {
-      const [timePart, modifier] = time.split(' ');
-      let [hours, minutes] = timePart.split(':').map(Number);
-      if (modifier === 'AM' && hours === 12) hours = 0;
-      if (modifier === 'PM' && hours !== 12) hours += 12;
-      const apptDate = new Date(date + 'T00:00:00');
-      apptDate.setHours(hours, minutes, 0, 0);
+      const apptDate = sgDateTimeFrom(date, time);
       return this.now > apptDate;
     },
     openModal(appt) { this.modal.appt = appt; this.modal.isOpen = true; },
     closeModal() { this.modal.isOpen = false; this.modal.appt = null; },
     formatDate(date) {
       if (!date) return 'N/A';
-      return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      return sgLocaleDate(`${date}T00:00:00+08:00`, 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     },
     getDayName(date) {
       if (!date) return '';
-      return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' });
+      return sgLocaleDate(`${date}T00:00:00+08:00`, 'en-US', { weekday: 'short' });
     },
     formatStatus(status) {
       return status.charAt(0).toUpperCase() + status.slice(1);

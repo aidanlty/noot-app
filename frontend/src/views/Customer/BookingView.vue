@@ -132,6 +132,7 @@
 
 <script>
 import { commonCarData } from '@/data/commonCarData.js';
+import { sgDateFromYmd, sgHourNow, sgNow, sgTodayStr } from '@/utils/sgTime.js';
 
 const ALL_SLOTS = [
   { value: '10:00', label: '10:00 AM' },
@@ -177,27 +178,27 @@ export default {
       return this.commonCarData[this.formData.make] || [];
     },
     minDate() {
-      return new Date().toISOString().split('T')[0]
+      return sgTodayStr()
     },
     maxDate() {
-      const oneMonth = new Date()
+      const oneMonth = sgNow()
       oneMonth.setMonth(oneMonth.getMonth() + 1)
-      return oneMonth.toISOString().split('T')[0]
+      return `${oneMonth.getFullYear()}-${String(oneMonth.getMonth() + 1).padStart(2, '0')}-${String(oneMonth.getDate()).padStart(2, '0')}`
     },
     isSunday() {
       if (!this.formData.date) return false
-      return new Date(this.formData.date + 'T00:00:00').getDay() === 0
+      return sgDateFromYmd(this.formData.date).getUTCDay() === 0
     },
     isSaturday() {
       if (!this.formData.date) return false
-      return new Date(this.formData.date + 'T00:00:00').getDay() === 6
+      return sgDateFromYmd(this.formData.date).getUTCDay() === 6
     },
     isToday() {
       if (!this.formData.date) return false
-      return this.formData.date === new Date().toISOString().split('T')[0]
+      return this.formData.date === sgTodayStr()
     },
     currentHour() {
-      return new Date().getHours()
+      return sgHourNow()
     },
     timeSlots() {
       if (!this.formData.date || this.isSunday) return []

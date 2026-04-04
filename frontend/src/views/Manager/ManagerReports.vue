@@ -322,6 +322,7 @@
 <script>
 import { supabase } from '@/supabase.js'
 import '@/assets/managerReports.css'
+import { sgLocaleDate, sgNow } from '@/utils/sgTime.js'
 
 const PAGE_SIZE = 8
 let filterIdCounter = 1
@@ -622,7 +623,7 @@ export default {
 
     formatDate(value) {
       if (!value) return ''
-      return new Date(value).toLocaleDateString('en-SG', {
+      return sgLocaleDate(value, 'en-SG', {
         day: '2-digit',
         month: 'short',
         year: 'numeric'
@@ -634,7 +635,7 @@ export default {
       const parts = String(value).split(':')
       const hours = Number(parts[0] || 0)
       const minutes = Number(parts[1] || 0)
-      const date = new Date()
+      const date = sgNow()
       date.setHours(hours, minutes, 0, 0)
       return date.toLocaleTimeString('en-SG', {
         hour: 'numeric',

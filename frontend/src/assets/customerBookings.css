@@ -1802,3 +1802,26 @@
   padding: 3px 10px;
   border-radius: 999px;
 }
+
+.jc-card-notes-box {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #aaa);
+  background: var(--input-bg, rgba(255,255,255,0.05));
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.jc-notes-box {
+  font-size: 0.875rem;
+  color: var(--text-primary, #e0e0e0);
+  background: var(--input-bg, rgba(255,255,255,0.05));
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+  border-radius: 6px;
+  padding: 0.625rem 0.875rem;
+  line-height: 1.6;
+  min-height: 60px;
+  white-space: pre-wrap;
+}
