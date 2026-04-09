@@ -538,3 +538,154 @@
     transform: rotate(360deg);
   }
 }
+
+/* ═══════════════════════════ DASHBOARD ═══════════════════════════ */
+
+.dashboard-section {
+  margin-bottom: 24px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-card {
+  background: #eeeee8;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.dashboard-card-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #32353b;
+  margin-bottom: 16px;
+}
+
+.dashboard-loading {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.dashboard-empty {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+/* ── Donut ── */
+.donut-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.donut-svg {
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.donut-center-num {
+  font-size: 22px;
+  font-weight: 700;
+  fill: #111827;
+}
+
+.donut-center-label {
+  font-size: 9px;
+  fill: #9ca3af;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #3063b7;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-val {
+  margin-left: auto;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+}
+
+/* ── Bar charts ── */
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bar-label {
+  font-size: 0.8rem;
+  color: #374151;
+  width: 90px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-track {
+  flex: 1;
+  background: #f4f6f9;
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #2480f0;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.bar-fill--purple {
+  background: #fb7d48;
+}
+
+.bar-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #111827;
+  width: 24px;
+  text-align: right;
+}
