@@ -847,7 +847,27 @@ export default {
     },
 
     async confirmProceed() {
+<<<<<<< Updated upstream
       if (!this.confirmModal.job || !this.confirmModal.targetStatus) return;
+=======
+      if (this.confirmModal.job && this.confirmModal.targetStatus) {
+        try {
+          const orderId = this.confirmModal.job.id
+          const newStatus = this.confirmModal.targetStatus
+          
+          console.log('🔄 Calling:', `/api/job-orders/${orderId}/status`)
+          
+          const response = await fetch(`http://localhost:3000/api/job-orders/${orderId}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: newStatus,
+              customerEmail: this.confirmModal.job.customerEmail || '',
+              customerName: this.confirmModal.job.customerName || '',
+              licensePlate: this.confirmModal.job.licensePlate || ''
+            })
+          })
+>>>>>>> Stashed changes
 
       const { job, targetStatus } = this.confirmModal;
       const token = localStorage.getItem('token');
