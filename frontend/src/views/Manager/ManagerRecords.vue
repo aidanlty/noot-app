@@ -1,15 +1,15 @@
 <template>
-  <div class="mr-container manager-reports-page">
+  <div class="mr-container manager-records-page">
     <div class="mr-header">
-      <h1>📝 Manager Reports</h1>
+      <h1>📝 Historical Record Retrieval</h1>
       <p class="mr-subtitle">Retrieve completed appointments and job orders.</p>
     </div>
 
-    <section class="reports-search-panel">
-      <div class="top-row-reports-section">
-        <div class="reports-section">
-          <div class="reports-section-title">Select Record Type <span style="color:orangered">*</span> </div>
-          <div class="reports-controls record-type-row">
+    <section class="records-search-panel">
+      <div class="top-row-records-section">
+        <div class="records-section">
+          <div class="records-section-title">Select Record Type <span style="color:orangered">*</span> </div>
+          <div class="records-controls record-type-row">
             <button type="button" class="record-type-btn" :class="{ active: filters.type === 'appointments' }"
               @click="setType('appointments')">
               Appointments
@@ -21,9 +21,9 @@
           </div>
         </div>
 
-        <div class="reports-section">
+        <div class="records-section">
           <div class="date-range-header">
-            <div class="reports-section-title">Date Range
+            <div class="records-section-title">Date Range
             </div>
             <button v-if="filters.dateFrom || filters.dateTo" type="button" class="clear-dates-btn"
               @click="filters.dateFrom = ''; filters.dateTo = ''">
@@ -31,23 +31,23 @@
             </button>
           </div>
           <div class="date-range-row">
-            <div class="reports-controls date-field-group">
+            <div class="records-controls date-field-group">
               <label class="field-label" for="fromDate">From</label>
-              <input id="fromDate" v-model="filters.dateFrom" type="date" class="date-input report-input"
+              <input id="fromDate" v-model="filters.dateFrom" type="date" class="date-input record-input"
                 :max="filters.dateTo || '2999-12-31'" />
             </div>
 
             <div class="date-field-group">
               <label class="field-label" for="toDate">To</label>
-              <input id="toDate" v-model="filters.dateTo" type="date" class="date-input report-input"
+              <input id="toDate" v-model="filters.dateTo" type="date" class="date-input record-input"
                 :max="'2999-12-31'" :min="filters.dateFrom" />
             </div>
           </div>
         </div>
       </div>
-      <div class="reports-section">
+      <div class="records-section">
         <div class="additional-filters-header">
-          <div class="reports-section-title">Additional Filters</div>
+          <div class="records-section-title">Additional Filters</div>
           <button v-if="filters.advanced.length < filterOptions.length" type="button" class="add-filter-btn"
             @click="addAdditionalFilter">+</button>
         </div>
@@ -60,12 +60,12 @@
           <div v-for="(filter, index) in filters.advanced" :key="filter.id" class="additional-filter-row">
             <div class="additional-filter-index">{{ index + 1 }}</div>
 
-            <select v-model="filter.field" class="additional-filter-select report-input">
+            <select v-model="filter.field" class="additional-filter-select record-input">
               <option v-for="opt in availableFilterOptions(filter.id)" :key="opt.value" :value="opt.value">{{ opt.label
                 }}</option>
             </select>
 
-            <input v-model.trim="filter.value" type="text" class="additional-filter-input report-input"
+            <input v-model.trim="filter.value" type="text" class="additional-filter-input record-input"
               :placeholder="getFilterPlaceholder(filter.field)" />
 
             <button type="button" class="remove-filter-btn" @click="removeAdditionalFilter(filter.id)">
@@ -75,7 +75,7 @@
         </div>
       </div>
 
-      <div class="reports-summary-row">
+      <div class="records-summary-row">
         <button class="search-btn"
           @click="filters.type === 'appointments' ? fetchAppointments() : fetchJobOrders()">Search</button>
         <div v-if="currentSourceRecords.length >= 0 && searchBtnClicked && !pageLoading" class="appt-count">
@@ -306,14 +306,14 @@
 <script>
 import '@/assets/jobCards.css'
 import '@/assets/managerAppointments.css'
-import '@/assets/managerReports.css'
+import '@/assets/managerRecords.css'
 import { sgLocaleDate, sgNow } from '@/utils/sgTime.js'
 
 const PAGE_SIZE = 8
 let filterIdCounter = 1
 
 export default {
-  name: 'ManagerReports',
+  name: 'ManagerRecords',
 
   data() {
     return {
@@ -405,7 +405,7 @@ export default {
           if (f.value) params.append(f.field, f.value)
         })
 
-        const res = await fetch(`http://localhost:3000/api/manager/reports/appointments?${params}`, {
+        const res = await fetch(`http://localhost:3000/api/manager/records/appointments?${params}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -460,7 +460,7 @@ export default {
           if (f.value) params.append(f.field, f.value)
         })
 
-        const res = await fetch(`http://localhost:3000/api/manager/reports/jobOrders?${params}`, {
+        const res = await fetch(`http://localhost:3000/api/manager/records/jobOrders?${params}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const result = await res.json()

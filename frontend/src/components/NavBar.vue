@@ -29,7 +29,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-xl-0">
 
         <!-- PUBLIC MENU (GUEST) -->
-        <li v-if="!isLoggedIn" class="nav-item">
+        <!-- <li v-if="!isLoggedIn" class="nav-item">
           <router-link to="/" class="nav-link" active-class="active">Home</router-link>
         </li>
         <li v-if="!isLoggedIn" class="nav-item">
@@ -46,7 +46,7 @@
         </li>
         <li v-if="!isLoggedIn" class="nav-item">
           <router-link to="/contact" class="nav-link" active-class="active">Contact</router-link>
-        </li>
+        </li> -->
 
         <!-- CUSTOMER MENU -->
         <li v-if="isCustomer" class="nav-item">
@@ -70,7 +70,7 @@
           <router-link to="/jobCards" class="nav-link" active-class="active">Job Cards</router-link>
         </li>
         <li v-if="isManager" class="nav-item">
-          <router-link to="/managerReports" class="nav-link" active-class="active">Reports</router-link>
+          <router-link to="/managerRecords" class="nav-link" active-class="active">Records</router-link>
         </li>
 
         <!-- TECHNICIAN MENU -->

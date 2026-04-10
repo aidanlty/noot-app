@@ -157,8 +157,8 @@ module.exports = (supabase) => {
     }
   })
 
-  // GET routes for ManagerReports
-  router.get('/reports/appointments', requireRole(supabase, ['manager']), async (req, res) => {
+  // GET routes for ManagerRecords
+  router.get('/records/appointments', requireRole(supabase, ['manager']), async (req, res) => {
     try {
       const { dateFrom, dateTo, customerName, vehicleName, licensePlate, assignedTechnician, recordId } = req.query
 
@@ -211,12 +211,12 @@ module.exports = (supabase) => {
 
       res.status(200).json({ message: 'Appointments retrieved successfully', data: results })
     } catch (err) {
-      console.error('Reports appointments error:', err)
+      console.error('Records appointments error:', err)
       res.status(500).json({ error: err.message })
     }
   })
 
-  router.get('/reports/jobOrders', requireRole(supabase, ['manager']), async (req, res) => {
+  router.get('/records/jobOrders', requireRole(supabase, ['manager']), async (req, res) => {
     try {
       const { dateFrom, dateTo, customerName, vehicleName, licensePlate, assignedTechnician, recordId } = req.query
 
@@ -286,7 +286,7 @@ module.exports = (supabase) => {
 
       res.status(200).json({ message: 'Job orders retrieved successfully', data: results })
     } catch (err) {
-      console.error('Reports job orders error:', err)
+      console.error('Records job orders error:', err)
       res.status(500).json({ error: err.message })
     }
   })

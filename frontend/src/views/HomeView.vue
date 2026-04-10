@@ -135,7 +135,7 @@ const serviceItems = [
         <p class="cta-eyebrow">Ready to Start?</p>
         <h2 class="cta-title">Book Your Service</h2>
         <p class="cta-sub">Experience excellence with Porschify's tailored automotive care.</p>
-        <a href="#contact" class="cta-btn">Get a Quote</a>
+        <router-link to="/login" class="cta-bin">Get a Quote</router-link>
       </div>
     </section>
 
@@ -469,6 +469,10 @@ const serviceItems = [
   padding: clamp(4rem, 10vw, 8rem) 0;
   background:#000;
   border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.cta-bin {
+  color: #fdc601;
 }
 
 .cta-inner {

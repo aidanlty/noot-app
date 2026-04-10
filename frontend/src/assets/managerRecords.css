@@ -1,4 +1,4 @@
-body:has(.manager-reports-page) {
+body:has(.manager-records-page) {
   place-items: start;
 }
 
@@ -10,7 +10,7 @@ body:has(.manager-reports-page) {
 
 }
 
-.manager-reports-page {
+.manager-records-page {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -38,7 +38,7 @@ body:has(.manager-reports-page) {
   font-size: 0.95rem;
 }
 
-.reports-search-panel {
+.records-search-panel {
   background: #171717;
   border: 1px solid #2c2c2c;
   border-radius: 16px;
@@ -48,7 +48,7 @@ body:has(.manager-reports-page) {
   gap: 1.25rem;
 }
 
-.top-row-reports-section {
+.top-row-records-section {
   display: flex;
   margin-bottom: 2rem;
   align-items: flex-start;
@@ -57,13 +57,13 @@ body:has(.manager-reports-page) {
   flex-wrap: wrap;
 }
 
-.reports-section {
+.records-section {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
 }
 
-.reports-section-title {
+.records-section-title {
   padding: 0.75rem 0;
   font-size: 0.82rem;
   font-weight: 700;
@@ -93,7 +93,7 @@ body:has(.manager-reports-page) {
 
 .record-type-row,
 .date-range-row,
-.reports-summary-row {
+.records-summary-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.9rem;
@@ -184,7 +184,7 @@ body:has(.manager-reports-page) {
   font-weight: 600;
 }
 
-.report-input,
+.record-input,
 .date-input {
   width: 100%;
   border: 1px solid #343434;
@@ -196,7 +196,7 @@ body:has(.manager-reports-page) {
   font: inherit;
 }
 
-.report-input:focus,
+.record-input:focus,
 .date-input:focus,
 .additional-filter-select:focus,
 .additional-filter-input:focus {
