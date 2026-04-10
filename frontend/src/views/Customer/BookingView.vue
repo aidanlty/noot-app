@@ -295,8 +295,11 @@ export default {
           return
         }
 
+        await this.notifyManagerNewAppointment()
+
         alert('Booking confirmed!')
         this.resetForm()
+        
       } catch (error) {
         console.error('Error:', error)
         alert('Something went wrong. Please try again.')
@@ -320,7 +323,21 @@ export default {
       this.showCustomMakeInput = false;
       this.showCustomModelInput = false;
       this.bookedSlots = [];
+    },
+    async notifyManagerNewAppointment() {
+    try {
+      await fetch('http://localhost:3000/api/email/manager-new-appointment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({}),
+      })
+    } catch (err) {
+      console.error('Manager email failed:', err)
     }
+  },
   }
 }
 </script>

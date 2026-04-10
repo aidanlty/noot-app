@@ -9,7 +9,7 @@ const PORT = 3000
 app.use(express.json())
 
 // Import email service
-const { sendStatusEmail } = require('./emailService.js')
+const { sendStatusEmail, sendMgrNewAppointmentEmail } = require('./emailService.js')
 
 app.use((req, res, next) => {
   if (!req.body) req.body = {}
@@ -171,6 +171,29 @@ app.post('/api/appointments/:appointmentId/status', async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' })
   }
 })
+
+// POST /api/email/manager-new-appointment
+// Generic notification - no customer details needed
+app.post('/api/email/manager-new-appointment', async (req, res) => {
+  console.log('📧 Manager new appointment notification triggered');
+  
+  try {
+    const { sendMgrNewAppointmentEmail } = require('./emailService'); // adjust path
+    
+    await sendMgrNewAppointmentEmail();
+    
+    res.json({ 
+      success: true, 
+      message: 'Manager notified successfully' 
+    });
+  } catch (error) {
+    console.error('❌ Manager email error:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to send manager notification' 
+    });
+  }
+});
 
 // Routes (BEFORE custom routes to avoid conflicts)
 app.use('/api/auth', require('./routes/auth')(supabase))

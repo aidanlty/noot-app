@@ -977,23 +977,32 @@ export default {
     },
     async saveAppointment() {
       if (this.editIsSameAsOriginal) return
+
       try {
         const token = localStorage.getItem('token')
         const response = await fetch(`http://localhost:3000/api/customer/editAppointment/${this.modal.booking.id}`, {
           method: 'PUT',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
             appointment_date: this.editForm.appointmentDate,
             appointment_time: this.editForm.appointmentTime,
           }),
         })
+
         const json = await response.json()
         if (!response.ok) throw new Error(json.error || json.message)
+
         const idx = this.bookings.findIndex(b => b.id === this.modal.booking.id)
         if (idx !== -1) {
           this.bookings[idx].appointmentDate = this.editForm.appointmentDate
           this.bookings[idx].appointmentTime = this.editForm.appointmentTime
         }
+
+        await this.notifyManagerNewAppointment()
+
         alert('Appointment updated successfully!')
         this.closeModal()
       } catch (err) {
@@ -1007,16 +1016,20 @@ export default {
         this.closeModal()
         return
       }
+
       try {
         const token = localStorage.getItem('token')
         const response = await fetch(`http://localhost:3000/api/customer/cancelAppointment/${this.modal.booking.id}`, {
           method: 'PUT',
-          headers: { 'Authorization': `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         })
+
         const json = await response.json()
         if (!response.ok) throw new Error(json.error || json.message)
+
         const idx = this.bookings.findIndex(b => b.id === this.modal.booking.id)
         if (idx !== -1) this.bookings[idx].status = 'cancelled'
+        
         alert('Appointment cancelled successfully!')
         this.closeModal()
       } catch (err) {
