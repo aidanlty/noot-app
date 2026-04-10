@@ -1,0 +1,443 @@
+/* ═══════════════════════════════════════════
+   MANAGER DASHBOARD — managerDashboard.css
+═══════════════════════════════════════════ */
+
+.md-container {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.manager-dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Header ── */
+.md-header {
+  background: #1c1c1c;
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+  padding: 1.5rem 2rem;
+  margin-top: 4.5rem;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.md-header h1 {
+  font-size: 2.2rem;
+  color: #ffd700;
+  margin: 0;
+  font-weight: 700;
+}
+
+.md-subtitle {
+  margin: 0.35rem 0 0;
+  color: #9ca3af;
+  font-size: 0.95rem;
+}
+
+.md-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  background: #232323;
+  color: #d1d5db;
+  font-size: 0.85rem;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.md-refresh-btn:hover:not(:disabled) {
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+.md-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.md-refresh-btn span {
+  display: inline-block;
+  font-size: 1rem;
+}
+
+.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════ KPI CARDS ══════════════════ */
+
+.kpi-section {
+  margin-bottom: 0;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 500px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+.kpi-card {
+  background: #171717;
+  border: 1px solid #2c2c2c;
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  transition: border-color 0.15s;
+}
+
+.kpi-card:hover {
+  border-color: #ffd700;
+}
+
+.kpi-icon {
+  display: none;
+}
+
+.kpi-body {
+  min-width: 0;
+  width: 100%;
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #c9a600;
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.kpi-sub {
+  font-size: 0.72rem;
+  color: #4b5563;
+  margin-top: 4px;
+}
+
+/* ══════════════════ SHARED CARD ══════════════════ */
+
+.dashboard-section {
+  margin-bottom: 0;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.dashboard-grid--2col {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid,
+  .dashboard-grid--2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-card {
+  background: #171717;
+  border: 1px solid #2c2c2c;
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.dashboard-card-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-loading {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.dashboard-empty {
+  color: #4b5563;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ══════════════════ DONUT ══════════════════ */
+
+.donut-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.donut-svg {
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.donut-center-num {
+  font-size: 22px;
+  font-weight: 700;
+  fill: #f3f4f6;
+}
+
+.donut-center-label {
+  font-size: 9px;
+  fill: #9ca3af;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #d1d5db;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-val {
+  margin-left: auto;
+  font-weight: 600;
+  color: #f3f4f6;
+  white-space: nowrap;
+}
+
+/* ══════════════════ BAR CHARTS (shared by funnel + vehicle + services) ══════════════════ */
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bar-label {
+  font-size: 0.8rem;
+  color: #d1d5db;
+  width: 90px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-track {
+  flex: 1;
+  background: #2a2a2a;
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #ffd700;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* Top Services uses a slightly different gold shade to distinguish */
+.bar-fill--alt {
+  background: #f5c542;
+  opacity: 0.85;
+}
+
+.bar-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #f3f4f6;
+  width: 24px;
+  text-align: right;
+}
+
+/* ══════════════════ FUNNEL NOTE ══════════════════ */
+
+.funnel-note {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px dashed #2a2a2a;
+}
+
+.funnel-note strong {
+  color: #ffd700;
+}
+
+/* ══════════════════ TREND CHART ══════════════════ */
+
+.trend-card {
+  /* full-width single card, inherits .dashboard-card */
+}
+
+.trend-chart {
+  display: flex;
+  gap: 8px;
+  height: 180px;
+  align-items: stretch;
+}
+
+.trend-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.y-tick {
+  font-size: 0.68rem;
+  color: #4b5563;
+  text-align: right;
+  line-height: 1;
+}
+
+.trend-bars {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.trend-gridlines {
+  position: absolute;
+  inset: 0;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.trend-gridline {
+  height: 1px;
+  background: #232323;
+  width: 100%;
+}
+
+.trend-bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.trend-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.trend-bar {
+  width: 100%;
+  background: #ffd700;
+  border-radius: 4px 4px 0 0;
+  min-height: 3px;
+  transition: height 0.5s ease;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+  opacity: 0.9;
+}
+
+.trend-bar:hover {
+  opacity: 1;
+}
+
+.trend-bar-val {
+  position: absolute;
+  top: -18px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.trend-bar-label {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-top: 6px;
+  text-align: center;
+  height: 18px;
+  line-height: 18px;
+  width: 100%;
+  white-space: nowrap;
+}
+
+/* ══════════════════ PLACEHOLDER CARD ══════════════════ */
+
+/* .bar-card--placeholder {
+  border-style: dashed;
+  border-color: #2a2a2a;
+  opacity: 0.6;
+} */

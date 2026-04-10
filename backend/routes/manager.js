@@ -65,7 +65,7 @@ module.exports = (supabase) => {
     }
   })
 
-// get all appointments with customer and technician
+  // get all appointments with customer and technician
   router.get('/getAllAppointments', requireRole(supabase, ['manager']), async (req, res) => {
     try {
       const { data, error } = await supabase
@@ -91,34 +91,34 @@ module.exports = (supabase) => {
       res.status(500).json({ error: err.message })
     }
   })
-  
+
   // update technician id for appointment
   router.put('/:appointmentId/technician', requireRole(supabase, ['manager']), async (req, res) => {
-      try {
+    try {
 
       const { appointmentId } = req.params
       const { technician_id } = req.body
 
       if (!technician_id) {
-          return res.status(400).json({ message: 'technician_id is required' })
+        return res.status(400).json({ message: 'technician_id is required' })
       }
 
       const { data, error } = await supabase
-          .from('Appointments')
-          .update({ technician_id })
-          .eq('id', appointmentId)
-          .select()
-          .single()
+        .from('Appointments')
+        .update({ technician_id })
+        .eq('id', appointmentId)
+        .select()
+        .single()
 
       if (error) return res.status(400).json({ error: error.message })
       if (!data) return res.status(404).json({ message: 'Appointment not found' })
 
       res.json({ message: 'Technician updated successfully', data })
-      } catch (err) {
+    } catch (err) {
       res.status(500).json({ error: err.message })
-      }
+    }
   })
-  
+
   // manager cancel appt
   router.put('/cancelAppointment/:id', requireRole(supabase, ['manager']), async (req, res) => {
     try {
@@ -139,9 +139,9 @@ module.exports = (supabase) => {
         return res.status(400).json({ message: 'Appointment is already cancelled' })
       }
 
-     const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('Appointments')
-        .update({ 
+        .update({
           status: 'cancelled',
           cancel_reason: cancel_reason ?? null
         })
@@ -149,7 +149,7 @@ module.exports = (supabase) => {
         .select()
         .single()
 
-     if (error) return res.status(400).json({ error: error.message })
+      if (error) return res.status(400).json({ error: error.message })
       res.status(200).json({ message: 'Appointment cancelled successfully', data })
     } catch (err) {
       console.error('Cancel appointment error:', err)
@@ -157,6 +157,140 @@ module.exports = (supabase) => {
     }
   })
 
+  // GET routes for ManagerReports
+  router.get('/reports/appointments', requireRole(supabase, ['manager']), async (req, res) => {
+    try {
+      const { dateFrom, dateTo, customerName, vehicleName, licensePlate, assignedTechnician, recordId } = req.query
 
-return router
+      let query = supabase
+        .from('Appointments')
+        .select(`
+          *,
+          Profiles!Appointments_customer_id_fkey (
+            ID,
+            Name,
+            Email
+          ),
+          TechnicianProfile:Profiles!Appointments_technician_id_fkey (
+            ID,
+            Name,
+            Email
+          )
+        `)
+        .eq('status', 'completed')
+
+      if (dateFrom) query = query.gte('appointment_date', dateFrom)
+      if (dateTo) query = query.lte('appointment_date', dateTo)
+      if (recordId) query = query.eq('id', recordId)
+
+      if (vehicleName) {
+        const words = vehicleName.trim().split(/\s+/)
+        words.forEach(word => {
+          query = query.or(
+            `vehicle_year.ilike.%${word}%,vehicle_make.ilike.%${word}%,vehicle_model.ilike.%${word}%`
+          )
+        })
+      }
+
+      if (licensePlate) query = query.ilike('vehicle_license_plate', `%${licensePlate}%`)
+
+      const { data, error } = await query.order('appointment_date', { ascending: false }).order('appointment_time', { ascending: false })
+      if (error) return res.status(500).json({ error: error.message })
+
+      let results = data || []
+
+      if (customerName) {
+        const term = customerName.toLowerCase()
+        results = results.filter(a => (a.Profiles?.Name || '').toLowerCase().includes(term))
+      }
+
+      if (assignedTechnician) {
+        const term = assignedTechnician.toLowerCase()
+        results = results.filter(a => (a.TechnicianProfile?.Name || '').toLowerCase().includes(term))
+      }
+
+      res.status(200).json({ message: 'Appointments retrieved successfully', data: results })
+    } catch (err) {
+      console.error('Reports appointments error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  router.get('/reports/jobOrders', requireRole(supabase, ['manager']), async (req, res) => {
+    try {
+      const { dateFrom, dateTo, customerName, vehicleName, licensePlate, assignedTechnician, recordId } = req.query
+
+      let query = supabase
+        .from('Job_Orders')
+        .select(`
+          *,
+          appointment:Appointments!Job_Orders_appointment_id_fkey (
+            *,
+            CustomerProfile:Profiles!Appointments_customer_id_fkey (
+              ID,
+              Name,
+              Email
+            ),
+            DiagnoseTechnicianProfile:Profiles!Appointments_technician_id_fkey (
+              ID,
+              Name,
+              Email
+            )
+          ),
+          ServiceTechnicianProfile:Profiles!Job_Orders_service_technician_id_fkey (
+            ID,
+            Name,
+            Email
+          )
+        `)
+        .eq('Order_Status', 'Check Out')
+
+      if (recordId) query = query.eq('Order_ID', recordId)
+      if (dateFrom) query = query.gte('Check_Out', dateFrom)
+      if (dateTo) query = query.lte('Check_Out', dateTo)
+
+      const { data, error } = await query.order('Check_Out', { ascending: false, nullsFirst: false })
+      if (error) return res.status(500).json({ error: error.message })
+
+      let results = data || []
+
+      if (customerName) {
+        const term = customerName.toLowerCase()
+        results = results.filter(j => (j.appointment?.CustomerProfile?.Name || '').toLowerCase().includes(term))
+      }
+
+      if (vehicleName) {
+        const words = vehicleName.trim().toLowerCase().split(/\s+/)
+        results = results.filter(j => {
+          const combined = [
+            j.appointment?.vehicle_year,
+            j.appointment?.vehicle_make,
+            j.appointment?.vehicle_model
+          ].filter(Boolean).join(' ').toLowerCase()
+          return words.every(word => combined.includes(word))
+        })
+      }
+
+      if (licensePlate) {
+        const term = licensePlate.toLowerCase()
+        results = results.filter(j => (j.appointment?.vehicle_license_plate || '').toLowerCase().includes(term))
+      }
+
+      if (assignedTechnician) {
+        const term = assignedTechnician.toLowerCase()
+        results = results.filter(j =>
+          (j.ServiceTechnicianProfile?.Name || '').toLowerCase().includes(term) ||
+          (j.appointment?.DiagnoseTechnicianProfile?.Name || '').toLowerCase().includes(term)
+        )
+      }
+
+      res.status(200).json({ message: 'Job orders retrieved successfully', data: results })
+    } catch (err) {
+      console.error('Reports job orders error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+
+  return router
 }
