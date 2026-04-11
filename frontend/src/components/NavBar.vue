@@ -1,24 +1,13 @@
 <template>
-  <nav
-    class="navbar navbar-expand-xl"
-    :class="{ 'navbar-scrolled': scrolled }"
-    role="navigation"
-  >
+  <nav class="navbar navbar-expand-xl" :class="{ 'navbar-scrolled': scrolled }" role="navigation">
     <!-- Brand/Logo -->
     <router-link :to="brandLink" class="navbar-brand">
       <strong>{{ isStaff ? 'PORSCHIFY ADMIN' : 'PORSCHIFY' }}</strong>
     </router-link>
 
     <!-- BOOTSTRAP HAMBURGER -->
-    <button
-      class="navbar-toggler d-xl-none"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#mainNavbar"
-      aria-controls="mainNavbar"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
+    <button class="navbar-toggler d-xl-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+      aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="toggler-bar"></span>
       <span class="toggler-bar"></span>
       <span class="toggler-bar"></span>
@@ -27,26 +16,6 @@
     <!-- COLLAPSIBLE NAV -->
     <div class="collapse navbar-collapse" id="mainNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-xl-0">
-
-        <!-- PUBLIC MENU (GUEST) -->
-        <!-- <li v-if="!isLoggedIn" class="nav-item">
-          <router-link to="/" class="nav-link" active-class="active">Home</router-link>
-        </li>
-        <li v-if="!isLoggedIn" class="nav-item">
-          <router-link to="/services" class="nav-link" active-class="active">Services</router-link>
-        </li>
-        <li v-if="!isLoggedIn" class="nav-item">
-          <router-link to="/pricing" class="nav-link" active-class="active">Pricing</router-link>
-        </li>
-        <li v-if="!isLoggedIn" class="nav-item">
-          <router-link to="/gallery" class="nav-link" active-class="active">Gallery</router-link>
-        </li>
-        <li v-if="!isLoggedIn" class="nav-item">
-          <router-link to="/about" class="nav-link" active-class="active">About</router-link>
-        </li>
-        <li v-if="!isLoggedIn" class="nav-item">
-          <router-link to="/contact" class="nav-link" active-class="active">Contact</router-link>
-        </li> -->
 
         <!-- CUSTOMER MENU -->
         <li v-if="isCustomer" class="nav-item">
@@ -64,7 +33,9 @@
           <router-link to="/manager-dashboard" class="nav-link" active-class="active">Manager Dashboard</router-link>
         </li>
         <li v-if="isManager" class="nav-item">
-          <router-link to="/managerAppointments" class="nav-link" active-class="active">Appointments</router-link>
+          <router-link to="/managerAppointments" class="nav-link" active-class="active">
+            Appointments<span v-if="unreadApptCount > 0" class="appt-badge">{{ unreadApptCount }}</span>
+          </router-link>
         </li>
         <li v-if="isManager" class="nav-item">
           <router-link to="/jobCards" class="nav-link" active-class="active">Job Cards</router-link>
@@ -75,7 +46,8 @@
 
         <!-- TECHNICIAN MENU -->
         <li v-if="isTechnician" class="nav-item">
-          <router-link to="/technician-dashboard" class="nav-link" active-class="active">Technician Dashboard</router-link>
+          <router-link to="/technician-dashboard" class="nav-link" active-class="active">Technician
+            Dashboard</router-link>
         </li>
         <li v-if="isTechnician" class="nav-item">
           <router-link to="/technicianJobs" class="nav-link" active-class="active">My Jobs</router-link>
@@ -160,51 +132,104 @@
   </nav>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+<script>
 import { useRoute } from 'vue-router'
 import profileIcon from '@/assets/profile.svg'
 
-const props = defineProps<{
-  user: {
-    role: 'customer' | 'manager' | 'technician' | 'administrator'
-    loggedIn: boolean
-  } | null
-}>()
+export default {
+  name: 'NavBar',
 
-const emit = defineEmits<{ logout: [] }>()
+  props: {
+    user: {
+      type: Object,
+      default: null,
+    },
+  },
 
-const scrolled = ref(false)
+  emits: ['logout'],
 
-const handleScroll = () => {
-  scrolled.value = window.scrollY > 50
+  data() {
+    return {
+      scrolled: false,
+      profileIcon,
+      unreadApptCount: 0,
+      _pollTimer: null,
+    }
+  },
+
+  computed: {
+    isLoggedIn() { return this.user !== null },
+    isCustomer() { return this.user?.role === 'customer' },
+    isManager() { return this.user?.role === 'manager' || this.user?.role === 'administrator' },
+    isTechnician() { return this.user?.role === 'technician' },
+    isAdmin() { return this.user?.role === 'administrator' },
+    isStaff() { return this.isManager || this.isTechnician },
+
+    brandLink() {
+      if (this.user?.role === 'manager' || this.user?.role === 'administrator') return '/manager-dashboard'
+      if (this.user?.role === 'technician') return '/technician-dashboard'
+      return '/'
+    },
+  },
+
+  watch: {
+    '$route.fullPath'() {
+      const navbar = document.getElementById('mainNavbar')
+      const toggler = document.querySelector('.navbar-toggler')
+      if (navbar?.classList.contains('show')) {
+        navbar.classList.remove('show')
+        toggler?.setAttribute('aria-expanded', 'false')
+      }
+    },
+
+    user: {
+      immediate: true,
+      handler(newUser) {
+        const isManager = newUser?.role === 'manager' || newUser?.role === 'administrator'
+        if (isManager && !this._pollTimer) {
+          this.fetchUnreadCount()
+          this._pollTimer = setInterval(this.fetchUnreadCount, 30000)
+        }
+        if (!isManager) {
+          clearInterval(this._pollTimer)
+          this._pollTimer = null
+          this.unreadApptCount = 0
+        }
+      }
+    },
+  },
+
+  mounted() {
+    window.addEventListener('scroll', this.handleScroll)
+    if (this.isManager) {
+      this.fetchUnreadCount()
+    }
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.handleScroll)
+  },
+
+  methods: {
+    handleScroll() {
+      this.scrolled = window.scrollY > 50
+    },
+
+    async fetchUnreadCount() {
+      try {
+        const token = localStorage.getItem('token')
+        const res = await fetch('http://localhost:3000/api/manager/appointments/unread-count', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const json = await res.json()
+        console.log('unread count response:', json)
+        this.unreadApptCount = json.count ?? 0
+      } catch (err) {
+        console.error('Failed to fetch unread count:', err)
+      }
+    },
+  },
 }
-
-onMounted(() => window.addEventListener('scroll', handleScroll))
-onUnmounted(() => window.removeEventListener('scroll', handleScroll))
-
-const isLoggedIn  = computed(() => props.user !== null)
-const isCustomer  = computed(() => props.user?.role === 'customer')
-const isManager   = computed(() => props.user?.role === 'manager' || props.user?.role === 'administrator')
-const isTechnician = computed(() => props.user?.role === 'technician')
-const isAdmin     = computed(() => props.user?.role === 'administrator')
-const isStaff     = computed(() => isManager.value || isTechnician.value || isAdmin.value)
-
-const brandLink = computed(() => {
-  if (props.user?.role === 'manager' || props.user?.role === 'administrator') return '/manager-dashboard'
-  if (props.user?.role === 'technician') return '/technician-dashboard'
-  return '/'
-})
-
-const route = useRoute()
-watch(() => route.fullPath, () => {
-  const navbar  = document.getElementById('mainNavbar')
-  const toggler = document.querySelector('.navbar-toggler')
-  if (navbar?.classList.contains('show')) {
-    navbar.classList.remove('show')
-    toggler?.setAttribute('aria-expanded', 'false')
-  }
-})
 </script>
 
 <style scoped>
@@ -221,7 +246,7 @@ watch(() => route.fullPath, () => {
   padding: 0 clamp(1rem, 4vw, 3rem);
   height: 80px;
 
- 
+
   background: transparent;
   border-bottom: 1px solid transparent;
   transition: background 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease;
@@ -239,7 +264,7 @@ watch(() => route.fullPath, () => {
 .navbar-brand {
   font-size: clamp(1.3rem, 2.5vw, 1.75rem);
   font-weight: 800;
-  font-family:Georgia, 'Times New Roman', Times, serif;
+  font-family: Georgia, 'Times New Roman', Times, serif;
   color: #eec10e !important;
   text-decoration: none !important;
   flex-shrink: 0;
@@ -247,7 +272,7 @@ watch(() => route.fullPath, () => {
 
 .navbar-brand:hover {
   color: #ffffff !important;
-  background-color:transparent;
+  background-color: transparent;
 }
 
 
@@ -276,12 +301,12 @@ watch(() => route.fullPath, () => {
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background:#fdc601;
+  background: #fdc601;
   transition: width 0.3s ease;
 }
 
 .nav-link:hover {
-  color:#fdc601 !important;
+  color: #fdc601 !important;
   background: transparent;
   transform: none;
   box-shadow: none;
@@ -292,7 +317,7 @@ watch(() => route.fullPath, () => {
 }
 
 .nav-link.active {
-  color:#eec10e !important;
+  color: #eec10e !important;
   background: transparent;
 }
 
@@ -319,6 +344,23 @@ watch(() => route.fullPath, () => {
   background: #000;
   border-radius: 2px;
   transition: all 0.3s ease;
+}
+
+.appt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #eec10e;
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 /* ─── DESKTOP CTA BUTTONS ─────────────────────────────────── */
@@ -350,8 +392,8 @@ watch(() => route.fullPath, () => {
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  background:#eec10e;
-  color:#000 !important;
+  background: #eec10e;
+  color: #000 !important;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -360,9 +402,9 @@ watch(() => route.fullPath, () => {
 }
 
 .btn-login:hover {
-  background:#ffffff;
+  background: #ffffff;
   text-decoration: none;
-  color:#000 !important;
+  color: #000 !important;
 }
 
 .btn-logout {
@@ -371,9 +413,9 @@ watch(() => route.fullPath, () => {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background:#fdc601;
-  color: rgba(0,0,0,0.7) !important;
-  border: 2px solid rgba(0,0,0,0.4);
+  background: #fdc601;
+  color: rgba(0, 0, 0, 0.7) !important;
+  border: 2px solid rgba(0, 0, 0, 0.4);
   cursor: pointer;
   transition: all 0.25s ease;
   border-radius: 0;
@@ -395,9 +437,9 @@ watch(() => route.fullPath, () => {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  background:#fdc601;
+  background: #fdc601;
   color: #000 !important;
-  border: 2px solid rgba(0,0,0,0.5);
+  border: 2px solid rgba(0, 0, 0, 0.5);
   text-decoration: none;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -407,9 +449,9 @@ watch(() => route.fullPath, () => {
 
 .btn-profile:hover {
   background: transparent;
-  border-color:#fdc601;
+  border-color: #fdc601;
   text-decoration: none;
-  color:#fdc601 !important;
+  color: #fdc601 !important;
 }
 
 .profile-icon {
@@ -422,7 +464,7 @@ watch(() => route.fullPath, () => {
   background: transparent;
   border-bottom: 1px solid transparent;
   transition: background 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease;
-  font-family:Georgia, 'Times New Roman', Times, serif;
+  font-family: Georgia, 'Times New Roman', Times, serif;
 
 }
 
@@ -451,7 +493,7 @@ watch(() => route.fullPath, () => {
   font-size: 0.82rem !important;
   letter-spacing: 0.15em !important;
   text-transform: uppercase !important;
-  color: rgba(0,0,0,0.75) !important;
+  color: rgba(0, 0, 0, 0.75) !important;
   padding: 0.65rem 1rem !important;
   display: flex;
   align-items: center;
@@ -487,7 +529,7 @@ watch(() => route.fullPath, () => {
   font-weight: 600 !important;
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
-  color: rgba(0,0,0,0.65) !important;
+  color: rgba(0, 0, 0, 0.65) !important;
   padding: 0.65rem 1rem !important;
   cursor: pointer;
   transition: color 0.2s ease;

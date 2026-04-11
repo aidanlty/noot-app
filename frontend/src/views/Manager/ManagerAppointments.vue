@@ -22,13 +22,9 @@
 
       <!-- Status Tabs -->
       <div class="status-tabs">
-        <button
-          v-for="tab in statusTabs"
-          :key="tab.value"
-          class="status-tab"
+        <button v-for="tab in statusTabs" :key="tab.value" class="status-tab"
           :class="['status-tab--' + tab.value, { active: activeStatusTab === tab.value }]"
-          @click="setStatusTab(tab.value)"
-        >
+          @click="setStatusTab(tab.value)">
           <span class="tab-label">{{ tab.label }}</span>
           <span class="tab-badge">{{ getStatusCount(tab.value) }}</span>
         </button>
@@ -36,36 +32,21 @@
 
       <!-- Filter Bar -->
       <div class="filter-bar">
-        <button
-          v-for="f in filters"
-          :key="f.value"
-          class="filter-btn"
-          :class="{ active: activeFilter === f.value && !specificDate }"
-          @click="setFilter(f.value)"
-        >
+        <button v-for="f in filters" :key="f.value" class="filter-btn"
+          :class="{ active: activeFilter === f.value && !specificDate }" @click="setFilter(f.value)">
           {{ f.label }}
         </button>
 
         <div class="date-filter">
-          <input
-            type="date"
-            class="date-input"
-            :class="{ active: specificDate }"
-            v-model="specificDate"
-            @change="onDateChange"
-          />
+          <input type="date" class="date-input" :class="{ active: specificDate }" v-model="specificDate"
+            @change="onDateChange" />
           <button v-if="specificDate" class="clear-date" @click="clearDate">✕</button>
         </div>
 
-        <div class="search-filter">          
+        <div class="search-filter">
           <span class="search-icon">🔍</span>
-          <input
-            type="text"
-            class="search-input"
-            v-model="customerSearch"
-            placeholder="Search by customer name..."
-            @input="currentPage = 1"
-          />
+          <input type="text" class="search-input" v-model="customerSearch" placeholder="Search by customer name..."
+            @input="currentPage = 1" />
           <button v-if="customerSearch" class="clear-search" @click="clearSearch">✕</button>
         </div>
 
@@ -82,23 +63,20 @@
 
       <!-- List -->
       <div v-else class="appointments-list">
-        <div
-          v-for="appt in paginatedAppointments"
-          :key="appt.id"
-          class="appt-card"
-          :class="{
-            'today-card': isToday(appt.appointmentDate) && activeStatusTab === 'active',
-            'card--completed': appt.status === 'completed',
-            'card--cancelled': appt.status === 'cancelled',
-            'card--diagnose': appt.status === 'diagnose',
-          }"
-        >
+        <div v-for="appt in paginatedAppointments" :key="appt.id" class="appt-card" :class="{
+          'today-card': isToday(appt.appointmentDate) && activeStatusTab === 'active',
+          'card--completed': appt.status === 'completed',
+          'card--cancelled': appt.status === 'cancelled',
+          'card--diagnose': appt.status === 'diagnose',
+          'card--unread': !appt.diagnoseTech && activeStatusTab === 'active',
+        }">
           <div class="appt-time-col" :class="{
             'time-col--completed': appt.status === 'completed',
             'time-col--cancelled': appt.status === 'cancelled',
             'time-col--diagnose': appt.status === 'diagnose',
           }">
-            <span class="appt-day">{{ isToday(appt.appointmentDate) && activeStatusTab === 'active' ? 'Today' : getDayName(appt.appointmentDate) }}</span>
+            <span class="appt-day">{{ isToday(appt.appointmentDate) && activeStatusTab === 'active' ? 'Today' :
+              getDayName(appt.appointmentDate) }}</span>
             <span class="appt-time">{{ appt.appointmentTime }}</span>
           </div>
           <div class="appt-divider"></div>
@@ -107,17 +85,21 @@
               <h3 class="appt-title">{{ appt.customerName }}</h3>
               <span class="appt-id">#{{ appt.id }}</span>
               <span v-if="appt.status === 'completed'" class="status-badge status-badge--completed">✓ Completed</span>
-              <span v-else-if="appt.status === 'cancelled'" class="status-badge status-badge--cancelled">✕ Cancelled</span>
-              <span v-else-if="appt.status === 'diagnose'" class="status-badge status-badge--diagnose">🔬 Diagnose</span>
+              <span v-else-if="appt.status === 'cancelled'" class="status-badge status-badge--cancelled">✕
+                Cancelled</span>
+              <span v-else-if="appt.status === 'diagnose'" class="status-badge status-badge--diagnose">🔬
+                Diagnose</span>
             </div>
-            <p class="appt-vehicle">{{ appt.vehicleYear }} {{ appt.vehicleMake }} {{ appt.vehicleModel }} · {{ appt.licensePlate }}</p>
+            <p class="appt-vehicle">{{ appt.vehicleYear }} {{ appt.vehicleMake }} {{ appt.vehicleModel }} · {{
+              appt.licensePlate }}</p>
             <div v-if="appt.notes" class="jc-card-notes-box">📝 {{ appt.notes }}</div>
             <div class="appt-meta">
               <span class="meta-tag date-tag">{{ formatDate(appt.appointmentDate) }}</span>
               <span v-if="appt.diagnoseTech" class="meta-tag tech-assigned-tag">
                 👤 {{ appt.diagnoseTech }}
               </span>
-              <span v-else-if="activeStatusTab === 'active' && appt.status !== 'cancelled'" class="meta-tag tech-unassigned-tag">
+              <span v-else-if="activeStatusTab === 'active' && appt.status !== 'cancelled'"
+                class="meta-tag tech-unassigned-tag">
                 Diagnose Tech: Not Assigned
               </span>
               <span v-if="appt.cancelReason && appt.status === 'cancelled'" class="meta-tag cancel-reason-tag">
@@ -128,28 +110,16 @@
           <div class="appt-actions">
             <button class="btn-view" @click="openModal(appt)">View</button>
             <template v-if="activeStatusTab === 'active'">
-              <button
-                v-if="!appt.diagnoseTech"
-                class="btn-assign-tech"
-                @click="openAssignTech(appt)"
-              >
+              <button v-if="!appt.diagnoseTech" class="btn-assign-tech" @click="openAssignTech(appt)">
                 Assign
               </button>
-              <button
-                v-else
-                class="btn-change-tech"
-                @click="openAssignTech(appt)"
-              >
+              <button v-else class="btn-change-tech" @click="openAssignTech(appt)">
                 Change
               </button>
-              <button
-                v-if="isPast(appt.appointmentDate, appt.appointmentTime)"
-                class="btn-diagnose"
-                :class="{ 'btn-proceed--disabled': !appt.diagnoseTech }"
-                :disabled="!appt.diagnoseTech"
+              <button v-if="isPast(appt.appointmentDate, appt.appointmentTime)" class="btn-diagnose"
+                :class="{ 'btn-proceed--disabled': !appt.diagnoseTech }" :disabled="!appt.diagnoseTech"
                 :title="!appt.diagnoseTech ? 'Assign a technician before proceeding to diagnose' : ''"
-                @click="openDiagnoseConfirm(appt)"
-              >
+                @click="openDiagnoseConfirm(appt)">
                 Diagnose
               </button>
               <button class="btn-cancel-appt" @click="openCancelConfirm(appt)">Cancel</button>
@@ -162,13 +132,8 @@
       <div v-if="totalPages > 1" class="pagination-container">
         <button class="pagination-btn" @click="prevPage" :disabled="currentPage === 1">← Previous</button>
         <div class="pagination-info">
-          <button
-            v-for="page in totalPages"
-            :key="page"
-            class="pagination-page"
-            :class="{ active: currentPage === page }"
-            @click="goToPage(page)"
-          >{{ page }}</button>
+          <button v-for="page in totalPages" :key="page" class="pagination-page"
+            :class="{ active: currentPage === page }" @click="goToPage(page)">{{ page }}</button>
         </div>
         <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">Next →</button>
       </div>
@@ -232,7 +197,7 @@
             <div v-if="modal.appt.notes" class="detail-group">
               <label>Notes</label>
               <div class="jc-notes-box">{{ modal.appt.notes }}</div>
-            </div>            
+            </div>
           </div>
           <div class="modal-actions">
             <button class="btn-secondary" @click="closeModal">Close</button>
@@ -272,7 +237,10 @@
           <div class="modal-actions confirm-actions">
             <button class="btn-secondary" @click="closeAssignTech">Go Back</button>
             <button class="btn-confirm-assign" @click="submitAssignTech" :disabled="assignTech.submitting">
-              {{ assignTech.submitting ? 'Saving...' : (assignTech.appt && assignTech.appt.diagnoseTech ? 'Confirm Change' : 'Confirm Assign') }}
+              {{ assignTech.submitting ?
+                'Saving...' : (assignTech.appt && assignTech.appt.diagnoseTech ?
+                  'Confirm Change' : 'Confirm Assign')
+              }}
             </button>
           </div>
         </div>
@@ -318,8 +286,10 @@
             </p>
             <p v-if="diagnoseConfirm.submitError" class="reason-error">{{ diagnoseConfirm.submitError }}</p>
             <div class="modal-actions confirm-actions">
-              <button class="btn-secondary" @click="closeDiagnoseConfirm" :disabled="diagnoseConfirm.submitting">Go Back</button>
-              <button class="btn-confirm-assign" @click="createJobCard(diagnoseConfirm.appt)" :disabled="diagnoseConfirm.submitting">
+              <button class="btn-secondary" @click="closeDiagnoseConfirm" :disabled="diagnoseConfirm.submitting">Go
+                Back</button>
+              <button class="btn-confirm-assign" @click="createJobCard(diagnoseConfirm.appt)"
+                :disabled="diagnoseConfirm.submitting">
                 {{ diagnoseConfirm.submitting ? 'Creating...' : 'Confirm' }}
               </button>
             </div>
@@ -335,15 +305,12 @@
           <p class="confirm-desc">Select a reason for cancelling this appointment.</p>
           <div class="confirm-appt-info">
             <span class="confirm-name">{{ cancelConfirm.appt.customerName }}</span>
-            <span class="confirm-meta">{{ cancelConfirm.appt.vehicleYear }} {{ cancelConfirm.appt.vehicleMake }} {{ cancelConfirm.appt.vehicleModel }} · #{{ cancelConfirm.appt.id }}</span>
+            <span class="confirm-meta">{{ cancelConfirm.appt.vehicleYear }} {{ cancelConfirm.appt.vehicleMake }} {{
+              cancelConfirm.appt.vehicleModel }} · #{{ cancelConfirm.appt.id }}</span>
           </div>
           <div class="cancel-reasons">
-            <label
-              v-for="reason in cancelReasons"
-              :key="reason"
-              class="reason-option"
-              :class="{ selected: cancelConfirm.reason === reason }"
-            >
+            <label v-for="reason in cancelReasons" :key="reason" class="reason-option"
+              :class="{ selected: cancelConfirm.reason === reason }">
               <input type="radio" name="cancelReason" :value="reason" v-model="cancelConfirm.reason" />
               <span class="reason-label">{{ reason }}</span>
             </label>
@@ -351,7 +318,8 @@
           <p v-if="cancelConfirm.showError" class="reason-error">Please select a reason to continue.</p>
           <p v-if="cancelConfirm.submitError" class="reason-error">{{ cancelConfirm.submitError }}</p>
           <div class="modal-actions confirm-actions">
-            <button class="btn-secondary" @click="closeCancelConfirm" :disabled="cancelConfirm.submitting">Go Back</button>
+            <button class="btn-secondary" @click="closeCancelConfirm" :disabled="cancelConfirm.submitting">Go
+              Back</button>
             <button class="btn-confirm-cancel" @click="submitCancel" :disabled="cancelConfirm.submitting">
               {{ cancelConfirm.submitting ? 'Cancelling...' : 'Confirm Cancel' }}
             </button>
@@ -384,15 +352,15 @@ export default {
       now: sgNow(),
 
       statusTabs: [
-        { label: 'Active',    value: 'active'    },
+        { label: 'Active', value: 'active' },
         { label: 'Completed', value: 'completed' },
         { label: 'Cancelled', value: 'cancelled' },
       ],
       filters: [
-        { label: 'Today',      value: 'today' },
-        { label: 'This Week',  value: 'week'  },
+        { label: 'Today', value: 'today' },
+        { label: 'This Week', value: 'week' },
         { label: 'This Month', value: 'month' },
-        { label: 'All',        value: 'all'   },
+        { label: 'All', value: 'all' },
       ],
 
       // ── Technicians ──
@@ -458,7 +426,7 @@ export default {
     },
 
     tabAppointments() {
-      if (this.activeStatusTab === 'active')    return this.activeAppointments;
+      if (this.activeStatusTab === 'active') return this.activeAppointments;
       if (this.activeStatusTab === 'completed') return this.completedAppointments;
       if (this.activeStatusTab === 'cancelled') return this.cancelledAppointments;
       return this.appointments;
@@ -526,24 +494,24 @@ export default {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || json.message || `Server error ${res.status}`);
         this.appointments = (json.data || []).map(a => ({
-          id:              a.id,
-          customerId:      a.Profiles?.ID            || '',
-          customerName:    a.Profiles?.Name          || '',
-          customerEmail:   a.Profiles?.Email         || '',
-          phoneNumber:     a.phone_number            || '',
-          licensePlate:    a.vehicle_license_plate   || '',
-          vehicleMake:     a.vehicle_make            || '',
-          vehicleModel:    a.vehicle_model           || '',
-          vehicleYear:     a.vehicle_year            || '',
-          appointmentDate: a.appointment_date        || '',
-          appointmentTime: a.appointment_time        || '',
-          duration:        a.duration               || '',
-          status:          a.status                 || '',
-          diagnoseTech:    a.TechnicianProfile?.Name  || '',
-          diagnoseTechId:  a.TechnicianProfile?.ID    || '',
-          techEmail:       a.TechnicianProfile?.Email || '',
-          cancelReason:    a.cancel_reason           || null,
-          notes:           a.customer_notes          || null,
+          id: a.id,
+          customerId: a.Profiles?.ID || '',
+          customerName: a.Profiles?.Name || '',
+          customerEmail: a.Profiles?.Email || '',
+          phoneNumber: a.phone_number || '',
+          licensePlate: a.vehicle_license_plate || '',
+          vehicleMake: a.vehicle_make || '',
+          vehicleModel: a.vehicle_model || '',
+          vehicleYear: a.vehicle_year || '',
+          appointmentDate: a.appointment_date || '',
+          appointmentTime: a.appointment_time || '',
+          duration: a.duration || '',
+          status: a.status || '',
+          diagnoseTech: a.TechnicianProfile?.Name || '',
+          diagnoseTechId: a.TechnicianProfile?.ID || '',
+          techEmail: a.TechnicianProfile?.Email || '',
+          cancelReason: a.cancel_reason || null,
+          notes: a.customer_notes || null,
         }));
       } catch (err) {
         console.error('Error fetching appointments:', err);
@@ -684,9 +652,9 @@ export default {
         if (!res.ok) throw new Error(json.error || json.message || `Error ${res.status}`);
 
         const selectedTech = this.technicians.find(t => t.ID === this.assignTech.selectedTechId);
-        this.assignTech.appt.diagnoseTech   = selectedTech?.Name  || '';
-        this.assignTech.appt.diagnoseTechId = selectedTech?.ID    || '';
-        this.assignTech.appt.techEmail      = selectedTech?.Email || '';
+        this.assignTech.appt.diagnoseTech = selectedTech?.Name || '';
+        this.assignTech.appt.diagnoseTechId = selectedTech?.ID || '';
+        this.assignTech.appt.techEmail = selectedTech?.Email || '';
 
         this.closeAssignTech();
       } catch (err) {
@@ -736,7 +704,7 @@ export default {
         );
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || json.message || `Error ${res.status}`);
-        
+
         await this.notifyAppointmentStatusUpdate(
           this.cancelConfirm.appt.id,
           'cancelled',
@@ -809,7 +777,7 @@ export default {
 
     // ── Helpers ──
     getStatusCount(tabValue) {
-      if (tabValue === 'active')    return this.activeAppointments.length;
+      if (tabValue === 'active') return this.activeAppointments.length;
       if (tabValue === 'completed') return this.completedAppointments.length;
       if (tabValue === 'cancelled') return this.cancelledAppointments.length;
       return 0;
@@ -826,7 +794,10 @@ export default {
       const apptDate = sgDateTimeFrom(date, time);
       return this.now > apptDate;
     },
-    openModal(appt) { this.modal.appt = appt; this.modal.isOpen = true; },
+    openModal(appt) {
+      this.modal.appt = appt
+      this.modal.isOpen = true
+    },
     closeModal() { this.modal.isOpen = false; this.modal.appt = null; },
     formatDate(date) {
       if (!date) return 'N/A';

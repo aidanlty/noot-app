@@ -291,6 +291,22 @@ module.exports = (supabase) => {
     }
   })
 
+  // GET appointments without assigned diagnose tech, for NavBar badge
+  router.get('/appointments/unread-count', requireRole(supabase, ['manager']), async (req, res) => {
+    try {
+      const { count, error } = await supabase
+        .from('Appointments')
+        .select('id', { count: 'exact', head: true })
+        .is('technician_id', null)
+        .in('status', ['active', 'booked', 'appointment'])
+
+      if (error) return res.status(400).json({ error: error.message })
+      res.status(200).json({ count })
+    } catch (err) {
+      console.error('Unread count error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
 
   return router
 }
