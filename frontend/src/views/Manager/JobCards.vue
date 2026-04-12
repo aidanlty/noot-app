@@ -846,7 +846,7 @@ export default {
       this.confirmModal.targetStatus = '';
     },
 
-    async confirmProcess() {
+    async confirmProceed() {
       if (!this.confirmModal.job || !this.confirmModal.targetStatus) return;
 
       try {
