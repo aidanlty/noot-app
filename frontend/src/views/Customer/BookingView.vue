@@ -187,11 +187,13 @@ export default {
     },
     isSunday() {
       if (!this.formData.date) return false
-      return sgDateFromYmd(this.formData.date).getUTCDay() === 0
+      const [y, m, d] = this.formData.date.split('-').map(Number);
+      return new Date(y, m - 1, d).getDay() === 0;
     },
     isSaturday() {
       if (!this.formData.date) return false
-      return sgDateFromYmd(this.formData.date).getUTCDay() === 6
+      const [y, m, d] = this.formData.date.split('-').map(Number);
+      return new Date(y, m - 1, d).getDay() === 6;
     },
     isToday() {
       if (!this.formData.date) return false
