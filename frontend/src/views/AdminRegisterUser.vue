@@ -70,25 +70,12 @@ const goToDashboard = () => {
 
       <div class="form-group">
         <label>Name</label>
-        <input
-          v-model="form.name"
-          type="text"
-          maxlength="50"
-          placeholder="Enter name"
-          required
-          :disabled="loading"
-        />
+        <input v-model="form.name" type="text" maxlength="50" placeholder="Enter name" required :disabled="loading" />
       </div>
 
       <div class="form-group">
         <label>Email</label>
-        <input
-          v-model="form.email"
-          type="email"
-          placeholder="Enter email"
-          required
-          :disabled="loading"
-        />
+        <input v-model="form.email" type="email" placeholder="Enter email" required :disabled="loading" />
       </div>
 
       <div class="form-group">
@@ -101,24 +88,13 @@ const goToDashboard = () => {
 
       <div class="form-group">
         <label>Password</label>
-        <input
-          v-model="form.password"
-          type="password"
-          placeholder="Enter password"
-          required
-          :disabled="loading"
-        />
+        <input v-model="form.password" type="password" placeholder="Enter password" required :disabled="loading" />
       </div>
 
       <div class="form-group">
         <label>Confirm Password</label>
-        <input
-          v-model="form.confirmPassword"
-          type="password"
-          placeholder="Confirm password"
-          required
-          :disabled="loading"
-        />
+        <input v-model="form.confirmPassword" type="password" placeholder="Confirm password" required
+          :disabled="loading" />
       </div>
 
       <div v-if="error" class="error">{{ error }}</div>
@@ -138,19 +114,14 @@ const goToDashboard = () => {
       <p class="success-details">
         Email: <strong>{{ form.email }}</strong>
       </p>
-      
+
       <!-- <div class="success-actions">
         <button class="btn btn-success" @click="goToDashboard">
           👉 Go to Dashboard
         </button> -->
-        <button 
-            class="btn btn-outline-secondary" 
-            type="button"
-            @click="showSuccess = false"
-        >
-            ➕ Create Another
-        </button>
-      </div>
+      <button class="btn btn-outline-secondary" type="button" @click="showSuccess = false">
+        ➕ Create Another
+      </button>
     </div>
   </div>
 </template>

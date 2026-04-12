@@ -37,7 +37,7 @@ const routes = [
     path: '/myBookings',
     name: 'customerBookings',
     meta: { requiresAuth: true, roles: ['customer'] },
-    component: () => import('../views/Customer/customerBookings.vue')
+    component: () => import('../views/Customer/CustomerBookings.vue')
   },
 
 
