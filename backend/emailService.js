@@ -54,7 +54,7 @@ async function sendStatusEmail({
     <p>– Porschify</p>
   `;
 
-  return sendEmail({ to: "teamnoot1@gmail.com", subject, html });
+  return sendEmail({ to, subject, html });
 }
 
 async function sendMgrNewAppointmentEmail() {
