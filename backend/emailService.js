@@ -13,7 +13,7 @@ async function sendEmail({ to, subject, html }) {
       },
       body: JSON.stringify({
         from: process.env.FROM_EMAIL || 'Porschify <no-reply@porschify.com>',
-        to: "teamnoot1@gmail.com",
+        to,
         subject,
         html,
       }),
@@ -83,7 +83,7 @@ async function sendMgrNewAppointmentEmail() {
       },
       body: JSON.stringify({
         from: process.env.FROM_EMAIL || 'Porschify <no-reply@porschify.com>',
-        to: process.env.MANAGER_EMAIL || 'teamnoot1@gmail.com',  // fallback for testing
+        to: process.env.MANAGER_EMAIL,  // fallback for testing
         subject,
         html,
       }),
