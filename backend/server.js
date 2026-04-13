@@ -1,7 +1,4 @@
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config()
-}
-const path = require('path')
+require('dotenv').config()
 const express = require('express')
 const { createClient } = require('@supabase/supabase-js')
 
@@ -12,7 +9,7 @@ const PORT = process.env.PORT || 3000
 app.use(express.json())
 
 // Import email service
-const { sendStatusEmail, sendMgrNewAppointmentEmail } = require(path.join(__dirname, './emailService.js'))
+const { sendStatusEmail, sendMgrNewAppointmentEmail } = require('./emailService.js')
 
 app.use((req, res, next) => {
   if (!req.body) req.body = {}
@@ -198,11 +195,11 @@ app.post('/api/email/manager-new-appointment', async (req, res) => {
   }
 });
 
-app.use('/api/auth', require(path.join(__dirname, './routes/auth'))(supabase))
-app.use('/api/technicians', require(path.join(__dirname, './routes/technicians'))(supabase))
-app.use('/api/manager', require(path.join(__dirname, './routes/manager'))(supabase))
-app.use('/api/jobOrders', require(path.join(__dirname, './routes/jobOrders'))(supabase))
-app.use('/api/customer', require(path.join(__dirname, './routes/customer'))(supabase))
+app.use('/api/auth', require('./routes/auth')(supabase))
+app.use('/api/technicians', require('./routes/technicians')(supabase))
+app.use('/api/manager', require('./routes/manager')(supabase))
+app.use('/api/jobOrders', require('./routes/jobOrders')(supabase))
+app.use('/api/customer', require('./routes/customer')(supabase))
 
 // Health check
 app.get('/', async (req, res) => {
@@ -214,10 +211,8 @@ app.get('/', async (req, res) => {
   }
 })
 
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Supabase Backend: http://localhost:${PORT}`)
-  })
-}
+app.listen(PORT, () => {
+  console.log(`🚀 Supabase Backend: http://localhost:${PORT}`)
+})
 
 module.exports = app
