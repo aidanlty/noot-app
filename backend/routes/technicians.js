@@ -86,30 +86,30 @@ module.exports = (supabase) => {
             const { data: diagnoseAppts, error: e2 } = await supabase
                 .from('Appointments')
                 .select(`
-          id,
-          appointment_date,
-          appointment_time,
-          vehicle_license_plate,
-          vehicle_make,
-          vehicle_year,
-          status,
-          technician_id,
-          Job_Orders!appointment_id (
-            Order_ID,
-            Order_Status,
-            Services,
-            Parts,
-            Service,
-            Quotation,
-            Waiting_For_Parts,
-            Diagnose,
-            Check_Out,
-            expected_parts_arrival_date,
-            service_technician_id,
-            Customer_id,
-            appointment_id
-          )
-        `)
+                    id,
+                    appointment_date,
+                    appointment_time,
+                    vehicle_license_plate,
+                    vehicle_make,
+                    vehicle_year,
+                    status,
+                    technician_id,
+                    Job_Orders!appointment_id (
+                        Order_ID,
+                        Order_Status,
+                        Services,
+                        Parts,
+                        Service,
+                        Quotation,
+                        Waiting_For_Parts,
+                        Diagnose,
+                        Check_Out,
+                        expected_parts_arrival_date,
+                        service_technician_id,
+                        Customer_id,
+                        appointment_id
+                    )
+                `)
                 .eq('technician_id', techId)
                 .not('status', 'in', '("completed","cancelled","Check Out","Check_Out")')
                 .range(from, to)
@@ -146,6 +146,21 @@ module.exports = (supabase) => {
                 }
             })
 
+            // ── 2b. Count completed jobs this month (for KPI) ─────────────────────
+            const now = new Date()
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString()
+
+            const { count: completedThisMonth, error: e3 } = await supabase
+                .from('Job_Orders')
+                .select('*', { count: 'exact', head: true })
+                .eq('service_technician_id', techId)
+                .in('Order_Status', ['Check Out', 'Check_Out', 'completed', 'Completed', 'PRM - Check Out - PRM'])
+                .gte('Check_Out', monthStart)
+                .lt('Check_Out', monthEnd)
+
+            if (e3) return res.status(400).json({ error: e3.message })
+
             // ── 3. Merge — deduplicate by Order_ID, track both roles ───────────────
             const byKey = {}
 
@@ -169,6 +184,7 @@ module.exports = (supabase) => {
 
             // ── 4. Role summary counts returned alongside data ─────────────────────
             const summary = {
+                completedThisMonth: completedThisMonth || 0,
                 totalDiagnose: merged.filter(j => j._roles.includes('diagnose')).length,
                 totalService: merged.filter(j => j._roles.includes('service')).length,
                 bothRoles: merged.filter(j => j._roles.length === 2).length,

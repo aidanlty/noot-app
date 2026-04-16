@@ -19,7 +19,7 @@
         <div class="kpi-card">
           <div class="kpi-body">
             <div class="kpi-label">Completed This Month</div>
-            <div class="kpi-value">{{ kpi.completedThisMonth }}</div>
+            <div class="kpi-value">{{ kpi.completedThisMonth ?? '—' }}</div>
             <div class="kpi-sub">{{ currentMonthLabel }}</div>
           </div>
         </div>
@@ -28,7 +28,7 @@
           <div class="kpi-body">
             <div class="kpi-label">Outstanding Diagnose Jobs</div>
             <div class="kpi-value">{{ kpi.totalDiagnose }}</div>
-            <div class="kpi-sub">Assigned for diagnosis</div>
+            <div class="kpi-sub">Active diagnose jobs</div>
           </div>
         </div>
 
@@ -36,7 +36,7 @@
           <div class="kpi-body">
             <div class="kpi-label">Outstanding Service Jobs</div>
             <div class="kpi-value">{{ kpi.totalService }}</div>
-            <div class="kpi-sub">Assigned for servicing</div>
+            <div class="kpi-sub">Active service jobs</div>
           </div>
         </div>
 
@@ -103,7 +103,8 @@
               <div class="today-item-top">
                 <span class="today-date">{{ formatDate(job.appointment?.appointment_date) }}</span>
                 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-                  <span class="role-pill" v-for="r in job._roles" :key="r" :class="'role-pill--' + r">{{ r }}</span>
+                  <span class="role-pill" v-for="r in [...new Set(job._roles)]" :key="r" :class="'role-pill--' + r">{{ r
+                    }}</span>
                   <span class="today-badge" :class="upcomingStatusClass(job)">{{ upcomingStatusLabel(job) }}</span>
                 </div>
               </div>
@@ -136,7 +137,7 @@
             <span class="parts-id">{{ shortId(job.Order_ID) }}</span>
             <span class="parts-plate">{{ job.appointment?.vehicle_license_plate || '—' }}</span>
             <span class="parts-make">{{ job.appointment?.vehicle_make || '—' }} {{ job.appointment?.vehicle_year || ''
-              }}</span>
+            }}</span>
             <span class="parts-services">{{ formatServices(job.Services) }}</span>
             <span class="parts-arrival"
               :class="{ 'parts-arrival--overdue': isOverdue(job.expected_parts_arrival_date) }">
@@ -200,19 +201,8 @@ export default {
   data() {
     return {
       jobsLoading: false,
-      myJobs: [
-        { Order_ID: 'ORD00001', Order_Status: 'Check Out', Check_Out: new Date().toISOString(), Services: 'Oil Change, Tyre Rotation', appointment: { appointment_date: new Date().toISOString(), vehicle_make: 'Toyota', vehicle_license_plate: 'SBA1234A', vehicle_year: 2020 }, _roles: ['diagnose'] },
-        { Order_ID: 'ORD00002', Order_Status: 'Check Out', Check_Out: new Date().toISOString(), Services: 'Brake Inspection, Air Filter', appointment: { appointment_date: new Date().toISOString(), vehicle_make: 'Honda', vehicle_license_plate: 'SBB5678B', vehicle_year: 2019 }, _roles: ['service'] },
-        { Order_ID: 'ORD00003', Order_Status: 'Check Out', Check_Out: new Date().toISOString(), Services: 'Oil Change', appointment: { appointment_date: new Date().toISOString(), vehicle_make: 'Mazda', vehicle_license_plate: 'SBC9012C', vehicle_year: 2021 }, _roles: ['service'] },
-        { Order_ID: 'ORD00004', Order_Status: 'Check Out', Check_Out: new Date().toISOString(), Services: 'Tyre Rotation, Wheel Alignment', appointment: { appointment_date: new Date().toISOString(), vehicle_make: 'Toyota', vehicle_license_plate: 'SBD3456D', vehicle_year: 2018 }, _roles: ['diagnose'] },
-        { Order_ID: 'ORD00005', Order_Status: 'Check Out', Check_Out: new Date().toISOString(), Services: 'Spark Plug Replacement', appointment: { appointment_date: new Date().toISOString(), vehicle_make: 'BMW', vehicle_license_plate: 'SBE7890E', vehicle_year: 2022 }, _roles: ['service'] },
-        { Order_ID: 'ORD00006', Order_Status: 'In Progress', Services: 'Brake Inspection', appointment: { appointment_date: (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString() })(), vehicle_make: 'Honda', vehicle_license_plate: 'SBF2345F', vehicle_year: 2020 }, _roles: ['service'] },
-        { Order_ID: 'ORD00007', Order_Status: 'In Progress', Services: 'Oil Change, Air Filter', appointment: { appointment_date: (() => { const d = new Date(); d.setDate(d.getDate() + 2); return d.toISOString() })(), vehicle_make: 'Nissan', vehicle_license_plate: 'SBG6789G', vehicle_year: 2017 }, _roles: ['diagnose'] },
-        { Order_ID: 'ORD00008', Order_Status: 'Waiting For Parts', Services: 'Suspension Repair', expected_parts_arrival_date: (() => { const d = new Date(); d.setDate(d.getDate() + 3); return d.toISOString() })(), appointment: { appointment_date: (() => { const d = new Date(); d.setDate(d.getDate() + 3); return d.toISOString() })(), vehicle_make: 'Mazda', vehicle_license_plate: 'SBH1234H', vehicle_year: 2019 }, _roles: ['service'] },
-        { Order_ID: 'ORD00009', Order_Status: 'Waiting For Parts', Services: 'Timing Belt', expected_parts_arrival_date: (() => { const d = new Date(); d.setDate(d.getDate() + 5); return d.toISOString() })(), appointment: { appointment_date: (() => { const d = new Date(); d.setDate(d.getDate() + 5); return d.toISOString() })(), vehicle_make: 'Toyota', vehicle_license_plate: 'SBI5678I', vehicle_year: 2016 }, _roles: ['diagnose'] },
-        { Order_ID: 'ORD00010', Order_Status: 'Ready', Services: 'Wheel Alignment', appointment: { appointment_date: (() => { const d = new Date(); d.setDate(d.getDate() + 4); return d.toISOString() })(), vehicle_make: 'BMW', vehicle_license_plate: 'SBJ9012J', vehicle_year: 2023 }, _roles: ['service'] },
-      ],
-      apiSummary: { totalDiagnose: 4, totalService: 6, bothRoles: 1 },
+      myJobs: [],
+      apiSummary: { completedThisMonth: 0, totalDiagnose: 0, totalService: 0, bothRoles: 0 },
     }
   },
 
@@ -227,18 +217,8 @@ export default {
     // ══════════════════ KPI ══════════════════
 
     kpi() {
-      const now = new Date()
-      const thisMonth = now.getMonth()
-      const thisYear = now.getFullYear()
-
-      const completedThisMonth = this.myJobs.filter(o => {
-        if (o.Order_Status !== 'Check Out' || !o.Check_Out) return false
-        const d = new Date(o.Check_Out)
-        return d.getMonth() === thisMonth && d.getFullYear() === thisYear
-      }).length
-
       return {
-        completedThisMonth,
+        completedThisMonth: this.apiSummary.completedThisMonth,
         totalDiagnose: this.apiSummary.totalDiagnose,
         totalService: this.apiSummary.totalService,
         bothRoles: this.apiSummary.bothRoles,
@@ -249,8 +229,10 @@ export default {
 
     myStats() {
       const total = this.myJobs.length
-      const completed = this.myJobs.filter(o => o.Order_Status === 'Check Out').length
-      const inProgress = this.myJobs.filter(o => ['In Progress', 'Diagnose', 'Ready'].includes(o.Order_Status)).length
+      const completed = this.myJobs.filter(o => ['Check Out', 'Check_Out', 'check_out'].includes(o.Order_Status)).length
+      const inProgress = this.myJobs.filter(o =>
+        ['In Progress', 'Diagnose', 'diagnose', 'Ready', 'Check-In', 'Re-Check-In'].includes(o.Order_Status)
+      ).length
       const waitingParts = this.myJobs.filter(o => o.Order_Status === 'Waiting For Parts').length
       const others = Math.max(0, total - completed - inProgress - waitingParts)
       return { total, completed, inProgress, waitingParts, others }
@@ -338,7 +320,7 @@ export default {
     },
   },
 
-  mounted() { /* refreshAll() skipped — using hardcoded demo data */ },
+  mounted() { this.refreshAll() },
 
   methods: {
     refreshAll() { this.fetchMyJobs() },
@@ -354,11 +336,11 @@ export default {
         const result = await res.json()
         if (!res.ok) throw new Error(result.error || result.message || 'Failed to fetch job cards')
         this.myJobs = result.data || []
-        this.apiSummary = result.summary || { totalDiagnose: 0, totalService: 0, bothRoles: 0 }
+        this.apiSummary = result.summary || { completedThisMonth: 0, totalDiagnose: 0, totalService: 0, bothRoles: 0 }
       } catch (err) {
         console.error('Technician dashboard fetch error:', err)
         this.myJobs = []
-        this.apiSummary = { totalDiagnose: 0, totalService: 0, bothRoles: 0 }
+        this.apiSummary = { completedThisMonth: 0, totalDiagnose: 0, totalService: 0, bothRoles: 0 }
       } finally {
         this.jobsLoading = false
       }
@@ -400,8 +382,9 @@ export default {
         'PRM - Check Out - PRM': 'PRM - Check Out - PRM',
         'Koki Pendings': 'Koki Pending',
         'service': 'Service',
-        'booked': 'Diagnose',
-        'appointment': 'Diagnose',
+        'booked': 'Awaiting Check-In',
+        'appointment': 'Awaiting Check-In',
+        'diagnose': 'In Progress',
       }
       return map[job.Order_Status] || job.Order_Status || '—'
     },
@@ -424,6 +407,7 @@ export default {
         'Koki Pendings': 'badge--on-hold',
 
         // Diagnose / check-in stage
+        'diagnose': 'badge--inprogress',
         'booked': 'badge--diagnose',
         'appointment': 'badge--diagnose',
         'Check-In': 'badge--diagnose',
